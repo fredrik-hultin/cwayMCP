@@ -1,0 +1,299 @@
+{
+  "name": "cway-mcp-server",
+  "description": "MCP server for Cway GraphQL API integration with real-time dashboard monitoring",
+  "version": "0.1.0",
+  "author": "Fredrik Hultin",
+  "homepage": "https://github.com/your-username/cwayMCP",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/cwayMCP.git"
+  },
+  "license": "MIT",
+  "keywords": ["mcp", "cway", "graphql", "dashboard", "monitoring", "api"],
+  
+  "server": {
+    "command": "python",
+    "args": [
+      "/Users/fredrik.hultin/Developer/cwayMCP/server/main.py",
+      "--mode",
+      "mcp"
+    ],
+    "cwd": "/Users/fredrik.hultin/Developer/cwayMCP",
+    "env": {
+      "PYTHONPATH": "/Users/fredrik.hultin/Developer/cwayMCP/server/src",
+      "VIRTUAL_ENV": "/Users/fredrik.hultin/Developer/cwayMCP/venv",
+      "PATH": "/Users/fredrik.hultin/Developer/cwayMCP/venv/bin:$PATH"
+    }
+  },
+  
+  "capabilities": {
+    "resources": {
+      "subscribe": true,
+      "listChanged": true
+    },
+    "tools": {
+      "subscribe": true,
+      "listChanged": true
+    },
+    "logging": {
+      "level": "info"
+    },
+    "experimental": {
+      "sampling": true
+    }
+  },
+  
+  "resources": [
+    {
+      "uri": "cway://projects",
+      "name": "Cway Projects",
+      "description": "Access to all Cway planner projects with full metadata",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "cway://users", 
+      "name": "Cway Users",
+      "description": "Access to all Cway users and their information",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "cway://projects/active",
+      "name": "Active Projects",
+      "description": "Currently active projects with progress tracking",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "cway://projects/completed",
+      "name": "Completed Projects", 
+      "description": "Completed projects with final metrics",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "cway://system/status",
+      "name": "System Status",
+      "description": "Cway system connection and health status",
+      "mimeType": "application/json"
+    }
+  ],
+  
+  "tools": [
+    {
+      "name": "list_projects",
+      "description": "Retrieve all Cway planner projects with comprehensive metadata including progress, dates, and status",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "get_project",
+      "description": "Get detailed information for a specific Cway project by its unique identifier",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "description": "The UUID of the project to retrieve",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          }
+        },
+        "required": ["project_id"]
+      }
+    },
+    {
+      "name": "get_active_projects",
+      "description": "List all currently active (in progress) projects with their current status and progress metrics",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "get_completed_projects", 
+      "description": "List all completed projects with final completion dates and outcomes",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "list_users",
+      "description": "Retrieve all Cway users with their profile information, roles, and status",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "get_user",
+      "description": "Get detailed profile information for a specific Cway user by their unique identifier",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The UUID of the user to retrieve",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          }
+        },
+        "required": ["user_id"]
+      }
+    },
+    {
+      "name": "find_user_by_email",
+      "description": "Find a Cway user by their email address and retrieve their profile information",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The email address of the user to find"
+          }
+        },
+        "required": ["email"]
+      }
+    },
+    {
+      "name": "get_users_page",
+      "description": "Retrieve users with pagination support for efficient handling of large user datasets",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "Page number (0-based indexing)",
+            "minimum": 0,
+            "default": 0
+          },
+          "size": {
+            "type": "integer",
+            "description": "Number of users per page",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_system_status",
+      "description": "Get comprehensive Cway system connection status, API health, and performance metrics",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  
+  "configuration": {
+    "required": [
+      {
+        "name": "CWAY_API_TOKEN",
+        "description": "Bearer token for authenticating with the Cway GraphQL API",
+        "type": "string",
+        "sensitive": true
+      }
+    ],
+    "optional": [
+      {
+        "name": "CWAY_API_URL",
+        "description": "Cway GraphQL API endpoint URL",
+        "type": "string",
+        "default": "https://app.cway.se/graphql"
+      },
+      {
+        "name": "LOG_LEVEL",
+        "description": "Logging level for the MCP server",
+        "type": "string",
+        "enum": ["DEBUG", "INFO", "WARNING", "ERROR"],
+        "default": "INFO"
+      },
+      {
+        "name": "DEBUG",
+        "description": "Enable debug mode for detailed logging",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "name": "REQUEST_TIMEOUT",
+        "description": "HTTP request timeout in seconds",
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 300,
+        "default": 30
+      },
+      {
+        "name": "MAX_RETRIES",
+        "description": "Maximum number of API request retries",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 10,
+        "default": 3
+      }
+    ]
+  },
+  
+  "setup": {
+    "requirements": [
+      "Python 3.9+",
+      "Virtual environment (recommended)",
+      "Cway API access token"
+    ],
+    "installation": [
+      "Clone the repository: git clone <repository-url>",
+      "Create virtual environment: python -m venv venv",
+      "Activate virtual environment: source venv/bin/activate",
+      "Install dependencies: pip install -r server/requirements.txt",
+      "Copy environment template: cp .env.example server/.env",
+      "Configure CWAY_API_TOKEN in server/.env"
+    ],
+    "verification": [
+      "Test connection: python -c \"from server.src.infrastructure.graphql_client import CwayGraphQLClient; import asyncio; asyncio.run(CwayGraphQLClient().test_connection())\"",
+      "Run basic test: python -m pytest server/tests/unit/ -v"
+    ]
+  },
+  
+  "features": [
+    "Real-time GraphQL API integration with Cway",
+    "Comprehensive project and user data access",
+    "System health monitoring and status checking",
+    "Pagination support for large datasets",
+    "Type-safe operations with full validation",
+    "Structured logging with request correlation",
+    "Configurable retry logic and timeouts",
+    "Optional real-time dashboard integration"
+  ],
+  
+  "dashboard": {
+    "available": true,
+    "description": "Optional real-time WebSocket dashboard for monitoring MCP server activity",
+    "url": "http://localhost:3001",
+    "websocket": "ws://localhost:8080",
+    "features": [
+      "Live request flow visualization",
+      "Real-time log streaming",
+      "Connection status monitoring",
+      "Request metrics and analytics",
+      "Interactive UI with animations"
+    ],
+    "launch": {
+      "command": "python",
+      "args": [
+        "/Users/fredrik.hultin/Developer/cwayMCP/server/main.py",
+        "--mode",
+        "dashboard"
+      ],
+      "additional_setup": [
+        "Install Node.js dependencies: cd client && npm install",
+        "Start React client: cd client && npm start"
+      ]
+    }
+  }
+}

@@ -1,0 +1,109 @@
+name: "Cway MCP Server Tasks"
+description: "Development and maintenance tasks"
+
+# Development tasks
+tasks:
+  # Server tasks
+  - name: "server:start"
+    command: "cd server && python main.py --mode mcp"
+    description: "Start MCP server"
+    category: "Server"
+    
+  - name: "server:start-with-dashboard"
+    command: "cd server && python main.py --mode dashboard"
+    description: "Start MCP server with dashboard"
+    category: "Server"
+    
+  - name: "server:test"
+    command: "cd server && python -m pytest tests/ -v"
+    description: "Run server tests"
+    category: "Server"
+    
+  - name: "server:test-coverage"
+    command: "cd server && python -m pytest tests/ -v --cov=src --cov-report=html"
+    description: "Run tests with coverage report"
+    category: "Server"
+    
+  - name: "server:lint"
+    command: "cd server && python -m black src/ tests/ && python -m isort src/ tests/ && python -m flake8 src/ tests/"
+    description: "Lint and format server code"
+    category: "Server"
+    
+  - name: "server:type-check"
+    command: "cd server && python -m mypy src/"
+    description: "Run type checking"
+    category: "Server"
+    
+  # Client tasks
+  - name: "client:start"
+    command: "cd client && npm start"
+    description: "Start React dashboard client"
+    category: "Client"
+    
+  - name: "client:build"
+    command: "cd client && npm run build"
+    description: "Build React client for production"
+    category: "Client"
+    
+  - name: "client:test"
+    command: "cd client && npm test"
+    description: "Run client tests"
+    category: "Client"
+    
+  - name: "client:lint"
+    command: "cd client && npm run lint"
+    description: "Lint client code"
+    category: "Client"
+    
+  # Project tasks
+  - name: "project:setup"
+    command: |
+      echo "🔧 Setting up Cway MCP Server project..."
+      python -m venv venv
+      source venv/bin/activate
+      cd server && pip install -r requirements.txt
+      cd ../client && npm install
+      cd .. && cp .env.example server/.env
+      echo "✅ Project setup complete!"
+    description: "Initial project setup"
+    category: "Project"
+    
+  - name: "project:clean"
+    command: |
+      echo "🧹 Cleaning project..."
+      rm -rf server/__pycache__/
+      rm -rf server/src/__pycache__/
+      rm -rf server/.pytest_cache/
+      rm -rf server/htmlcov/
+      rm -rf client/node_modules/.cache/
+      rm -rf client/build/
+      echo "✅ Project cleaned!"
+    description: "Clean build artifacts and cache"
+    category: "Project"
+    
+  - name: "project:install-deps"
+    command: |
+      echo "📦 Installing dependencies..."
+      source venv/bin/activate
+      cd server && pip install -r requirements.txt
+      cd ../client && npm install
+      echo "✅ Dependencies installed!"
+    description: "Install all dependencies"
+    category: "Project"
+    
+  # Database/API tasks
+  - name: "api:test-connection"
+    command: "cd server && python -c \"from src.infrastructure.graphql_client import CwayGraphQLClient; import asyncio; asyncio.run(CwayGraphQLClient().test_connection())\""
+    description: "Test Cway API connection"
+    category: "API"
+    
+  # Docker tasks (if using Docker)
+  - name: "docker:build"
+    command: "docker build -t cway-mcp-server ."
+    description: "Build Docker image"
+    category: "Docker"
+    
+  - name: "docker:run"
+    command: "docker-compose up -d"
+    description: "Run with Docker Compose"
+    category: "Docker"

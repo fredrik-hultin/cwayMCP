@@ -1,0 +1,44 @@
+name: "Cway MCP Server"
+description: "Quick launch options for the Cway MCP Server project"
+
+# Default launch command
+default_command: "cd server && python main.py --mode dashboard"
+
+# Launch profiles
+profiles:
+  - name: "MCP Server Only"
+    command: "cd server && python main.py --mode mcp"
+    description: "Launch the MCP server without dashboard"
+    icon: "🚀"
+    
+  - name: "Full Stack (Server + Dashboard)"
+    command: "cd server && python main.py --mode dashboard"
+    description: "Launch MCP server with WebSocket dashboard"
+    icon: "📊"
+    
+  - name: "Dashboard Client Only"
+    command: "cd client && npm start"
+    description: "Launch the React dashboard client"
+    icon: "⚛️"
+    
+  - name: "Run Tests"
+    command: "cd server && python -m pytest tests/ -v --cov=src"
+    description: "Run server tests with coverage"
+    icon: "🧪"
+    
+  - name: "Setup Project"
+    command: |
+      echo "🔧 Setting up Cway MCP Server project..."
+      python -m venv venv
+      source venv/bin/activate
+      cd server && pip install -r requirements.txt
+      cd ../client && npm install
+      cd .. && cp .env.example server/.env
+      echo "✅ Project setup complete!"
+    description: "Initial project setup"
+    icon: "⚙️"
+
+# Environment variables
+environment:
+  PYTHONPATH: "${PWD}/server/src"
+  NODE_ENV: "development"

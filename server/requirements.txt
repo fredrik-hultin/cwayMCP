@@ -1,0 +1,29 @@
+# MCP Framework
+mcp>=1.0.0
+
+# GraphQL Client
+gql[all]>=3.5.0
+aiohttp>=3.9.0
+
+# Type hints and validation
+pydantic>=2.5.0
+typing-extensions>=4.8.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# WebSocket and real-time communication
+python-socketio>=5.14.0
+
+# Development dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.9.0
+mypy>=1.6.0
+isort>=5.12.0
+flake8>=6.1.0
+
+# Testing utilities
+httpx>=0.25.0
+pytest-mock>=3.11.0

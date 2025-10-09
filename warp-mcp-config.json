@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "cway": {
+      "name": "Cway MCP Server",
+      "description": "MCP server for Cway GraphQL API integration",
+      "command": "/Users/fredrik.hultin/Developer/cwayMCP/venv/bin/python",
+      "args": [
+        "/Users/fredrik.hultin/Developer/cwayMCP/server/main.py",
+        "--mode",
+        "mcp"
+      ],
+      "cwd": "/Users/fredrik.hultin/Developer/cwayMCP",
+      "env": {
+        "PYTHONPATH": "/Users/fredrik.hultin/Developer/cwayMCP/server/src"
+      },
+      "envFile": "/Users/fredrik.hultin/Developer/cwayMCP/server/.env"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+name: "Cway MCP Server"
+description: "MCP server for Cway GraphQL API integration with real-time dashboard"
+version: "0.1.0"
+
+# Project metadata
+project:
+  type: "python"
+  framework: "mcp"
+  
+# Development environment
+environment:
+  python_version: "3.11"
+  virtual_env: "venv"
+  
+# Quick commands for development
+commands:
+  - name: "Start MCP Server"
+    command: "cd server && python main.py --mode mcp"
+    description: "Start the MCP server only"
+    
+  - name: "Start with Dashboard"
+    command: "cd server && python main.py --mode dashboard"
+    description: "Start the MCP server with live dashboard"
+    
+  - name: "Run Tests"
+    command: "cd server && python -m pytest tests/ -v"
+    description: "Run all server tests"
+    
+  - name: "Start React Dashboard"
+    command: "cd client && npm start"
+    description: "Start the React dashboard client"
+    
+  - name: "Install Server Dependencies"
+    command: "cd server && pip install -r requirements.txt"
+    description: "Install Python dependencies"
+    
+  - name: "Install Client Dependencies"
+    command: "cd client && npm install"
+    description: "Install React dependencies"
+    
+  - name: "Setup Environment"
+    command: "cp .env.example server/.env"
+    description: "Copy environment template"
+
+# Development workflows
+workflows:
+  development:
+    - name: "Setup Project"
+      steps:
+        - "python -m venv venv"
+        - "source venv/bin/activate"
+        - "cd server && pip install -r requirements.txt"
+        - "cd client && npm install"
+        - "cp .env.example server/.env"
+        
+    - name: "Full Stack Development"
+      steps:
+        - "cd server && python main.py --mode dashboard &"
+        - "cd client && npm start"
