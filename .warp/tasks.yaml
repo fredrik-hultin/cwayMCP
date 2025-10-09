@@ -57,14 +57,7 @@ tasks:
     
   # Project tasks
   - name: "project:setup"
-    command: |
-      echo "🔧 Setting up Cway MCP Server project..."
-      python -m venv venv
-      source venv/bin/activate
-      cd server && pip install -r requirements.txt
-      cd ../client && npm install
-      cd .. && cp .env.example server/.env
-      echo "✅ Project setup complete!"
+    command: "echo '🔧 Setting up Cway MCP Server project...' && python -m venv venv && source venv/bin/activate && cd server && pip install -r requirements.txt && cd ../client && npm install && cd .. && cp .env.example server/.env && echo '✅ Project setup complete!'"
     description: "Initial project setup"
     category: "Project"
     

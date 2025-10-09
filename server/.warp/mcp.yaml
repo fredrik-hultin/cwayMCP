@@ -1,0 +1,109 @@
+name: "Cway MCP Server"
+description: "MCP server for Cway GraphQL API integration with real-time dashboard monitoring"
+version: "0.1.0"
+
+# MCP Server Configuration
+server:
+  name: "cway-mcp-server"
+  command: "source ../venv/bin/activate && python main.py --mode mcp"
+  cwd: "."
+  env:
+    PYTHONPATH: "${PWD}/src"
+    VIRTUAL_ENV: "../venv"
+  envFile: ".env"
+
+# Server Capabilities
+capabilities:
+  resources:
+    subscribe: true
+    listChanged: true
+  tools:
+    subscribe: true
+    listChanged: true
+  logging:
+    level: "info"
+
+# Available Resources
+resources:
+  - uri: "cway://projects"
+    name: "Cway Projects"
+    description: "Access to all Cway planner projects with full metadata"
+    mimeType: "application/json"
+  - uri: "cway://users"
+    name: "Cway Users"
+    description: "Access to all Cway users and their information"
+    mimeType: "application/json"
+  - uri: "cway://projects/active"
+    name: "Active Projects"
+    description: "Currently active projects with progress tracking"
+    mimeType: "application/json"
+  - uri: "cway://projects/completed"
+    name: "Completed Projects"
+    description: "Completed projects with final metrics"
+    mimeType: "application/json"
+  - uri: "cway://system/status"
+    name: "System Status"
+    description: "Cway system connection and health status"
+    mimeType: "application/json"
+
+# Available Tools
+tools:
+  - name: "list_projects"
+    description: "Retrieve all Cway planner projects with comprehensive metadata"
+  - name: "get_project"
+    description: "Get detailed information for a specific Cway project by ID"
+  - name: "get_active_projects"
+    description: "List all currently active (in progress) projects"
+  - name: "get_completed_projects"
+    description: "List all completed projects with final completion dates"
+  - name: "list_users"
+    description: "Retrieve all Cway users with their profile information"
+  - name: "get_user"
+    description: "Get detailed profile information for a specific user by ID"
+  - name: "find_user_by_email"
+    description: "Find a Cway user by their email address"
+  - name: "get_system_status"
+    description: "Get comprehensive Cway system connection status and health"
+
+# Configuration Requirements
+configuration:
+  required:
+    - name: "CWAY_API_TOKEN"
+      description: "Bearer token for authenticating with the Cway GraphQL API"
+      type: "string"
+      sensitive: true
+  optional:
+    - name: "CWAY_API_URL"
+      description: "Cway GraphQL API endpoint URL"
+      type: "string"
+      default: "https://app.cway.se/graphql"
+    - name: "LOG_LEVEL"
+      description: "Logging level for the MCP server"
+      type: "string"
+      enum: ["DEBUG", "INFO", "WARNING", "ERROR"]
+      default: "INFO"
+    - name: "DEBUG"
+      description: "Enable debug mode for detailed logging"
+      type: "boolean"
+      default: false
+
+# Dashboard Integration
+dashboard:
+  available: true
+  description: "Optional real-time WebSocket dashboard for monitoring MCP server activity"
+  url: "http://localhost:3001"
+  websocket: "ws://localhost:8080"
+  command: "source ../venv/bin/activate && python main.py --mode dashboard"
+  features:
+    - "Live request flow visualization"
+    - "Real-time log streaming"
+    - "Connection status monitoring"
+    - "Request metrics and analytics"
+    - "Interactive UI with animations"
+
+# Quick Setup Commands
+setup:
+  install: "source ../venv/bin/activate && pip install -r requirements.txt"
+  configure: "cp .env.example .env"
+  test: "source ../venv/bin/activate && python -m pytest tests/unit/ -v"
+  validate: "python3 -c 'import json; json.load(open(\"../mcp-server-config.json\")); print(\"✅ MCP config is valid\")'"

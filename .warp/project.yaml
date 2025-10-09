@@ -40,27 +40,15 @@ environment:
 quick_actions:
   - name: "🚀 Start Full Stack"
     description: "Launch both server and dashboard"
-    command: |
-      source venv/bin/activate
-      cd server && python main.py --mode dashboard &
-      cd client && npm start
+    command: "source venv/bin/activate && cd server && python main.py --mode dashboard"
     
   - name: "🧪 Run All Tests"
     description: "Execute comprehensive test suite"
-    command: |
-      source venv/bin/activate
-      cd server && python -m pytest tests/ -v --cov=src
-      cd client && npm test -- --watchAll=false
+    command: "source venv/bin/activate && cd server && python -m pytest tests/ -v --cov=src"
     
   - name: "🔧 Setup Project"
     description: "Complete project initialization"
-    command: |
-      python -m venv venv
-      source venv/bin/activate
-      cd server && pip install -r requirements.txt
-      cd ../client && npm install
-      cp .env.example server/.env
-      echo "✅ Project setup complete! Edit server/.env with your Cway API token."
+    command: "python -m venv venv && source venv/bin/activate && cd server && pip install -r requirements.txt && cd ../client && npm install && cp .env.example server/.env"
 
 # Bookmarks for important files
 bookmarks:

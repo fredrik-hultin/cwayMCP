@@ -13,6 +13,7 @@ class ProjectState(Enum):
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
     PLANNED = "PLANNED"
+    DELIVERED = "DELIVERED"
 
 
 @dataclass

@@ -1,0 +1,141 @@
+name: "Cway MCP Server Tasks"
+description: "Development tasks for the MCP server backend"
+
+# Server development tasks
+tasks:
+  # Core server tasks
+  - name: "server:start"
+    command: "source ../venv/bin/activate && python main.py --mode mcp"
+    description: "Start MCP server only"
+    category: "Server"
+    
+  - name: "server:start-dashboard"
+    command: "source ../venv/bin/activate && python main.py --mode dashboard"
+    description: "Start MCP server with WebSocket dashboard"
+    category: "Server"
+    
+  - name: "server:health-check"
+    command: "source ../venv/bin/activate && python -c 'import requests; print(requests.get(\"http://localhost:8080/health\").json())'"
+    description: "Check server health status"
+    category: "Server"
+    
+  # Testing tasks
+  - name: "test:unit"
+    command: "source ../venv/bin/activate && python -m pytest tests/unit/ -v"
+    description: "Run unit tests only"
+    category: "Testing"
+    
+  - name: "test:integration"
+    command: "source ../venv/bin/activate && python -m pytest tests/integration/ -v"
+    description: "Run integration tests only"
+    category: "Testing"
+    
+  - name: "test:all"
+    command: "source ../venv/bin/activate && python -m pytest tests/ -v"
+    description: "Run all tests"
+    category: "Testing"
+    
+  - name: "test:coverage"
+    command: "source ../venv/bin/activate && python -m pytest tests/ -v --cov=src --cov-report=html"
+    description: "Run tests with HTML coverage report"
+    category: "Testing"
+    
+  - name: "test:watch"
+    command: "source ../venv/bin/activate && python -m pytest tests/ -v --tb=short -f"
+    description: "Run tests in watch mode"
+    category: "Testing"
+    
+  # Code quality tasks
+  - name: "lint:black"
+    command: "source ../venv/bin/activate && python -m black src/ tests/"
+    description: "Format code with Black"
+    category: "Code Quality"
+    
+  - name: "lint:isort"
+    command: "source ../venv/bin/activate && python -m isort src/ tests/"
+    description: "Sort imports with isort"
+    category: "Code Quality"
+    
+  - name: "lint:flake8"
+    command: "source ../venv/bin/activate && python -m flake8 src/ tests/"
+    description: "Lint code with flake8"
+    category: "Code Quality"
+    
+  - name: "lint:mypy"
+    command: "source ../venv/bin/activate && python -m mypy src/"
+    description: "Type check with mypy"
+    category: "Code Quality"
+    
+  - name: "lint:all"
+    command: "source ../venv/bin/activate && python -m black src/ tests/ && python -m isort src/ tests/ && python -m flake8 src/ tests/ && python -m mypy src/"
+    description: "Run all linting and formatting"
+    category: "Code Quality"
+    
+  # Development setup tasks
+  - name: "setup:venv"
+    command: "cd .. && python -m venv venv && source venv/bin/activate && cd server && pip install -r requirements.txt"
+    description: "Create virtual environment and install dependencies"
+    category: "Setup"
+    
+  - name: "setup:env"
+    command: "cp .env.example .env"
+    description: "Copy environment template"
+    category: "Setup"
+    
+  - name: "setup:deps"
+    command: "source ../venv/bin/activate && pip install -r requirements.txt"
+    description: "Install Python dependencies"
+    category: "Setup"
+    
+  - name: "setup:dev-deps"
+    command: "source ../venv/bin/activate && pip install -r requirements-dev.txt"
+    description: "Install development dependencies"
+    category: "Setup"
+    
+  # MCP-specific tasks
+  - name: "mcp:start"
+    command: "source ../venv/bin/activate && python main.py --mode mcp"
+    description: "Start MCP server only"
+    category: "MCP"
+    
+  - name: "mcp:start-with-dashboard"
+    command: "source ../venv/bin/activate && python main.py --mode dashboard"
+    description: "Start MCP server with WebSocket dashboard"
+    category: "MCP"
+    
+  - name: "mcp:test-tools"
+    command: "source ../venv/bin/activate && python -c 'from src.presentation.cway_mcp_server import CwayMCPServer; import asyncio; print(\"Testing MCP tools...\")'"
+    description: "Test MCP server tools functionality"
+    category: "MCP"
+    
+  - name: "mcp:validate-config"
+    command: "python3 -c 'import json; json.load(open(\"../mcp-server-config.json\")); print(\"✅ MCP config is valid\")'"
+    description: "Validate MCP server configuration"
+    category: "MCP"
+    
+  - name: "mcp:show-resources"
+    command: "echo 'Available MCP Resources:'; echo '• cway://projects - All Cway planner projects'; echo '• cway://users - All Cway users'; echo '• cway://projects/active - Active projects'; echo '• cway://projects/completed - Completed projects'; echo '• cway://system/status - System health status'"
+    description: "Display available MCP resources"
+    category: "MCP"
+    
+  - name: "mcp:show-tools"
+    command: "echo 'Available MCP Tools:'; echo '• list_projects - Retrieve all projects'; echo '• get_project - Get specific project by ID'; echo '• get_active_projects - List active projects'; echo '• get_completed_projects - List completed projects'; echo '• list_users - Retrieve all users'; echo '• get_user - Get specific user by ID'; echo '• find_user_by_email - Find user by email'; echo '• get_system_status - System health check'"
+    description: "Display available MCP tools"
+    category: "MCP"
+    
+  # API testing tasks
+  - name: "api:test-connection"
+    command: "source ../venv/bin/activate && python -c 'from src.infrastructure.graphql_client import CwayGraphQLClient; import asyncio; asyncio.run(CwayGraphQLClient().test_connection())'"
+    description: "Test Cway API connection"
+    category: "API"
+    
+  # Cleanup tasks
+  - name: "clean:cache"
+    command: "find . -type d -name '__pycache__' -exec rm -rf {} + && find . -name '*.pyc' -delete && rm -rf .pytest_cache/ htmlcov/ .coverage"
+    description: "Clean Python cache and test artifacts"
+    category: "Cleanup"
+    
+  - name: "clean:logs"
+    command: "rm -rf logs/*.log"
+    description: "Clean log files"
+    category: "Cleanup"

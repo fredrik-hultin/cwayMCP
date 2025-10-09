@@ -1,0 +1,52 @@
+name: "Cway MCP Server - Backend"
+description: "Launch configurations for the MCP server"
+
+# Default launch command
+default_command: "source ../venv/bin/activate && python main.py --mode dashboard"
+
+# Launch profiles
+profiles:
+  - name: "MCP Server Only"
+    command: "source ../venv/bin/activate && python main.py --mode mcp"
+    description: "Start MCP server without dashboard"
+    icon: "🚀"
+    
+  - name: "Server with Dashboard"
+    command: "source ../venv/bin/activate && python main.py --mode dashboard"
+    description: "Start MCP server with WebSocket dashboard"
+    icon: "📊"
+    
+  - name: "Run Tests with Coverage"
+    command: "source ../venv/bin/activate && python -m pytest tests/ -v --cov=src --cov-report=html"
+    description: "Execute all tests with coverage report"
+    icon: "🧪"
+    
+  - name: "Type Check"
+    command: "source ../venv/bin/activate && python -m mypy src/"
+    description: "Run mypy type checking"
+    icon: "🔍"
+    
+  - name: "Format Code"
+    command: "source ../venv/bin/activate && python -m black src/ tests/ && python -m isort src/ tests/"
+    description: "Format code with Black and sort imports"
+    icon: "🎨"
+    
+  - name: "Install Dependencies"
+    command: "source ../venv/bin/activate && pip install -r requirements.txt"
+    description: "Install Python dependencies"
+    icon: "📦"
+    
+  - name: "MCP Tools Demo"
+    command: "source ../venv/bin/activate && echo 'Available MCP Resources:' && echo '• cway://projects' && echo '• cway://users' && echo '• cway://projects/active' && echo '• cway://projects/completed' && echo '• cway://system/status'"
+    description: "Show available MCP resources and tools"
+    icon: "🔌"
+    
+  - name: "Validate MCP Config"
+    command: "python3 -c 'import json; json.load(open(\"../mcp-server-config.json\")); print(\"✅ MCP configuration is valid\")'"
+    description: "Validate MCP server configuration file"
+    icon: "✅"
+
+# Environment variables
+environment:
+  PYTHONPATH: "${PWD}/src"
+  LOG_LEVEL: "INFO"

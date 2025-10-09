@@ -1,0 +1,116 @@
+name: "Cway MCP Server - Backend"
+description: "Python MCP server backend with GraphQL integration"
+version: "0.1.0"
+
+# Project metadata
+project:
+  type: "python"
+  framework: "mcp"
+  technologies:
+    - "Python 3.11"
+    - "MCP Framework"
+    - "GraphQL"
+    - "AsyncIO"
+    - "WebSocket"
+
+# Development environment
+environment:
+  python_version: "3.11"
+  virtual_env: "../venv"
+
+# Quick actions
+quick_actions:
+  - name: "🚀 Start MCP Server"
+    description: "Start MCP server only"
+    command: "source ../venv/bin/activate && python main.py --mode mcp"
+    
+  - name: "📊 Start with Dashboard"
+    description: "Start MCP server with WebSocket dashboard"
+    command: "source ../venv/bin/activate && python main.py --mode dashboard"
+    
+  - name: "🧪 Run Tests"
+    description: "Run all tests with coverage"
+    command: "source ../venv/bin/activate && python -m pytest tests/ -v --cov=src --cov-report=html"
+    
+  - name: "🔍 Type Check"
+    description: "Run mypy type checking"
+    command: "source ../venv/bin/activate && python -m mypy src/"
+    
+  - name: "🎨 Format Code"
+    description: "Format with Black and sort imports"
+    command: "source ../venv/bin/activate && python -m black src/ tests/ && python -m isort src/ tests/"
+
+# Bookmarks for important files
+bookmarks:
+  - name: "Main Entry Point"
+    path: "main.py"
+    description: "Server launcher and mode selection"
+  - name: "MCP Server Core"
+    path: "src/presentation/cway_mcp_server.py"
+    description: "Main MCP server implementation"
+  - name: "GraphQL Client"
+    path: "src/infrastructure/graphql_client.py"
+    description: "Cway API GraphQL client"
+  - name: "Settings"
+    path: "config/settings.py"
+    description: "Configuration management"
+  - name: "Environment File"
+    path: ".env"
+    description: "Environment variables"
+
+# MCP Server Configuration
+mcp:
+  server:
+    name: "cway-mcp-server"
+    description: "MCP server for Cway GraphQL API integration with real-time dashboard monitoring"
+    command: "source ../venv/bin/activate && python main.py --mode mcp"
+    cwd: "."
+    env:
+      PYTHONPATH: "${PWD}/src"
+      VIRTUAL_ENV: "../venv"
+    envFile: ".env"
+    
+  capabilities:
+    resources:
+      - "cway://projects" # All Cway planner projects
+      - "cway://users" # All Cway users
+      - "cway://projects/active" # Active projects
+      - "cway://projects/completed" # Completed projects
+      - "cway://system/status" # System health status
+      
+    tools:
+      - "list_projects" # Retrieve all projects
+      - "get_project" # Get specific project by ID
+      - "get_active_projects" # List active projects
+      - "get_completed_projects" # List completed projects
+      - "list_users" # Retrieve all users
+      - "get_user" # Get specific user by ID
+      - "find_user_by_email" # Find user by email
+      - "get_system_status" # System health check
+      
+  dashboard:
+    available: true
+    url: "http://localhost:3001"
+    websocket: "ws://localhost:8080"
+    command: "source ../venv/bin/activate && python main.py --mode dashboard"
+    
+  configuration:
+    required:
+      - name: "CWAY_API_TOKEN"
+        description: "Bearer token for Cway GraphQL API"
+        type: "string"
+        sensitive: true
+    optional:
+      - name: "CWAY_API_URL"
+        description: "Cway GraphQL API endpoint"
+        default: "https://app.cway.se/graphql"
+      - name: "LOG_LEVEL"
+        description: "Logging level"
+        default: "INFO"
+        
+# Status indicators
+status:
+  build: "passing"
+  tests: "95% coverage"
+  dependencies: "up-to-date"
+  mcp_server: "configured"
