@@ -22,9 +22,9 @@ def main():
     parser = argparse.ArgumentParser(description="Cway MCP Server")
     parser.add_argument(
         "--mode",
-        choices=["mcp", "dashboard"],
+        choices=["mcp", "sse", "dashboard"],
         default="mcp",
-        help="Server mode: 'mcp' for MCP server only, 'dashboard' for server with dashboard"
+        help="Server mode: 'mcp' for stdio MCP server, 'sse' for persistent SSE server, 'dashboard' for server with dashboard"
     )
     parser.add_argument(
         "--host",
@@ -50,8 +50,13 @@ def main():
         # Import here to avoid loading dashboard dependencies if not needed
         from start_server_with_dashboard import main as dashboard_main
         asyncio.run(dashboard_main())
+    elif args.mode == "sse":
+        # Run MCP server with SSE transport (persistent)
+        from src.presentation.cway_mcp_server import CwayMCPServer
+        server = CwayMCPServer()
+        asyncio.run(server.run_sse(host=args.host, port=args.port))
     else:
-        # Run MCP server only
+        # Run MCP server with stdio (for Warp stdio mode)
         mcp_main()
 
 

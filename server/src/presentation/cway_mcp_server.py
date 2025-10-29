@@ -1153,11 +1153,11 @@ class CwayMCPServer:
         else:
             raise ValueError(f"Unknown tool: {name}")
             
-    async def run(self) -> None:
+    async def run_stdio(self) -> None:
         """Run the MCP server with stdio transport."""
         from mcp.server.stdio import stdio_server
         
-        logger.info("Starting Cway MCP Server...")
+        logger.info("Starting Cway MCP Server (stdio)...")
         
         try:
             await self._ensure_initialized()
@@ -1178,6 +1178,73 @@ class CwayMCPServer:
         finally:
             await self._cleanup()
             
+    async def run_sse(self, host: str = "localhost", port: int = 8000) -> None:
+        """Run the MCP server with modern StreamableHTTP transport protocol."""
+        from mcp.server.streamable_http import StreamableHTTPServerTransport
+        from starlette.applications import Starlette
+        from starlette.routing import Route, Mount
+        from starlette.responses import Response, JSONResponse
+        from starlette.middleware import Middleware
+        from starlette.middleware.cors import CORSMiddleware
+        import uvicorn
+        
+        logger.info(f"Starting Cway MCP Server (StreamableHTTP) on {host}:{port}...")
+        
+        try:
+            await self._ensure_initialized()
+            logger.info(f"Server initialized and ready")
+            logger.info(f"Connected to Cway API at {settings.cway_api_url}")
+            
+            # Create StreamableHTTP session manager
+            # The manager handles HTTP requests and manages MCP sessions
+            from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+            from starlette.applications import Starlette as StarletteApp
+            
+            manager = StreamableHTTPSessionManager(self.server)
+            
+            async def health_check(request):
+                """Health check endpoint."""
+                return JSONResponse({
+                    "status": "healthy",
+                    "service": "cway-mcp-server",
+                    "transport": "streamable-http"
+                })
+            
+            # Create Starlette app with CORS middleware
+            middleware = [
+                Middleware(
+                    CORSMiddleware,
+                    allow_origins=["*"],
+                    allow_methods=["GET", "POST", "OPTIONS"],
+                    allow_headers=["*"],
+                    allow_credentials=True,
+                )
+            ]
+            
+            # Use manager.run() as async context manager
+            async with manager.run():
+                app = Starlette(
+                    routes=[
+                        Mount("/sse", app=manager.handle_request),
+                        Route("/health", endpoint=health_check, methods=["GET"]),
+                    ],
+                    middleware=middleware
+                )
+                
+                logger.info(f"StreamableHTTP server configured")
+                logger.info(f"Endpoints: GET/POST /sse, GET /health")
+                
+                # Run with uvicorn
+                config = uvicorn.Config(app, host=host, port=port, log_level="info")
+                server = uvicorn.Server(config)
+                await server.serve()
+            
+        except Exception as e:
+            logger.error(f"SSE Server error: {e}")
+            raise
+        finally:
+            await self._cleanup()
+            
     async def cleanup(self) -> None:
         """Public cleanup method."""
         await self._cleanup()
@@ -1190,9 +1257,9 @@ class CwayMCPServer:
 
 
 def main() -> None:
-    """Main entry point."""
+    """Main entry point for stdio mode."""
     server = CwayMCPServer()
-    asyncio.run(server.run())
+    asyncio.run(server.run_stdio())
 
 
 if __name__ == "__main__":
