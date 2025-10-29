@@ -5,6 +5,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from mcp.server import Server
+from mcp.server.stdio import stdio_server
 from mcp.types import (
     Resource,
     Tool,
@@ -21,8 +22,17 @@ from ..infrastructure.repositories import GraphQLProjectRepository, GraphQLUserR
 from ..application.use_cases import ProjectUseCases, UserUseCases
 
 
-# Set up logging
-logging.basicConfig(level=getattr(logging, settings.log_level.upper()))
+# Set up logging - redirect to file to avoid interfering with stdio protocol
+import sys
+log_file = "/Users/fredrik.hultin/Developer/cwayMCP/server/logs/mcp_server.log"
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper()),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler(sys.stderr)  # Log to stderr, not stdout
+    ]
+)
 logger = logging.getLogger(__name__)
 
 
@@ -435,16 +445,14 @@ class CwayMCPServer:
         
         try:
             await self._ensure_initialized()
-            logger.info(f"Server initialized and ready on {settings.mcp_server_host}:{settings.mcp_server_port}")
+            logger.info(f"Server initialized and ready")
             
-            # Run the MCP server
-            async with self.server.stdio() as streams:
+            # Run the MCP server with stdio transport
+            async with stdio_server() as (read_stream, write_stream):
                 await self.server.run(
-                    streams[0], streams[1],
-                    initialization_options={
-                        "server_name": "cway-mcp-server",
-                        "server_version": "1.0.0"
-                    }
+                    read_stream,
+                    write_stream,
+                    self.server.create_initialization_options()
                 )
                 
         except Exception as e:

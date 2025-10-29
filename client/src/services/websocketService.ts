@@ -23,6 +23,7 @@ interface FlowMessage {
 export class WebSocketService {
   private socket: Socket | null = null;
   private isConnected = false;
+  private disconnectCallbacks: Array<() => void> = [];
 
   constructor(private serverUrl: string = 'http://localhost:8080') {}
 
@@ -48,6 +49,7 @@ export class WebSocketService {
       this.socket.on('disconnect', () => {
         console.log('🔌 Disconnected from MCP server WebSocket');
         this.isConnected = false;
+        this.disconnectCallbacks.forEach(callback => callback());
       });
 
       this.socket.on('connect_error', (error) => {
@@ -101,92 +103,12 @@ export class WebSocketService {
     return this.isConnected;
   }
 
-  // Simulate real-time data for demo purposes when server is not available
-  startSimulation(
-    onLog: (message: LogMessage) => void,
-    onFlow: (message: FlowMessage) => void
-  ): () => void {
-    console.log('🎭 Starting simulation mode (server not available)');
-    
-    const operations = [
-      'list_projects',
-      'get_project', 
-      'list_users',
-      'get_user_by_email',
-      'get_system_status'
-    ];
+  onDisconnect(callback: () => void): void {
+    this.disconnectCallbacks.push(callback);
+  }
 
-    const sources = ['mcp.client', 'mcp.server', 'cway.api'];
-
-    const logInterval = setInterval(() => {
-      if (Math.random() > 0.6) {
-        const source = sources[Math.floor(Math.random() * sources.length)];
-        const operation = operations[Math.floor(Math.random() * operations.length)];
-        const requestId = `sim-${Date.now()}`;
-
-        onLog({
-          timestamp: new Date().toISOString(),
-          level: Math.random() > 0.1 ? 'info' : 'error',
-          source,
-          message: `${source === 'cway.api' ? '📡' : source === 'mcp.server' ? '🖥️' : '💻'} ${operation} operation`,
-          requestId,
-          operation
-        });
-      }
-    }, 1500);
-
-    const flowInterval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        const operation = operations[Math.floor(Math.random() * operations.length)];
-        const requestId = `flow-${Date.now()}`;
-
-        // Simulate flow steps
-        setTimeout(() => {
-          onFlow({
-            requestId,
-            step: 'client_to_server',
-            source: 'mcp-client',
-            target: 'mcp-server', 
-            operation,
-            status: 'success',
-            duration: Math.floor(Math.random() * 50) + 10
-          });
-        }, 100);
-
-        setTimeout(() => {
-          onFlow({
-            requestId,
-            step: 'server_to_api',
-            source: 'mcp-server',
-            target: 'cway-api',
-            operation: `GraphQL: ${operation}`,
-            status: 'pending'
-          });
-        }, 200);
-
-        setTimeout(() => {
-          const success = Math.random() > 0.1;
-          onFlow({
-            requestId,
-            step: 'api_response',
-            source: 'cway-api',
-            target: 'response',
-            operation: `Response: ${operation}`,
-            status: success ? 'success' : 'error',
-            duration: Math.floor(Math.random() * 400) + 100,
-            details: success ? 
-              { records: Math.floor(Math.random() * 20) + 1, size: `${(Math.random() * 5 + 0.5).toFixed(1)}KB` } :
-              { error: 'Timeout or API error' }
-          });
-        }, 800);
-      }
-    }, 2000);
-
-    // Return cleanup function
-    return () => {
-      clearInterval(logInterval);
-      clearInterval(flowInterval);
-    };
+  removeDisconnectCallback(callback: () => void): void {
+    this.disconnectCallbacks = this.disconnectCallbacks.filter(cb => cb !== callback);
   }
 }
 

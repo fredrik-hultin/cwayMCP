@@ -67,7 +67,7 @@ class TestGraphQLProjectRepository:
             "id": "proj-123",
             "name": "Test Project",
             "description": "A test project",
-            "status": "active",
+            "status": "ACTIVE",
             "createdAt": "2024-01-01T10:00:00Z",
             "updatedAt": "2024-01-01T11:00:00Z"
         }
@@ -113,6 +113,7 @@ class TestGraphQLProjectRepository:
         minimal_data = {
             "id": "proj-456",
             "name": "Minimal Project",
+            "status": "ACTIVE",
             "createdAt": "2024-01-01T10:00:00Z",
             "updatedAt": "2024-01-01T11:00:00Z"
         }
@@ -126,7 +127,7 @@ class TestGraphQLProjectRepository:
         assert len(result) == 1
         project = result[0]
         assert project.description is None  # Should be None when missing
-        assert project.status == "active"  # Should use default
+        assert project.status == "ACTIVE"  # Should use default
     
     @pytest.mark.asyncio
     async def test_get_all_api_error(self, repository: GraphQLProjectRepository, mock_client: AsyncMock) -> None:
@@ -178,7 +179,7 @@ class TestGraphQLProjectRepository:
             id="proj-new",
             name="New Project",
             description="A new project",
-            status="active",
+            status="ACTIVE",
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -187,7 +188,7 @@ class TestGraphQLProjectRepository:
             "id": "proj-created",
             "name": "New Project",
             "description": "A new project",
-            "status": "active",
+            "status": "ACTIVE",
             "createdAt": "2024-01-01T10:00:00Z",
             "updatedAt": "2024-01-01T11:00:00Z"
         }
@@ -209,7 +210,7 @@ class TestGraphQLProjectRepository:
         input_data = call_args[0][1]["input"]
         assert input_data["name"] == "New Project"
         assert input_data["description"] == "A new project"
-        assert input_data["status"] == "active"
+        assert input_data["status"] == "ACTIVE"
     
     @pytest.mark.asyncio
     async def test_create_api_error(self, repository: GraphQLProjectRepository, mock_client: AsyncMock) -> None:
@@ -233,7 +234,7 @@ class TestGraphQLProjectRepository:
             id="proj-123",
             name="Updated Project",
             description="Updated description",
-            status="inactive",
+            status="INACTIVE",
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -242,7 +243,7 @@ class TestGraphQLProjectRepository:
             "id": "proj-123",
             "name": "Updated Project",
             "description": "Updated description",
-            "status": "inactive",
+            "status": "INACTIVE",
             "createdAt": "2024-01-01T10:00:00Z",
             "updatedAt": "2024-01-01T12:00:00Z"
         }
@@ -255,7 +256,7 @@ class TestGraphQLProjectRepository:
         
         assert result.id == "proj-123"
         assert result.name == "Updated Project"
-        assert result.status == "inactive"
+        assert result.status == "INACTIVE"
         
         mock_client.execute_mutation.assert_called_once()
         call_args = mock_client.execute_mutation.call_args

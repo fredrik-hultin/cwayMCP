@@ -9,11 +9,11 @@
         "--mode",
         "mcp"
       ],
-      "cwd": "/Users/fredrik.hultin/Developer/cwayMCP",
       "env": {
-        "PYTHONPATH": "/Users/fredrik.hultin/Developer/cwayMCP/server/src"
-      },
-      "envFile": "/Users/fredrik.hultin/Developer/cwayMCP/server/.env"
+        "PYTHONPATH": "/Users/fredrik.hultin/Developer/cwayMCP/server/src",
+        "CWAY_API_TOKEN": "f20f14d8-f40f-4e8e-aa13-f5ec6d3497ba",
+        "CWAY_API_URL": "https://app.cway.se/graphql"
+      }
     }
   }
 }

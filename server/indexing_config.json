@@ -1,0 +1,37 @@
+{
+  "targets": [
+    {
+      "name": "file_backup",
+      "platform": "file",
+      "description": "Local JSON file backup for all documents and pages",
+      "enabled": true,
+      "config": {
+        "output_dir": "indexed_data",
+        "format": "jsonl"
+      }
+    },
+    {
+      "name": "search_index",
+      "platform": "elasticsearch",
+      "description": "Main search index for documents and pages",
+      "enabled": false,
+      "config": {
+        "url": "http://localhost:9200",
+        "auth": null,
+        "verify_ssl": true
+      }
+    },
+    {
+      "name": "main_search",
+      "platform": "elasticsearch",
+      "description": "Main search index for all content",
+      "enabled": false,
+      "config": {
+        "url": "http://localhost:9200",
+        "index_prefix": "cway_prod",
+        "auth": null
+      }
+    }
+  ],
+  "updated_at": "2025-10-09T15:12:01.655083"
+}

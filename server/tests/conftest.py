@@ -37,7 +37,7 @@ def sample_cway_data() -> dict:
                 "id": "proj-1",
                 "name": "Sample Project",
                 "description": "A sample project for testing",
-                "status": "active",
+                "status": "ACTIVE",
                 "created_at": "2024-01-01T00:00:00Z",
                 "updated_at": "2024-01-01T00:00:00Z"
             }

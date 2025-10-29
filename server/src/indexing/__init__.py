@@ -1,0 +1,1 @@
+"""Indexing pipeline module for the Cway MCP Server."""

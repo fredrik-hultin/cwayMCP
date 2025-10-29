@@ -4,7 +4,10 @@ from datetime import datetime
 from typing import Optional
 import pytest
 
-from src.domain.entities import Project, User, CwayEntity
+from src.domain.entities import (
+    Project, User, CwayEntity, Artwork, Revision,
+    RevisionStatus, ArtworkType
+)
 
 
 class TestCwayEntity:
@@ -57,7 +60,7 @@ class TestProject:
             "id": "proj-123",
             "name": "Test Project",
             "description": "A test project",
-            "status": "active",
+            "status": "ACTIVE",
             "created_at": datetime.now(),
             "updated_at": datetime.now()
         }
@@ -81,11 +84,11 @@ class TestProject:
         assert project.id == "proj-123"
         assert project.name == "Test Project"
         assert project.description is None
-        assert project.status == "active"  # Default value
+        assert project.status == "ACTIVE"  # Default value
         
     def test_project_status_validation(self) -> None:
         """Test that Project status validation works."""
-        valid_statuses = ["active", "inactive", "archived"]
+        valid_statuses = ["ACTIVE", "INACTIVE", "ARCHIVED"]
         
         for status in valid_statuses:
             project = Project(
@@ -221,3 +224,263 @@ class TestUser:
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
+    
+    def test_user_record_login(self) -> None:
+        """Test recording user login."""
+        user = User(
+            id="user-123",
+            email="test@example.com",
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        assert user.login_count == 0
+        assert user.last_login_at is None
+        
+        user.record_login()
+        
+        assert user.login_count == 1
+        assert user.last_login_at is not None
+        assert len(user.activity_log) == 1
+        
+    def test_user_log_activity(self) -> None:
+        """Test logging user activity."""
+        user = User(
+            id="user-123",
+            email="test@example.com",
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        user.log_activity("test_activity", "Test description", {"key": "value"})
+        
+        assert len(user.activity_log) == 1
+        assert user.activity_log[0]["type"] == "test_activity"
+        assert user.activity_log[0]["description"] == "Test description"
+        
+    def test_user_calculate_performance_metrics(self) -> None:
+        """Test calculating user performance metrics."""
+        user = User(
+            id="user-123",
+            email="test@example.com",
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        # Create test revisions
+        now = datetime.now()
+        revision1 = Revision(
+            id="rev-1",
+            artwork_id="art-1",
+            version_number=1,
+            submitted_by="user-123",
+            submitted_at=now,
+            reviewed_by="user-123",
+            status=RevisionStatus.APPROVED,
+            time_to_review_minutes=10.0,
+            created_at=now,
+            updated_at=now
+        )
+        
+        user.calculate_performance_metrics([revision1])
+        
+        assert user.avg_review_time_minutes is not None
+        assert user.approval_rate is not None
+
+
+class TestArtwork:
+    """Test the Artwork entity."""
+    
+    def test_artwork_creation(self) -> None:
+        """Test creating an Artwork."""
+        artwork = Artwork(
+            id="art-123",
+            project_id="proj-123",
+            name="Test Artwork",
+            artwork_type=ArtworkType.DIGITAL_ART,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        assert artwork.id == "art-123"
+        assert artwork.project_id == "proj-123"
+        assert artwork.name == "Test Artwork"
+        assert artwork.artwork_type == ArtworkType.DIGITAL_ART
+        
+    def test_artwork_validation_missing_project(self) -> None:
+        """Test that Artwork validates project_id."""
+        with pytest.raises(ValueError, match="Artwork must belong to a project"):
+            Artwork(
+                id="art-123",
+                project_id="",
+                name="Test Artwork",
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+    def test_artwork_add_revision(self) -> None:
+        """Test adding revision to artwork."""
+        artwork = Artwork(
+            id="art-123",
+            project_id="proj-123",
+            name="Test Artwork",
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        assert len(artwork.revisions) == 0
+        
+        artwork.add_revision("rev-123", "user-123")
+        
+        assert len(artwork.revisions) == 1
+        assert "rev-123" in artwork.revisions
+        assert len(artwork.activity_log) > 0
+        
+    def test_artwork_add_pending_revision(self) -> None:
+        """Test adding pending revision."""
+        artwork = Artwork(
+            id="art-123",
+            project_id="proj-123",
+            name="Test Artwork",
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        # Just manually add to pending list since no method exists
+        artwork.pending_revisions.append("rev-123")
+        
+        assert "rev-123" in artwork.pending_revisions
+        
+    def test_artwork_approve_revision(self) -> None:
+        """Test approving revision."""
+        artwork = Artwork(
+            id="art-123",
+            project_id="proj-123",
+            name="Test Artwork",
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        # Add pending revision first
+        artwork.pending_revisions.append("rev-123")
+        assert "rev-123" in artwork.pending_revisions
+        
+        # Approve it
+        artwork.approve_revision("rev-123", "user-456")
+        
+        assert "rev-123" not in artwork.pending_revisions
+        assert "rev-123" in artwork.approved_revisions
+
+
+class TestRevision:
+    """Test the Revision entity."""
+    
+    def test_revision_creation(self) -> None:
+        """Test creating a Revision."""
+        revision = Revision(
+            id="rev-123",
+            artwork_id="art-123",
+            version_number=1,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        assert revision.id == "rev-123"
+        assert revision.artwork_id == "art-123"
+        assert revision.version_number == 1
+        assert revision.status == RevisionStatus.PENDING
+        
+    def test_revision_validation_missing_artwork(self) -> None:
+        """Test that Revision validates artwork_id."""
+        with pytest.raises(ValueError, match="Revision must belong to an artwork"):
+            Revision(
+                id="rev-123",
+                artwork_id="",
+                version_number=1,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+    def test_revision_validation_invalid_version(self) -> None:
+        """Test that Revision validates version number."""
+        with pytest.raises(ValueError, match="Version number must be positive"):
+            Revision(
+                id="rev-123",
+                artwork_id="art-123",
+                version_number=0,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+            
+    def test_revision_submit_for_review(self) -> None:
+        """Test submitting revision for review."""
+        revision = Revision(
+            id="rev-123",
+            artwork_id="art-123",
+            version_number=1,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        revision.submit_for_review("user-123")
+        
+        assert revision.status == RevisionStatus.IN_REVIEW
+        assert revision.submitted_by == "user-123"
+        assert revision.submitted_at is not None
+        assert len(revision.activity_log) > 0
+        
+    def test_revision_approve(self) -> None:
+        """Test approving revision."""
+        revision = Revision(
+            id="rev-123",
+            artwork_id="art-123",
+            version_number=1,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        revision.submit_for_review("user-123")
+        revision.approve("user-456", "Looks good!")
+        
+        assert revision.status == RevisionStatus.APPROVED
+        assert revision.approved_by == "user-456"
+        assert revision.approved_at is not None
+        assert revision.reviewer_comments == "Looks good!"
+        assert revision.time_to_approve_minutes is not None
+        
+    def test_revision_reject(self) -> None:
+        """Test rejecting revision."""
+        revision = Revision(
+            id="rev-123",
+            artwork_id="art-123",
+            version_number=1,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        revision.submit_for_review("user-123")
+        revision.reject("user-456", "Needs changes", "Please fix the colors")
+        
+        assert revision.status == RevisionStatus.REJECTED
+        assert revision.rejected_by == "user-456"
+        assert revision.rejected_at is not None
+        assert revision.rejection_reason == "Needs changes"
+        assert revision.reviewer_comments == "Please fix the colors"
+        assert revision.time_to_review_minutes is not None
+        
+    def test_revision_add_feedback(self) -> None:
+        """Test adding feedback to revision."""
+        revision = Revision(
+            id="rev-123",
+            artwork_id="art-123",
+            version_number=1,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        revision.add_feedback("user-456", "Great work!", "PRAISE")
+        
+        assert len(revision.feedback) == 1
+        assert revision.feedback[0]["user_id"] == "user-456"
+        assert revision.feedback[0]["text"] == "Great work!"
+        assert revision.feedback[0]["feedback_type"] == "PRAISE"

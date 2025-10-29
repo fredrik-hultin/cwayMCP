@@ -85,7 +85,13 @@ echo "CWAY_API_TOKEN=your_bearer_token_here" >> server/.env
 
 ### 4️⃣ Launch Application
 
-**🎯 Full Stack (Recommended)**
+**🎯 Full Stack (Recommended) - Single Command**
+```bash
+# Use the convenient start script (starts both backend and React dashboard)
+./start-dashboard.sh
+```
+
+**🎯 Full Stack (Manual)**
 ```bash
 # Terminal 1: Start server with dashboard
 cd server && python main.py --mode dashboard
@@ -96,6 +102,10 @@ cd client && npm start
 
 **🚀 MCP Server Only**
 ```bash
+# Use the start script
+./start-mcp.sh
+
+# Or manually
 cd server && python main.py --mode mcp
 ```
 

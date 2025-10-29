@@ -113,6 +113,15 @@ const SimpleDashboard: React.FC = () => {
           // Request historical data
           wsService.requestHistoricalData();
           
+          // Listen for disconnection
+          wsService.onDisconnect(() => {
+            if (mounted) {
+              setIsConnected(false);
+              setConnectionStatus('disconnected');
+              addLogEntry('warn', 'dashboard', '⚠️ Disconnected from MCP server');
+            }
+          });
+          
         } else {
           setIsConnected(false);
           setConnectionStatus('disconnected');

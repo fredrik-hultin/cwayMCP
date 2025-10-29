@@ -36,7 +36,7 @@ class ProjectUseCases:
             logger.warning(f"Project not found: {project_id}")
         return project
         
-    async def create_project(self, name: str, description: Optional[str] = None, status: str = "active") -> Project:
+    async def create_project(self, name: str, description: Optional[str] = None, status: str = "ACTIVE") -> Project:
         """Create a new project."""
         logger.info(f"Creating new project: {name}")
         

@@ -30,7 +30,7 @@ class TestProjectUseCases:
             id="proj-123",
             name="Test Project",
             description="A test project",
-            status="active",
+            status="ACTIVE",
             created_at=datetime(2024, 1, 1, 10, 0, 0),
             updated_at=datetime(2024, 1, 1, 10, 0, 0)
         )
@@ -98,7 +98,7 @@ class TestProjectUseCases:
             id=f"proj_{project_name.lower().replace(' ', '_')}",
             name=project_name,
             description=None,
-            status="active",
+            status="ACTIVE",
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -119,7 +119,7 @@ class TestProjectUseCases:
         create_call_args = mock_repository.create.call_args[0][0]
         assert create_call_args.name == project_name
         assert create_call_args.description is None
-        assert create_call_args.status == "active"
+        assert create_call_args.status == "ACTIVE"
         
         mock_logger.info.assert_any_call(f"Creating new project: {project_name}")
         mock_logger.info.assert_any_call(f"Created project: {created_project.id}")
@@ -129,7 +129,7 @@ class TestProjectUseCases:
         """Test creating a project with all parameters."""
         project_name = "Full Project"
         description = "A complete project"
-        status = "inactive"
+        status = "INACTIVE"
         
         created_project = Project(
             id="proj_full_project",
@@ -155,7 +155,7 @@ class TestProjectUseCases:
         project_id = "proj-123"
         new_name = "Updated Project"
         new_description = "Updated description"
-        new_status = "inactive"
+        new_status = "INACTIVE"
         
         mock_repository.get_by_id.return_value = sample_project
         

@@ -42,17 +42,19 @@ async def main():
         # Initialize MCP server
         logger.info("🔧 Initializing MCP server...")
         mcp_server = CwayMCPServer()
-        await mcp_server.initialize()
+        # The MCP server initializes on first use via _ensure_initialized()
+        # Just log that it's ready
         
         logger.info("🎯 All servers initialized successfully!")
         logger.info("📊 Dashboard available at: http://localhost:3001")
         logger.info("🔌 WebSocket server at: http://localhost:8080")
         logger.info("🔑 Using Cway API: %s", settings.cway_api_url)
         logger.info("📝 Log level: %s", settings.log_level)
-        logger.info("💡 MCP server ready to handle requests")
+        logger.info("💡 MCP server ready to handle requests (will connect on first use)")
         
         # Keep the server running
-        logger.info("✅ Server is running. Press Ctrl+C to stop.")
+        logger.info("✅ Servers are running. Press Ctrl+C to stop.")
+        logger.info("💻 Open http://localhost:3001 in your browser to view the dashboard")
         while True:
             await asyncio.sleep(1)
         
