@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from config.settings import settings
 from src.utils.logging_config import initialize_logging
-from src.utils.websocket_server import initialize_websocket_server
+from src.utils.websocket_server import initialize_websocket_server, add_websocket_handler_to_logger
 from src.presentation.cway_mcp_server import CwayMCPServer
 
 
@@ -38,6 +38,14 @@ async def main():
         logger.info("🌐 Starting WebSocket server for dashboard...")
         ws_server = await initialize_websocket_server(port=8080)
         logger.info("✅ WebSocket server started on http://localhost:8080")
+        
+        # Attach WebSocket handler to root logger to forward all logs to dashboard
+        logger.info("🔗 Connecting logging system to dashboard...")
+        add_websocket_handler_to_logger()  # Root logger
+        add_websocket_handler_to_logger('src.presentation.cway_mcp_server')  # MCP server logger
+        add_websocket_handler_to_logger('src.infrastructure.graphql_client')  # GraphQL client logger
+        add_websocket_handler_to_logger('src.application')  # Application layer loggers
+        logger.info("✅ Dashboard logging integration complete")
         
         # Initialize MCP server
         logger.info("🔧 Initializing MCP server...")

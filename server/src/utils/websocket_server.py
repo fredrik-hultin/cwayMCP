@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import sys
 from datetime import datetime
 from typing import Set, Dict, Any, Optional, List
 import socketio
@@ -165,3 +166,71 @@ async def emit_flow_to_dashboard(request_id: str, step: str, source: str, target
     """Emit flow step to dashboard if WebSocket server is available."""
     if _ws_server:
         await _ws_server.emit_flow(request_id, step, source, target, operation, status, duration, details)
+
+
+class WebSocketLogHandler(logging.Handler):
+    """Logging handler that forwards log messages to WebSocket dashboard."""
+    
+    def __init__(self, ws_server: Optional[WebSocketLogServer] = None):
+        super().__init__()
+        self.ws_server = ws_server
+        self._loop = None
+        
+    def emit(self, record: logging.LogRecord) -> None:
+        """Emit a log record to the WebSocket server."""
+        if not self.ws_server:
+            return
+            
+        try:
+            # Format the log message
+            log_message = self.format(record)
+            
+            # Get or create event loop
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                # No running loop, try to get the default one
+                loop = asyncio.get_event_loop()
+                
+            # Create a task to emit the log
+            if loop and loop.is_running():
+                asyncio.create_task(
+                    self.ws_server.emit_log(
+                        level=record.levelname,
+                        source=record.name,
+                        message=log_message,
+                        request_id=getattr(record, 'request_id', None)
+                    )
+                )
+            else:
+                # If no running loop, schedule it
+                asyncio.ensure_future(
+                    self.ws_server.emit_log(
+                        level=record.levelname,
+                        source=record.name,
+                        message=log_message,
+                        request_id=getattr(record, 'request_id', None)
+                    ),
+                    loop=loop
+                )
+        except Exception as e:
+            # Silently fail to avoid breaking logging
+            print(f"WebSocketLogHandler error: {e}", file=sys.stderr)
+
+
+def add_websocket_handler_to_logger(logger_name: Optional[str] = None):
+    """Add WebSocket handler to a logger."""
+    if _ws_server:
+        target_logger = logging.getLogger(logger_name) if logger_name else logging.getLogger()
+        
+        # Remove existing WebSocket handlers to avoid duplicates
+        for handler in target_logger.handlers[:]:
+            if isinstance(handler, WebSocketLogHandler):
+                target_logger.removeHandler(handler)
+        
+        # Add new WebSocket handler
+        ws_handler = WebSocketLogHandler(_ws_server)
+        ws_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(message)s')
+        ws_handler.setFormatter(formatter)
+        target_logger.addHandler(ws_handler)
