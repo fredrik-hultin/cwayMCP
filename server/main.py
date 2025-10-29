@@ -43,6 +43,11 @@ def main():
         default=8080,
         help="Port for the WebSocket dashboard server (default: 8080)"
     )
+    parser.add_argument(
+        "--with-dashboard",
+        action="store_true",
+        help="Start WebSocket dashboard alongside SSE server"
+    )
     
     args = parser.parse_args()
     
@@ -54,7 +59,12 @@ def main():
         # Run MCP server with SSE transport (persistent)
         from src.presentation.cway_mcp_server import CwayMCPServer
         server = CwayMCPServer()
-        asyncio.run(server.run_sse(host=args.host, port=args.port))
+        asyncio.run(server.run_sse(
+            host=args.host, 
+            port=args.port, 
+            with_dashboard=args.with_dashboard,
+            dashboard_port=args.dashboard_port
+        ))
     else:
         # Run MCP server with stdio (for Warp stdio mode)
         mcp_main()

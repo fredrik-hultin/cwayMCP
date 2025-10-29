@@ -1178,22 +1178,53 @@ class CwayMCPServer:
         finally:
             await self._cleanup()
             
-    async def run_sse(self, host: str = "localhost", port: int = 8000) -> None:
-        """Run the MCP server with modern StreamableHTTP transport protocol."""
+    async def run_sse(self, host: str = "localhost", port: int = 8000, with_dashboard: bool = False, dashboard_port: int = 8080) -> None:
+        """Run the MCP server with modern StreamableHTTP transport protocol.
+        
+        Args:
+            host: Host to bind the MCP server to
+            port: Port for the MCP server
+            with_dashboard: If True, also start the WebSocket dashboard server
+            dashboard_port: Port for the WebSocket dashboard server
+        """
         from mcp.server.streamable_http import StreamableHTTPServerTransport
         from starlette.applications import Starlette
         from starlette.routing import Route, Mount
+        from starlette.requests import Request
         from starlette.responses import Response, JSONResponse
         from starlette.middleware import Middleware
         from starlette.middleware.cors import CORSMiddleware
         import uvicorn
         
         logger.info(f"Starting Cway MCP Server (StreamableHTTP) on {host}:{port}...")
+        if with_dashboard:
+            logger.info(f"Dashboard mode enabled on port {dashboard_port}")
         
         try:
             await self._ensure_initialized()
             logger.info(f"Server initialized and ready")
             logger.info(f"Connected to Cway API at {settings.cway_api_url}")
+            
+            # Initialize WebSocket dashboard if requested
+            ws_server = None
+            if with_dashboard:
+                from src.utils.websocket_server import initialize_websocket_server, add_websocket_handler_to_logger
+                logger.info("🌐 Starting WebSocket server for dashboard...")
+                ws_server = await initialize_websocket_server(port=dashboard_port)
+                logger.info(f"✅ WebSocket server started on http://localhost:{dashboard_port}")
+                
+                # Attach WebSocket handler to loggers
+                add_websocket_handler_to_logger()  # Root logger
+                add_websocket_handler_to_logger('src.presentation.cway_mcp_server')
+                add_websocket_handler_to_logger('src.infrastructure.graphql_client')
+                add_websocket_handler_to_logger('src.application')
+                logger.info("✅ Dashboard logging integration complete")
+                logger.info("📊 Dashboard available at: http://localhost:3001")
+                
+                # Test that WebSocket logging is working
+                logger.info("🧪 TEST: WebSocket logging pipeline active - you should see this in dashboard")
+                logger.warning("🧪 TEST: Warning level message for dashboard")
+                logger.error("🧪 TEST: Error level message for dashboard")
             
             # Create StreamableHTTP session manager
             # The manager handles HTTP requests and manages MCP sessions
@@ -1221,14 +1252,64 @@ class CwayMCPServer:
                 )
             ]
             
-            # Use manager.run() as async context manager
+            # Use manager.run() as async context manager  
             async with manager.run():
-                app = Starlette(
-                    routes=[
-                        Mount("/sse", app=manager.handle_request),
-                        Route("/health", endpoint=health_check, methods=["GET"]),
-                    ],
-                    middleware=middleware
+                # MCP logging middleware - captures all requests/responses
+                async def mcp_logging_middleware(scope, receive, send):
+                    """Log all MCP requests and responses."""
+                    if scope["type"] == "http" and scope["path"] == "/sse":
+                        # Capture request body
+                        body_parts = []
+                        
+                        async def logging_receive():
+                            message = await receive()
+                            if message["type"] == "http.request":
+                                body = message.get("body", b"")
+                                if body:
+                                    body_parts.append(body)
+                                    # Try to parse and log MCP request
+                                    try:
+                                        import json as json_module
+                                        request_data = json_module.loads(body.decode())
+                                        method = request_data.get("method", "unknown")
+                                        req_id = request_data.get("id", "unknown")
+                                        logger.info(f"📨 MCP Request: method={method}, id={req_id}")
+                                        if "params" in request_data:
+                                            logger.info(f"   Parameters: {json_module.dumps(request_data['params'], indent=2)}")
+                                    except Exception as e:
+                                        logger.debug(f"Could not parse MCP request: {e}")
+                            return message
+                        
+                        # Call the actual handler with logging receive
+                        await route_handler(scope, logging_receive, send)
+                    else:
+                        await route_handler(scope, receive, send)
+                
+                # Custom router that handles /sse without trailing slash issues
+                async def route_handler(scope, receive, send):
+                    path = scope["path"]
+                    
+                    if path == "/health":
+                        # Handle health check
+                        request = Request(scope, receive)
+                        response = await health_check(request)
+                        await response(scope, receive, send)
+                    elif path == "/sse":
+                        # Handle MCP SSE requests directly
+                        await manager.handle_request(scope, receive, send)
+                    else:
+                        # 404 for other paths
+                        response = Response("Not Found", status_code=404)
+                        await response(scope, receive, send)
+                
+                # Wrap with CORS middleware manually
+                from starlette.middleware.cors import CORSMiddleware
+                app = CORSMiddleware(
+                    mcp_logging_middleware,  # Use logging middleware instead of direct router
+                    allow_origins=["*"],
+                    allow_methods=["GET", "POST", "OPTIONS"],
+                    allow_headers=["*"],
+                    allow_credentials=True,
                 )
                 
                 logger.info(f"StreamableHTTP server configured")
