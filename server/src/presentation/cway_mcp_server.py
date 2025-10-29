@@ -1260,6 +1260,7 @@ class CwayMCPServer:
                     if scope["type"] == "http" and scope["path"] == "/sse":
                         # Capture request body
                         body_parts = []
+                        request_start_time = asyncio.get_event_loop().time()
                         
                         async def logging_receive():
                             message = await receive()
@@ -1272,16 +1273,57 @@ class CwayMCPServer:
                                         import json as json_module
                                         request_data = json_module.loads(body.decode())
                                         method = request_data.get("method", "unknown")
-                                        req_id = request_data.get("id", "unknown")
+                                        req_id = str(request_data.get("id", "unknown"))
+                                        
+                                        # Log to console
                                         logger.info(f"📨 MCP Request: method={method}, id={req_id}")
                                         if "params" in request_data:
                                             logger.info(f"   Parameters: {json_module.dumps(request_data['params'], indent=2)}")
+                                        
+                                        # Emit flow event to dashboard
+                                        from src.utils.websocket_server import emit_flow_to_dashboard
+                                        await emit_flow_to_dashboard(
+                                            request_id=req_id,
+                                            step="mcp-request",
+                                            source="mcp-client",
+                                            target="mcp-server",
+                                            operation=method,
+                                            status="pending"
+                                        )
                                     except Exception as e:
                                         logger.debug(f"Could not parse MCP request: {e}")
                             return message
                         
-                        # Call the actual handler with logging receive
-                        await route_handler(scope, logging_receive, send)
+                        # Capture response to emit success flow event
+                        async def logging_send(message):
+                            if message["type"] == "http.response.body":
+                                # Calculate duration
+                                duration_ms = int((asyncio.get_event_loop().time() - request_start_time) * 1000)
+                                
+                                # Emit success flow event
+                                if body_parts:
+                                    try:
+                                        import json as json_module
+                                        request_data = json_module.loads(body_parts[0].decode())
+                                        req_id = str(request_data.get("id", "unknown"))
+                                        method = request_data.get("method", "unknown")
+                                        
+                                        from src.utils.websocket_server import emit_flow_to_dashboard
+                                        await emit_flow_to_dashboard(
+                                            request_id=req_id,
+                                            step="mcp-response",
+                                            source="mcp-server",
+                                            target="response",
+                                            operation=f"{method} completed",
+                                            status="success",
+                                            duration=duration_ms
+                                        )
+                                    except:
+                                        pass
+                            await send(message)
+                        
+                        # Call the actual handler with logging receive and send
+                        await route_handler(scope, logging_receive, logging_send)
                     else:
                         await route_handler(scope, receive, send)
                 
