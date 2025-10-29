@@ -756,6 +756,164 @@ class CwayMCPServer:
                         },
                         "required": ["job_id"]
                     }
+                ),
+                Tool(
+                    name="get_login_info",
+                    description="Get current user login information",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                ),
+                Tool(
+                    name="search_users",
+                    description="Search for users by username",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search query for username (optional)"
+                            }
+                        },
+                        "required": []
+                    }
+                ),
+                Tool(
+                    name="search_projects",
+                    description="Search for projects",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search query (optional)"
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "description": "Maximum number of results (default: 10)",
+                                "default": 10
+                            }
+                        },
+                        "required": []
+                    }
+                ),
+                Tool(
+                    name="get_project_by_id",
+                    description="Get a regular project by ID (not planner project)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "project_id": {
+                                "type": "string",
+                                "description": "The UUID of the project"
+                            }
+                        },
+                        "required": ["project_id"]
+                    }
+                ),
+                Tool(
+                    name="create_user",
+                    description="Create a new user",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                                "description": "User email address"
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Username"
+                            },
+                            "first_name": {
+                                "type": "string",
+                                "description": "First name (optional)"
+                            },
+                            "last_name": {
+                                "type": "string",
+                                "description": "Last name (optional)"
+                            }
+                        },
+                        "required": ["email", "username"]
+                    }
+                ),
+                Tool(
+                    name="update_user_name",
+                    description="Update user's real name",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Username"
+                            },
+                            "first_name": {
+                                "type": "string",
+                                "description": "First name (optional)"
+                            },
+                            "last_name": {
+                                "type": "string",
+                                "description": "Last name (optional)"
+                            }
+                        },
+                        "required": ["username"]
+                    }
+                ),
+                Tool(
+                    name="delete_user",
+                    description="Delete a user",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Username of user to delete"
+                            }
+                        },
+                        "required": ["username"]
+                    }
+                ),
+                Tool(
+                    name="create_project",
+                    description="Create a new project",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Project name"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Project description (optional)"
+                            }
+                        },
+                        "required": ["name"]
+                    }
+                ),
+                Tool(
+                    name="update_project",
+                    description="Update an existing project",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "project_id": {
+                                "type": "string",
+                                "description": "Project ID"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "New project name (optional)"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "New project description (optional)"
+                            }
+                        },
+                        "required": ["project_id"]
+                    }
                 )
             ]
             return ListToolsResult(tools=tools)
@@ -1149,6 +1307,94 @@ class CwayMCPServer:
                 return {"job_status": status}
             else:
                 return {"job_status": None, "message": "Job not found"}
+        
+        elif name == "get_login_info":
+            login_info = await self.system_repo.get_login_info()
+            return {"login_info": login_info}
+        
+        elif name == "search_users":
+            query = arguments.get("query")
+            users = await self.user_repo.search_users(query)
+            return {
+                "users": [
+                    {
+                        "id": u.id,
+                        "name": u.name,
+                        "username": u.username,
+                        "email": u.email,
+                        "firstName": u.firstName,
+                        "lastName": u.lastName,
+                        "enabled": u.enabled
+                    }
+                    for u in users
+                ]
+            }
+        
+        elif name == "search_projects":
+            query = arguments.get("query")
+            limit = arguments.get("limit", 10)
+            result = await self.project_repo.search_projects(query, limit)
+            return result
+        
+        elif name == "get_project_by_id":
+            project_id = arguments["project_id"]
+            project = await self.project_repo.get_project_by_id(project_id)
+            return {"project": project}
+        
+        elif name == "create_user":
+            email = arguments["email"]
+            username = arguments["username"]
+            first_name = arguments.get("first_name")
+            last_name = arguments.get("last_name")
+            user = await self.user_repo.create_user(email, username, first_name, last_name)
+            return {
+                "user": {
+                    "id": user.id,
+                    "name": user.name,
+                    "username": user.username,
+                    "email": user.email,
+                    "firstName": user.firstName,
+                    "lastName": user.lastName,
+                    "enabled": user.enabled
+                }
+            }
+        
+        elif name == "update_user_name":
+            username = arguments["username"]
+            first_name = arguments.get("first_name")
+            last_name = arguments.get("last_name")
+            user = await self.user_repo.update_user_name(username, first_name, last_name)
+            if user:
+                return {
+                    "user": {
+                        "id": user.id,
+                        "username": user.username,
+                        "firstName": user.firstName,
+                        "lastName": user.lastName,
+                        "name": user.name,
+                        "email": user.email,
+                        "enabled": user.enabled
+                    }
+                }
+            return {"user": None, "message": "User not found"}
+        
+        elif name == "delete_user":
+            username = arguments["username"]
+            success = await self.user_repo.delete_user(username)
+            return {"success": success}
+        
+        elif name == "create_project":
+            name_val = arguments["name"]
+            description = arguments.get("description")
+            project = await self.project_repo.create_project(name_val, description)
+            return {"project": project}
+        
+        elif name == "update_project":
+            project_id = arguments["project_id"]
+            name_val = arguments.get("name")
+            description = arguments.get("description")
+            project = await self.project_repo.update_project(project_id, name_val, description)
+            return {"project": project}
             
         else:
             raise ValueError(f"Unknown tool: {name}")
