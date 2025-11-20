@@ -190,10 +190,10 @@ class TestCwayMCPServerCore:
             
             result = await initialized_server._execute_tool("get_system_status", {})
         
-        assert "system_status" in result
-        assert result["system_status"]["connected"] is True
-        assert result["system_status"]["api_url"] == "https://api.cway.com"
-        assert result["system_status"]["login_info"]["id"] == "user-123"
+        assert "status" in result
+        assert result["connected"] is True
+        assert result["api_url"] == "https://api.cway.com"
+        assert result["login_info"]["id"] == "user-123"
     
     @pytest.mark.asyncio
     async def test_execute_tool_unknown_tool(self, initialized_server: CwayMCPServer) -> None:

@@ -10,7 +10,7 @@ from src.infrastructure.repositories import (
     _parse_datetime
 )
 from src.infrastructure.graphql_client import CwayGraphQLClient, CwayAPIError
-from src.domain.entities import Project, User
+from src.domain.entities import Project, User, ProjectState
 
 
 class TestParseDateTime:
@@ -91,7 +91,8 @@ class TestGraphQLProjectRepository:
         assert project.id == sample_project_data["id"]
         assert project.name == sample_project_data["name"]
         assert project.description == sample_project_data["description"]
-        assert project.status == sample_project_data["status"]
+        # Status is converted to enum
+        assert project.status == ProjectState.ACTIVE
         
         mock_client.execute_query.assert_called_once()
         query_arg = mock_client.execute_query.call_args[0][0]
@@ -127,7 +128,8 @@ class TestGraphQLProjectRepository:
         assert len(result) == 1
         project = result[0]
         assert project.description is None  # Should be None when missing
-        assert project.status == "ACTIVE"  # Should use default
+        # Status is converted to enum
+        assert project.status == ProjectState.ACTIVE
     
     @pytest.mark.asyncio
     async def test_get_all_api_error(self, repository: GraphQLProjectRepository, mock_client: AsyncMock) -> None:
@@ -256,7 +258,8 @@ class TestGraphQLProjectRepository:
         
         assert result.id == "proj-123"
         assert result.name == "Updated Project"
-        assert result.status == "INACTIVE"
+        # Status is converted to enum
+        assert result.status == ProjectState.INACTIVE
         
         mock_client.execute_mutation.assert_called_once()
         call_args = mock_client.execute_mutation.call_args

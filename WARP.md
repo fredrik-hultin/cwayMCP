@@ -17,6 +17,9 @@ The server follows CLEAN architecture with strict layer separation:
 
 ### Key Components
 - **MCP Server**: Python-based server implementing Model Context Protocol
+  - **stdio transport**: For Claude Desktop and similar clients
+  - **SSE transport**: For ChatGPT custom MCP connector
+- **REST API**: FastAPI-based REST API with OpenAPI documentation (for ChatGPT GPT custom actions, NOT MCP)
 - **GraphQL Client**: Async client for Cway API integration with connection pooling
 - **WebSocket Dashboard**: Real-time monitoring and logging system
 - **React Dashboard**: Modern TypeScript frontend with Framer Motion animations
@@ -27,6 +30,16 @@ The server follows CLEAN architecture with strict layer separation:
 ```bash
 # Start MCP server only
 cd server && python main.py --mode mcp
+
+# Start MCP server with SSE transport (for ChatGPT MCP connector)
+cd server && python main.py --mode sse
+# or
+cd server && python start_mcp_sse.py
+
+# Start REST API server (for ChatGPT GPT custom actions)
+cd server && python main.py --mode rest
+# or
+cd server && python start_rest_api.py
 
 # Start server with WebSocket dashboard
 cd server && python main.py --mode dashboard
@@ -163,6 +176,112 @@ Automatically runs on commit:
 - flake8 linting
 - mypy type checking
 - pytest test execution
+
+## REST API
+
+### Starting the REST API
+```bash
+# Start REST API server (default port: 8000)
+cd server && python main.py --mode rest
+
+# Access points:
+# - API Root: http://localhost:8000/
+# - Swagger UI: http://localhost:8000/docs
+# - ReDoc: http://localhost:8000/redoc
+# - OpenAPI Spec: http://localhost:8000/openapi.json
+# - Health Check: http://localhost:8000/health
+```
+
+### Available Endpoints
+
+#### Projects
+- `GET /api/projects` - List all projects
+- `GET /api/projects/{project_id}` - Get project by ID
+- `GET /api/projects/filter/active` - Get active projects
+- `GET /api/projects/filter/completed` - Get completed projects
+
+#### Users
+- `GET /api/users` - List all users
+- `GET /api/users/{user_id}` - Get user by ID
+- `GET /api/users/by-email/{email}` - Get user by email
+
+#### KPIs
+- `GET /api/kpis/dashboard` - Get comprehensive KPI dashboard
+- `GET /api/kpis/project-health` - Get project health scores
+- `GET /api/kpis/critical-projects` - Get projects requiring attention
+
+#### Temporal KPIs
+- `GET /api/temporal-kpis/dashboard?analysis_period_days=90` - Get temporal analysis
+- `GET /api/temporal-kpis/stagnation-alerts?min_urgency_score=5` - Get stagnation alerts
+
+#### System
+- `GET /api/system/status` - Get system status
+- `GET /health` - Health check (no auth required)
+
+### Authentication
+All API endpoints (except `/health`) require Bearer token authentication:
+```bash
+# Example with curl
+curl -H "Authorization: Bearer YOUR_CWAY_API_TOKEN" \
+  http://localhost:8000/api/projects
+
+# Example with httpie
+http GET localhost:8000/api/projects \
+  Authorization:"Bearer YOUR_CWAY_API_TOKEN"
+```
+
+### Export OpenAPI Spec
+```bash
+# Export OpenAPI specification for ChatGPT GPT integration
+cd server && python scripts/export_openapi.py
+
+# Output: server/openapi.json
+```
+
+## ChatGPT GPT Integration
+
+### Creating a ChatGPT GPT with Cway Actions
+
+1. **Export the OpenAPI spec**:
+   ```bash
+   cd server && python scripts/export_openapi.py
+   ```
+
+2. **Create or edit a GPT**:
+   - Go to https://chat.openai.com/gpts/editor
+   - Create new GPT or edit existing
+
+3. **Configure Actions**:
+   - Navigate to "Actions" section
+   - Click "Import from file" or paste JSON
+   - Upload `server/openapi.json`
+
+4. **Set up Authentication**:
+   - Type: **Bearer**
+   - Token: Your `CWAY_API_TOKEN` from `.env` file
+
+5. **Update Server URL** (if not localhost):
+   - Edit the `servers` section in OpenAPI spec
+   - Point to your deployed REST API URL
+
+6. **Example GPT Instructions**:
+   ```
+   You are a Cway project management assistant with access to the Cway API.
+   You can:
+   - List and search projects
+   - Get project details and status
+   - List users and find team members
+   - Monitor project health and identify risks
+   - Track stagnation and velocity trends
+   
+   Always provide clear, actionable insights from the data.
+   ```
+
+### Benefits of REST API + ChatGPT GPT
+- Natural language interface to Cway data
+- Custom GPT can analyze trends and provide insights
+- Shareable with team members (with appropriate auth)
+- Works with both local development and production APIs
 
 ## MCP Integration
 

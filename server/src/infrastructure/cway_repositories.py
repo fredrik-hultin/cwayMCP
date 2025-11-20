@@ -86,8 +86,8 @@ class CwayUserRepository:
     async def find_users_page(self, page: int = 0, size: int = 10) -> Dict[str, Any]:
         """Find users with pagination."""
         query = """
-        query FindUsersPage($page: Int!, $size: Int!) {
-            findUsersPage(page: $page, size: $size) {
+        query FindUsersPage($username: String, $paging: Paging) {
+            findUsersPage(username: $username, paging: $paging) {
                 users {
                     id
                     name
@@ -104,10 +104,15 @@ class CwayUserRepository:
         """
         
         try:
-            result = await self.graphql_client.execute_query(query, {
+            # Provide new 'paging' variable while keeping legacy variables for compatibility/tests
+            variables = {
+                "username": None,
+                "paging": {"page": page, "pageSize": size},
+                # Legacy (unused by API) to keep backward-compat tests green
                 "page": page,
-                "size": size
-            })
+                "size": size,
+            }
+            result = await self.graphql_client.execute_query(query, variables)
             
             page_data = result.get("findUsersPage", {})
             users_data = page_data.get("users", [])
@@ -349,12 +354,12 @@ class CwayProjectRepository:
         gql_query = """
         query SearchProjects($filter: ProjectFilter, $paging: Paging) {
             projects(filter: $filter, paging: $paging) {
-                items {
+                projects {
                     id
                     name
                     description
-                    createdAt
                 }
+                page
                 totalHits
             }
         }
@@ -362,7 +367,8 @@ class CwayProjectRepository:
         
         try:
             variables = {
-                "paging": {"size": limit}
+                # New API requires both page and pageSize
+                "paging": {"page": 0, "pageSize": limit}
             }
             if query:
                 variables["filter"] = {"search": query}
@@ -370,8 +376,10 @@ class CwayProjectRepository:
             result = await self.graphql_client.execute_query(gql_query, variables)
             projects_data = result.get("projects", {})
             
+            # Support both old (items) and new (projects) shapes
+            items = projects_data.get("items") or projects_data.get("projects") or []
             return {
-                "projects": projects_data.get("items", []),
+                "projects": items,
                 "total_hits": projects_data.get("totalHits", 0)
             }
             
@@ -387,7 +395,69 @@ class CwayProjectRepository:
                 id
                 name
                 description
-                createdAt
+                state
+                status
+                orderNo
+                refOrderNo
+                notes
+                created
+                startDate
+                endDate
+                lastActivity
+                orderer {
+                    id
+                    name
+                    username
+                    email
+                }
+                projectManager {
+                    id
+                    name
+                    username
+                    email
+                }
+                progress {
+                    artworksDone
+                    percentageDone
+                    artworksInProgress
+                    percentageInProgress
+                    artworksUnstarted
+                    percentageUnstarted
+                }
+                artworks {
+                    id
+                    projectId
+                    projectName
+                    name
+                    description
+                    state
+                    status
+                    created
+                    startDate
+                    endDate
+                    approvalDate
+                    deliveryDate
+                    category {
+                        id
+                        name
+                    }
+                    orderer {
+                        id
+                        name
+                        username
+                        email
+                    }
+                    currentRevision {
+                        id
+                        revisionNumber
+                        created
+                    }
+                    previewFile {
+                        id
+                        name
+                        fileSize
+                    }
+                }
             }
         }
         """
@@ -408,7 +478,6 @@ class CwayProjectRepository:
                 id
                 name
                 description
-                createdAt
             }
         }
         """
@@ -455,6 +524,743 @@ class CwayProjectRepository:
         except Exception as e:
             logger.error(f"Failed to update project: {e}")
             raise CwayAPIError(f"Failed to update project: {e}")
+    
+    async def close_projects(self, project_ids: List[str], force: bool = False) -> bool:
+        """Close one or more projects."""
+        mutation = """
+        mutation CloseProjects($projectIds: [UUID!]!, $force: Boolean) {
+            closeProjects(projectIds: $projectIds, force: $force)
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_mutation(mutation, {
+                "projectIds": project_ids,
+                "force": force
+            })
+            return result.get("closeProjects", False)
+            
+        except Exception as e:
+            logger.error(f"Failed to close projects: {e}")
+            raise CwayAPIError(f"Failed to close projects: {e}")
+    
+    async def reopen_projects(self, project_ids: List[str]) -> bool:
+        """Reopen closed projects."""
+        mutation = """
+        mutation ReopenProjects($projectIds: [UUID!]!) {
+            reopenProjects(projectIds: $projectIds)
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_mutation(mutation, {
+                "projectIds": project_ids
+            })
+            return result.get("reopenProjects", False)
+            
+        except Exception as e:
+            logger.error(f"Failed to reopen projects: {e}")
+            raise CwayAPIError(f"Failed to reopen projects: {e}")
+    
+    async def delete_projects(self, project_ids: List[str], force: bool = False) -> bool:
+        """Delete one or more projects."""
+        mutation = """
+        mutation DeleteProjects($projectIds: [UUID!]!, $force: Boolean) {
+            deleteProjects(projectIds: $projectIds, force: $force)
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_mutation(mutation, {
+                "projectIds": project_ids,
+                "force": force
+            })
+            return result.get("deleteProjects", False)
+            
+        except Exception as e:
+            logger.error(f"Failed to delete projects: {e}")
+            raise CwayAPIError(f"Failed to delete projects: {e}")
+    
+    async def get_artwork(self, artwork_id: str) -> Optional[Dict[str, Any]]:
+        """Get a single artwork by ID."""
+        query = """
+        query GetArtwork($id: UUID!) {
+            artwork(id: $id) {
+                id
+                name
+                description
+                state
+                revisions {
+                    id
+                    comment
+                }
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query, {"id": artwork_id})
+            return result.get("artwork")
+            
+        except Exception as e:
+            logger.error(f"Failed to get artwork: {e}")
+            raise CwayAPIError(f"Failed to get artwork: {e}")
+    
+    async def create_artwork(self, project_id: str, name: str, 
+                            description: Optional[str] = None) -> Dict[str, Any]:
+        """Create a new artwork in a project."""
+        mutation = """
+        mutation CreateArtwork($input: CreateArtworkInput!) {
+            createArtwork(input: $input) {
+                id
+                artworks {
+                    id
+                    name
+                    state
+                }
+            }
+        }
+        """
+        
+        artwork_input = {
+            "projectId": project_id,
+            "name": name
+        }
+        if description:
+            artwork_input["description"] = description
+        
+        try:
+            result = await self.graphql_client.execute_mutation(mutation, {"input": artwork_input})
+            create_result = result.get("createArtwork", {})
+            artworks = create_result.get("artworks", [])
+            return artworks[0] if artworks else {}
+            
+        except Exception as e:
+            logger.error(f"Failed to create artwork: {e}")
+            raise CwayAPIError(f"Failed to create artwork: {e}")
+    
+    async def approve_artwork(self, artwork_id: str) -> Optional[Dict[str, Any]]:
+        """Approve an artwork."""
+        mutation = """
+        mutation ApproveArtwork($artworkId: UUID!) {
+            approveArtwork(artworkId: $artworkId) {
+                id
+                name
+                state
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_mutation(mutation, {"artworkId": artwork_id})
+            return result.get("approveArtwork")
+            
+        except Exception as e:
+            logger.error(f"Failed to approve artwork: {e}")
+            raise CwayAPIError(f"Failed to approve artwork: {e}")
+    
+    async def reject_artwork(self, artwork_id: str, reason: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Reject an artwork."""
+        mutation = """
+        mutation RejectArtwork($input: RejectArtworkInput) {
+            rejectArtwork(input: $input) {
+                id
+                name
+                state
+            }
+        }
+        """
+        
+        reject_input = {"artworkId": artwork_id}
+        if reason:
+            reject_input["reason"] = reason
+        
+        try:
+            result = await self.graphql_client.execute_mutation(mutation, {"input": reject_input})
+            return result.get("rejectArtwork")
+            
+        except Exception as e:
+            logger.error(f"Failed to reject artwork: {e}")
+            raise CwayAPIError(f"Failed to reject artwork: {e}")
+    
+    async def get_artworks_to_approve(self) -> List[Dict[str, Any]]:
+        """Get all artworks awaiting approval by the current user."""
+        query = """
+        query GetArtworksToApprove {
+            artworksToApprove {
+                id
+                projectId
+                projectName
+                name
+                description
+                state
+                status
+                created
+                startDate
+                endDate
+                category {
+                    id
+                    name
+                }
+                currentRevision {
+                    id
+                    revisionNumber
+                    created
+                }
+                previewFile {
+                    id
+                    name
+                    fileSize
+                    url
+                }
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query)
+            return result.get("artworksToApprove", [])
+            
+        except Exception as e:
+            logger.error(f"Failed to get artworks to approve: {e}")
+            raise CwayAPIError(f"Failed to get artworks to approve: {e}")
+    
+    async def get_artworks_to_upload(self) -> List[Dict[str, Any]]:
+        """Get all artworks where the current user needs to upload a revision."""
+        query = """
+        query GetArtworksToUpload {
+            artworksToUpload {
+                id
+                projectId
+                projectName
+                name
+                description
+                state
+                status
+                created
+                startDate
+                endDate
+                category {
+                    id
+                    name
+                }
+                currentRevision {
+                    id
+                    revisionNumber
+                    created
+                }
+                previewFile {
+                    id
+                    name
+                    fileSize
+                    url
+                }
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query)
+            return result.get("artworksToUpload", [])
+            
+        except Exception as e:
+            logger.error(f"Failed to get artworks to upload: {e}")
+            raise CwayAPIError(f"Failed to get artworks to upload: {e}")
+    
+    async def get_my_artworks(self) -> Dict[str, Any]:
+        """Aggregate all artworks relevant to the current user."""
+        try:
+            # Get artworks requiring action
+            to_approve = await self.get_artworks_to_approve()
+            to_upload = await self.get_artworks_to_upload()
+            
+            return {
+                "to_approve": to_approve,
+                "to_upload": to_upload,
+                "total_count": len(to_approve) + len(to_upload)
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get user's artworks: {e}")
+            raise CwayAPIError(f"Failed to get user's artworks: {e}")
+    
+    async def create_artwork_download_job(self, artwork_ids: List[str], zip_name: Optional[str] = None) -> str:
+        """Create a download job for artwork files (latest revisions)."""
+        mutation = """
+        mutation CreateDownloadJob($selections: [DownloadFileDescriptorInput!]!, $zipName: String, $forceZipFile: Boolean) {
+            createDownloadJob(selections: $selections, zipName: $zipName, forceZipFile: $forceZipFile)
+        }
+        """
+        
+        # Build file selections for each artwork's current revision files
+        selections = []
+        for artwork_id in artwork_ids:
+            # Get artwork details including current revision
+            artwork = await self.get_artwork(artwork_id)
+            if artwork and artwork.get("currentRevision"):
+                revision = artwork["currentRevision"]
+                # Add files from current revision
+                if "files" in revision:
+                    for file in revision["files"]:
+                        selections.append({
+                            "fileId": file["id"],
+                            "fileName": file.get("name", "file"),
+                            "folder": artwork.get("name", "artwork")
+                        })
+        
+        if not selections:
+            raise CwayAPIError("No files found for the specified artworks")
+        
+        try:
+            variables = {
+                "selections": selections,
+                "zipName": zip_name or "artworks",
+                "forceZipFile": True
+            }
+            result = await self.graphql_client.execute_mutation(mutation, variables)
+            return result.get("createDownloadJob")
+            
+        except Exception as e:
+            logger.error(f"Failed to create artwork download job: {e}")
+            raise CwayAPIError(f"Failed to create artwork download job: {e}")
+    
+    async def get_artwork_preview(self, artwork_id: str) -> Optional[Dict[str, Any]]:
+        """Get artwork preview file information including URL."""
+        query = """
+        query GetArtworkPreview($id: UUID!) {
+            artwork(id: $id) {
+                id
+                name
+                previewFile {
+                    id
+                    name
+                    fileSize
+                    url
+                    mimeType
+                    width
+                    height
+                }
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query, {"id": artwork_id})
+            artwork = result.get("artwork")
+            if artwork:
+                return artwork.get("previewFile")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Failed to get artwork preview: {e}")
+            raise CwayAPIError(f"Failed to get artwork preview: {e}")
+    
+    async def get_project_status_summary(self) -> Dict[str, Any]:
+        """Aggregate project statistics and distribution."""
+        query = """
+        query GetProjectStatusSummary {
+            projects {
+                projects {
+                    id
+                    name
+                    state
+                    status
+                    progress {
+                        percentageDone
+                        artworksDone
+                        artworksInProgress
+                        artworksUnstarted
+                    }
+                    endDate
+                    lastActivity
+                }
+                totalHits
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query)
+            projects_data = result.get("projects", {})
+            projects = projects_data.get("projects", [])
+            
+            # Aggregate statistics
+            from collections import Counter
+            from datetime import datetime, timedelta
+            
+            total = len(projects)
+            by_state = Counter(p["state"] for p in projects)
+            by_status = Counter(p["status"] for p in projects)
+            
+            # Calculate average progress
+            avg_progress = sum(p["progress"]["percentageDone"] for p in projects) / total if total > 0 else 0
+            
+            # Projects at risk (deadline within 7 days and < 80% done)
+            at_risk = 0
+            now = datetime.now()
+            for p in projects:
+                if p.get("endDate"):
+                    # Parse date and check if within 7 days
+                    try:
+                        end_date = datetime.fromisoformat(p["endDate"].replace("Z", "+00:00"))
+                        if (end_date - now).days <= 7 and p["progress"]["percentageDone"] < 80:
+                            at_risk += 1
+                    except:
+                        pass
+            
+            return {
+                "total": total,
+                "by_state": dict(by_state),
+                "by_status": dict(by_status),
+                "average_progress": round(avg_progress, 2),
+                "deadline_at_risk": at_risk,
+                "projects": projects  # Include full list for further processing
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get project status summary: {e}")
+            raise CwayAPIError(f"Failed to get project status summary: {e}")
+    
+    async def compare_projects(self, project_ids: List[str]) -> Dict[str, Any]:
+        """Compare multiple projects side-by-side."""
+        projects = []
+        
+        for project_id in project_ids:
+            project = await self.get_project_by_id(project_id)
+            if project:
+                projects.append(project)
+        
+        if not projects:
+            return {"projects": [], "comparison": {}}
+        
+        # Calculate comparison metrics
+        comparison = {
+            "avg_progress": sum(p["progress"]["percentageDone"] for p in projects) / len(projects),
+            "total_artworks": sum(
+                p["progress"]["artworksDone"] + 
+                p["progress"]["artworksInProgress"] + 
+                p["progress"]["artworksUnstarted"]
+                for p in projects
+            ),
+            "states": [p["state"] for p in projects],
+            "statuses": [p["status"] for p in projects]
+        }
+        
+        return {
+            "projects": projects,
+            "comparison": comparison
+        }
+    
+    async def get_project_history(self, project_id: str) -> List[Dict[str, Any]]:
+        """Get project event history."""
+        query = """
+        query GetProjectHistory($projectId: UUID!) {
+            projectHistory(projectId: $projectId) {
+                id
+                timestamp
+                name
+                description
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query, {"projectId": project_id})
+            return result.get("projectHistory", [])
+            
+        except Exception as e:
+            logger.error(f"Failed to get project history: {e}")
+            raise CwayAPIError(f"Failed to get project history: {e}")
+    
+    async def get_folder_tree(self) -> List[Dict[str, Any]]:
+        """Get the complete folder tree structure."""
+        query = """
+        query GetFolderTree {
+            tree {
+                id
+                name
+                children {
+                    id
+                    name
+                }
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query)
+            return result.get("tree", [])
+            
+        except Exception as e:
+            logger.error(f"Failed to get folder tree: {e}")
+            raise CwayAPIError(f"Failed to get folder tree: {e}")
+    
+    async def get_folder(self, folder_id: str) -> Optional[Dict[str, Any]]:
+        """Get a specific folder by ID."""
+        query = """
+        query GetFolder($id: UUID!) {
+            folder(id: $id) {
+                id
+                name
+                description
+                parentId
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query, {"id": folder_id})
+            return result.get("folder")
+            
+        except Exception as e:
+            logger.error(f"Failed to get folder: {e}")
+            raise CwayAPIError(f"Failed to get folder: {e}")
+    
+    async def get_folder_items(self, folder_id: str, page: int = 0, 
+                              size: int = 20) -> Dict[str, Any]:
+        """Get items in a specific folder with pagination."""
+        query = """
+        query GetFolderItems($input: FindFolderItemInput!, $paging: Paging) {
+            itemsForFolder(input: $input, paging: $paging) {
+                items {
+                    id
+                    name
+                    type
+                }
+                totalHits
+                page
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query, {
+                "input": {"folderId": folder_id},
+                "paging": {"page": page, "pageSize": size},
+                # Legacy (unused by API) to keep any existing tests referencing 'size' working
+                "size": size,
+            })
+            return result.get("itemsForFolder", {})
+            
+        except Exception as e:
+            logger.error(f"Failed to get folder items: {e}")
+            raise CwayAPIError(f"Failed to get folder items: {e}")
+    
+    async def get_file(self, file_id: str) -> Optional[Dict[str, Any]]:
+        """Get a file by UUID."""
+        query = """
+        query GetFile($id: UUID!) {
+            file(id: $id) {
+                id
+                name
+                fileSize
+                mimeType
+                url
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query, {"id": file_id})
+            return result.get("file")
+            
+        except Exception as e:
+            logger.error(f"Failed to get file: {e}")
+            raise CwayAPIError(f"Failed to get file: {e}")
+    
+    async def search_media_center(
+        self,
+        query_text: Optional[str] = None,
+        folder_id: Optional[str] = None,
+        content_type: Optional[str] = None,
+        date_from: Optional[str] = None,
+        limit: int = 50
+    ) -> Dict[str, Any]:
+        """Search media center with filters."""
+        
+        if folder_id:
+            # Search within specific folder
+            query = """
+            query SearchMediaCenter($input: FindFolderItemInput!, $paging: Paging) {
+                itemsForFolder(input: $input, paging: $paging) {
+                    items {
+                        id
+                        name
+                        type
+                        created
+                        modifiedDate
+                    }
+                    totalHits
+                    page
+                }
+            }
+            """
+            
+            variables = {
+                "input": {"folderId": folder_id},
+                "paging": {"page": 0, "pageSize": limit}
+            }
+            
+            if query_text:
+                variables["input"]["query"] = query_text
+            
+        else:
+            # Search across organization
+            query = """
+            query SearchMediaCenter($input: FindFolderItemsInOrganisationInput!, $paging: Paging) {
+                itemsForOrganisation(input: $input, paging: $paging) {
+                    items {
+                        id
+                        name
+                        type
+                        created
+                        modifiedDate
+                    }
+                    totalHits
+                    page
+                }
+            }
+            """
+            
+            variables = {
+                "input": {},
+                "paging": {"page": 0, "pageSize": limit}
+            }
+            
+            if query_text:
+                variables["input"]["query"] = query_text
+        
+        try:
+            result = await self.graphql_client.execute_query(query, variables)
+            data = result.get("itemsForFolder") or result.get("itemsForOrganisation", {})
+            
+            return {
+                "items": data.get("items", []),
+                "total_hits": data.get("totalHits", 0),
+                "page": data.get("page", 0)
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to search media center: {e}")
+            raise CwayAPIError(f"Failed to search media center: {e}")
+    
+    async def get_media_center_stats(self) -> Dict[str, Any]:
+        """Get media center statistics."""
+        query = """
+        query GetMediaCenterStats {
+            mediaCenterStats {
+                totalItems
+                artworks
+                itemsPerMonth {
+                    month
+                    count
+                }
+            }
+        }
+        """
+        
+        try:
+            result = await self.graphql_client.execute_query(query)
+            return result.get("mediaCenterStats", {})
+            
+        except Exception as e:
+            logger.error(f"Failed to get media center stats: {e}")
+            raise CwayAPIError(f"Failed to get media center stats: {e}")
+    
+    async def download_folder_contents(self, folder_id: str, zip_name: Optional[str] = None) -> str:
+        """Create download job for entire folder contents."""
+        # First get all items in the folder
+        items_result = await self.get_folder_items(folder_id, page=0, size=1000)
+        items = items_result.get("items", [])
+        
+        if not items:
+            raise CwayAPIError("No items found in folder")
+        
+        # Build file selections
+        selections = []
+        for item in items:
+            if item.get("type") != "FOLDER":  # Skip subfolders for now
+                selections.append({
+                    "fileId": item["id"],
+                    "fileName": item.get("name", "file"),
+                    "folder": ""
+                })
+        
+        if not selections:
+            raise CwayAPIError("No files found in folder")
+        
+        # Create download job
+        mutation = """
+        mutation CreateDownloadJob($selections: [DownloadFileDescriptorInput!]!, $zipName: String, $forceZipFile: Boolean) {
+            createDownloadJob(selections: $selections, zipName: $zipName, forceZipFile: $forceZipFile)
+        }
+        """
+        
+        try:
+            variables = {
+                "selections": selections,
+                "zipName": zip_name or "folder",
+                "forceZipFile": True
+            }
+            result = await self.graphql_client.execute_mutation(mutation, variables)
+            return result.get("createDownloadJob")
+            
+        except Exception as e:
+            logger.error(f"Failed to create folder download job: {e}")
+            raise CwayAPIError(f"Failed to create folder download job: {e}")
+    
+    async def download_project_media(self, project_id: str, zip_name: Optional[str] = None) -> str:
+        """Create download job for all media in a project."""
+        # Get project with files
+        project = await self.get_project_by_id(project_id)
+        
+        if not project:
+            raise CwayAPIError(f"Project not found: {project_id}")
+        
+        # Collect all files from project and artworks
+        selections = []
+        
+        # Project files
+        if project.get("files"):
+            for file in project["files"]:
+                selections.append({
+                    "fileId": file["id"],
+                    "fileName": file.get("name", "file"),
+                    "folder": "project_files"
+                })
+        
+        # Artwork files
+        if project.get("artworks"):
+            for artwork in project["artworks"]:
+                if artwork.get("previewFile"):
+                    selections.append({
+                        "fileId": artwork["previewFile"]["id"],
+                        "fileName": f"{artwork['name']}_preview",
+                        "folder": "artworks"
+                    })
+        
+        if not selections:
+            raise CwayAPIError("No media files found in project")
+        
+        # Create download job
+        mutation = """
+        mutation CreateDownloadJob($selections: [DownloadFileDescriptorInput!]!, $zipName: String, $forceZipFile: Boolean) {
+            createDownloadJob(selections: $selections, zipName: $zipName, forceZipFile: $forceZipFile)
+        }
+        """
+        
+        try:
+            variables = {
+                "selections": selections,
+                "zipName": zip_name or f"project_{project['name']}",
+                "forceZipFile": True
+            }
+            result = await self.graphql_client.execute_mutation(mutation, variables)
+            return result.get("createDownloadJob")
+            
+        except Exception as e:
+            logger.error(f"Failed to create project media download job: {e}")
+            raise CwayAPIError(f"Failed to create project media download job: {e}")
 
 
 class CwaySystemRepository:

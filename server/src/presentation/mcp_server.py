@@ -20,11 +20,18 @@ from config.settings import settings
 from ..infrastructure.graphql_client import CwayGraphQLClient, CwayAPIError
 from ..infrastructure.repositories import GraphQLProjectRepository, GraphQLUserRepository
 from ..application.use_cases import ProjectUseCases, UserUseCases
+from .formatters import ResourceFormatter
 
 
 # Set up logging - redirect to file to avoid interfering with stdio protocol
 import sys
-log_file = "/Users/fredrik.hultin/Developer/cwayMCP/server/logs/mcp_server.log"
+from pathlib import Path
+
+# Ensure log directory exists
+log_dir = Path(settings.log_dir)
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / "mcp_server.log"
+
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -85,30 +92,18 @@ class CwayMCPServer:
             try:
                 if uri == "cway://projects":
                     projects = await self.project_use_cases.list_projects()
-                    content = "\n".join([
-                        f"Project: {p.name} (ID: {p.id})\n"
-                        f"  Status: {p.status}\n"
-                        f"  Description: {p.description or 'N/A'}\n"
-                        f"  Created: {p.created_at}\n"
-                        for p in projects
-                    ])
+                    content = ResourceFormatter.format_projects(projects)
                     
                 elif uri == "cway://users":
                     users = await self.user_use_cases.list_users()
-                    content = "\n".join([
-                        f"User: {u.name or u.email} (ID: {u.id})\n"
-                        f"  Email: {u.email}\n"
-                        f"  Role: {u.role}\n"
-                        f"  Created: {u.created_at}\n"
-                        for u in users
-                    ])
+                    content = ResourceFormatter.format_users(users)
                     
                 elif uri == "cway://schema":
                     schema = await self.graphql_client.get_schema()
-                    content = str(schema) if schema else "Schema not available"
+                    content = ResourceFormatter.format_schema(schema)
                     
                 else:
-                    content = f"Resource not found: {uri}"
+                    content = ResourceFormatter.format_not_found(uri)
                     
                 return ReadResourceResult(
                     contents=[TextContent(type="text", text=content)]
@@ -117,7 +112,7 @@ class CwayMCPServer:
             except Exception as e:
                 logger.error(f"Error reading resource {uri}: {e}")
                 return ReadResourceResult(
-                    contents=[TextContent(type="text", text=f"Error: {e}")]
+                    contents=[TextContent(type="text", text=ResourceFormatter.format_error(e, f"reading resource {uri}"))]
                 )
                 
         @self.server.list_tools()
@@ -163,9 +158,9 @@ class CwayMCPServer:
                             },
                             "status": {
                                 "type": "string",
-                                "enum": ["active", "inactive", "archived"],
+                                "enum": ["ACTIVE", "INACTIVE", "COMPLETED", "CANCELLED", "PLANNED", "IN_PROGRESS", "DELIVERED", "ARCHIVED"],
                                 "description": "The status of the project",
-                                "default": "active"
+                                "default": "ACTIVE"
                             }
                         },
                         "required": ["name"]
@@ -191,7 +186,7 @@ class CwayMCPServer:
                             },
                             "status": {
                                 "type": "string",
-                                "enum": ["active", "inactive", "archived"],
+                                "enum": ["ACTIVE", "INACTIVE", "COMPLETED", "CANCELLED", "PLANNED", "IN_PROGRESS", "DELIVERED", "ARCHIVED"],
                                 "description": "The new status of the project"
                             }
                         },

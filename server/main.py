@@ -1,73 +1,82 @@
 #!/usr/bin/env python3
 """
 Main entry point for the Cway MCP Server.
-This script provides different ways to run the server:
-- MCP server only
-- MCP server with dashboard
+Supports multiple modes: MCP stdio, REST API, or hybrid.
 """
 
-import argparse
-import asyncio
 import sys
+import argparse
+import logging
 from pathlib import Path
 
 # Add the src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from src.presentation.cway_mcp_server import main as mcp_main
+import uvicorn
+from config.settings import settings
+
+
+def run_mcp_mode():
+    """Run MCP server in stdio mode."""
+    from src.presentation.cway_mcp_server import main as mcp_main
+    mcp_main()
+
+
+def run_rest_mode():
+    """Run REST API server."""
+    logging.basicConfig(
+        level=getattr(logging, settings.log_level.upper()),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    logger = logging.getLogger(__name__)
+    logger.info("Starting Cway REST API server...")
+    logger.info(f"API Documentation: http://{settings.mcp_server_host}:{settings.mcp_server_port}/docs")
+    logger.info(f"OpenAPI Spec: http://{settings.mcp_server_host}:{settings.mcp_server_port}/openapi.json")
+    
+    uvicorn.run(
+        "src.presentation.rest_api:app",
+        host=settings.mcp_server_host,
+        port=settings.mcp_server_port,
+        reload=settings.debug,
+        log_level=settings.log_level.lower()
+    )
+
+
+def run_sse_mode():
+    """Run SSE server for ChatGPT integration."""
+    from start_mcp_sse import main as sse_main
+    sse_main()
+
+
+def run_dashboard_mode():
+    """Run with WebSocket dashboard."""
+    from start_server_with_dashboard import main as dashboard_main
+    dashboard_main()
 
 
 def main():
-    """Main entry point with command line argument parsing."""
-    parser = argparse.ArgumentParser(description="Cway MCP Server")
+    """Main entry point with mode selection."""
+    parser = argparse.ArgumentParser(
+        description="Cway MCP Server - Multiple modes available"
+    )
     parser.add_argument(
         "--mode",
-        choices=["mcp", "sse", "dashboard"],
+        choices=["mcp", "rest", "sse", "dashboard"],
         default="mcp",
-        help="Server mode: 'mcp' for stdio MCP server, 'sse' for persistent SSE server, 'dashboard' for server with dashboard"
-    )
-    parser.add_argument(
-        "--host",
-        default="localhost",
-        help="Host to bind the server to (default: localhost)"
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Port to bind the MCP server to (default: 8000)"
-    )
-    parser.add_argument(
-        "--dashboard-port",
-        type=int,
-        default=8080,
-        help="Port for the WebSocket dashboard server (default: 8080)"
-    )
-    parser.add_argument(
-        "--with-dashboard",
-        action="store_true",
-        help="Start WebSocket dashboard alongside SSE server"
+        help="Server mode: mcp (stdio), rest (API), sse (ChatGPT), or dashboard (with WebSocket)"
     )
     
     args = parser.parse_args()
     
-    if args.mode == "dashboard":
-        # Import here to avoid loading dashboard dependencies if not needed
-        from start_server_with_dashboard import main as dashboard_main
-        asyncio.run(dashboard_main())
+    if args.mode == "mcp":
+        run_mcp_mode()
+    elif args.mode == "rest":
+        run_rest_mode()
     elif args.mode == "sse":
-        # Run MCP server with SSE transport (persistent)
-        from src.presentation.cway_mcp_server import CwayMCPServer
-        server = CwayMCPServer()
-        asyncio.run(server.run_sse(
-            host=args.host, 
-            port=args.port, 
-            with_dashboard=args.with_dashboard,
-            dashboard_port=args.dashboard_port
-        ))
-    else:
-        # Run MCP server with stdio (for Warp stdio mode)
-        mcp_main()
+        run_sse_mode()
+    elif args.mode == "dashboard":
+        run_dashboard_mode()
 
 
 if __name__ == "__main__":

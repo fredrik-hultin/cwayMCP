@@ -12,6 +12,7 @@ from graphql import DocumentNode
 
 from config.settings import settings
 from ..utils.logging_config import log_api_call, log_performance, log_request_flow
+from .auth import TokenProvider, OAuth2TokenProvider, StaticTokenProvider
 
 
 logger = logging.getLogger(__name__)
@@ -20,18 +21,58 @@ logger = logging.getLogger(__name__)
 class CwayGraphQLClient:
     """GraphQL client for Cway API with bearer token authentication."""
     
-    def __init__(self, api_url: Optional[str] = None, api_token: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        api_url: Optional[str] = None,
+        api_token: Optional[str] = None,
+        token_provider: Optional[TokenProvider] = None,
+    ) -> None:
         """
         Initialize the GraphQL client.
         
         Args:
             api_url: GraphQL endpoint URL (defaults to settings)
-            api_token: Bearer token (defaults to settings)
+            api_token: Bearer token (deprecated, use token_provider)
+            token_provider: Token provider for authentication
         """
         self.api_url = api_url or settings.cway_api_url
-        self.api_token = api_token or settings.cway_api_token
         self._client: Optional[Client] = None
         
+        # Initialize token provider
+        if token_provider:
+            self.token_provider = token_provider
+        elif api_token:
+            # Legacy static token support
+            self.token_provider = StaticTokenProvider(api_token)
+        else:
+            # Auto-configure based on settings
+            self.token_provider = self._create_token_provider_from_settings()
+        
+    def _create_token_provider_from_settings(self) -> TokenProvider:
+        """Create token provider based on settings configuration."""
+        if settings.auth_method == "oauth2":
+            if not settings.azure_tenant_id or not settings.azure_client_id:
+                raise ValueError(
+                    "OAuth2 authentication requires AZURE_TENANT_ID and AZURE_CLIENT_ID"
+                )
+            
+            logger.info("Initializing OAuth2 authentication")
+            return OAuth2TokenProvider(
+                tenant_id=settings.azure_tenant_id,
+                client_id=settings.azure_client_id,
+                client_secret=settings.azure_client_secret,
+                scope=settings.oauth2_scope,
+                use_device_code_flow=settings.use_device_code_flow,
+            )
+        else:
+            # Default to static token
+            if not settings.cway_api_token:
+                raise ValueError(
+                    "Static authentication requires CWAY_API_TOKEN in environment"
+                )
+            logger.info("Using static token authentication")
+            return StaticTokenProvider(settings.cway_api_token)
+    
     async def __aenter__(self) -> "CwayGraphQLClient":
         """Async context manager entry."""
         await self.connect()
@@ -47,8 +88,11 @@ class CwayGraphQLClient:
         log_request_flow("GraphQL Connection", f"Connecting to {self.api_url}")
         
         try:
+            # Get initial token
+            token = await self.token_provider.get_token()
+            
             headers = {
-                "Authorization": f"Bearer {self.api_token[:10]}..." if self.api_token else "None",  # Mask token for logging
+                "Authorization": f"Bearer {token[:10]}..." if token else "None",  # Mask token for logging
                 "Content-Type": "application/json",
                 "User-Agent": "Cway-MCP-Server/1.0.0"
             }
@@ -56,7 +100,7 @@ class CwayGraphQLClient:
             transport = AIOHTTPTransport(
                 url=self.api_url,
                 headers={
-                    "Authorization": f"Bearer {self.api_token}",  # Use full token for actual request
+                    "Authorization": f"Bearer {token}",  # Use full token for actual request
                     "Content-Type": "application/json",
                     "User-Agent": "Cway-MCP-Server/1.0.0"
                 },

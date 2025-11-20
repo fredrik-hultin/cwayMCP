@@ -291,6 +291,25 @@
         } ],
         "possibleTypes" : null
       }, {
+        "kind" : "ENUM",
+        "name" : "ApprovalMode",
+        "description" : null,
+        "fields" : null,
+        "inputFields" : null,
+        "interfaces" : null,
+        "enumValues" : [ {
+          "name" : "ALL_REQUIRED",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "ANY_MEMBER",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        } ],
+        "possibleTypes" : null
+      }, {
         "kind" : "OBJECT",
         "name" : "ApprovalStats",
         "description" : null,
@@ -967,6 +986,98 @@
                 "ofType" : {
                   "kind" : "OBJECT",
                   "name" : "ArtworkUser",
+                  "ofType" : null
+                }
+              }
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "teams",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "LIST",
+              "name" : null,
+              "ofType" : {
+                "kind" : "NON_NULL",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "OBJECT",
+                  "name" : "ArtworkUserTeam",
+                  "ofType" : null
+                }
+              }
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "teamApprovers",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "LIST",
+              "name" : null,
+              "ofType" : {
+                "kind" : "NON_NULL",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "OBJECT",
+                  "name" : "ArtworkUserTeam",
+                  "ofType" : null
+                }
+              }
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "teamReceivers",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "LIST",
+              "name" : null,
+              "ofType" : {
+                "kind" : "NON_NULL",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "OBJECT",
+                  "name" : "ArtworkUserTeam",
+                  "ofType" : null
+                }
+              }
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "teamSuppliers",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "LIST",
+              "name" : null,
+              "ofType" : {
+                "kind" : "NON_NULL",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "OBJECT",
+                  "name" : "ArtworkUserTeam",
                   "ofType" : null
                 }
               }
@@ -2332,6 +2443,45 @@
         "possibleTypes" : null
       }, {
         "kind" : "OBJECT",
+        "name" : "ArtworkTeamMember",
+        "description" : null,
+        "fields" : [ {
+          "name" : "user",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "OBJECT",
+              "name" : "User",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "admin",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        } ],
+        "inputFields" : null,
+        "interfaces" : [ ],
+        "enumValues" : null,
+        "possibleTypes" : null
+      }, {
+        "kind" : "OBJECT",
         "name" : "ArtworkUser",
         "description" : null,
         "fields" : [ {
@@ -2477,6 +2627,196 @@
             "kind" : "OBJECT",
             "name" : "Supplier",
             "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        } ],
+        "inputFields" : null,
+        "interfaces" : [ ],
+        "enumValues" : null,
+        "possibleTypes" : null
+      }, {
+        "kind" : "OBJECT",
+        "name" : "ArtworkUserTeam",
+        "description" : null,
+        "fields" : [ {
+          "name" : "id",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "UUID",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "sourceTeamId",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "UUID",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "name",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "String",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "description",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "String",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "members",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "LIST",
+              "name" : null,
+              "ofType" : {
+                "kind" : "NON_NULL",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "OBJECT",
+                  "name" : "ArtworkTeamMember",
+                  "ofType" : null
+                }
+              }
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "approvalMode",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "ENUM",
+              "name" : "ApprovalMode",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "isApprover",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "isReceiver",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "isSupplier",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "memberApprovals",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "LIST",
+              "name" : null,
+              "ofType" : {
+                "kind" : "NON_NULL",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "OBJECT",
+                  "name" : "TeamMemberApproval",
+                  "ofType" : null
+                }
+              }
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "approvalState",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "ENUM",
+              "name" : "TeamApprovalState",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
@@ -8661,7 +9001,7 @@
         "description" : null,
         "fields" : [ {
           "name" : "setDatesOnProject",
-          "description" : null,
+          "description" : "Set or update the start and end dates for a project.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -8707,7 +9047,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setDatesOnArtworks",
-          "description" : null,
+          "description" : "Set or update the start and end dates for multiple artworks within a project.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -8774,7 +9114,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createUser",
-          "description" : null,
+          "description" : "Create a new user account within an organisation. Email invitation will be sent.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -8790,15 +9130,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "User",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "createUsersFromEmailString",
-          "description" : null,
+          "description" : "Create multiple users from a list of email addresses. Sends invitations to all valid addresses.",
           "args" : [ {
             "name" : "emails",
             "description" : null,
@@ -8834,7 +9178,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setOwnUserRealName",
-          "description" : "Simple mutation to set the actual name of the user",
+          "description" : "Update the current user's first and last name.",
           "args" : [ {
             "name" : "firstName",
             "description" : null,
@@ -8855,15 +9199,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "User",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "updateUserAccountInfo",
-          "description" : null,
+          "description" : "Update the current user's account information including address, phone, and work details.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -8882,8 +9230,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "User",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -8891,7 +9239,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setUserRealName",
-          "description" : "Only admin",
+          "description" : "Admin only - Update another user's first and last name.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -8925,15 +9273,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "User",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "setAvatar",
-          "description" : null,
+          "description" : "Upload and set an avatar image for the current user.",
           "args" : [ {
             "name" : "fileId",
             "description" : null,
@@ -8961,7 +9313,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteUsers",
-          "description" : "organisationid is optional. Defaults to current.",
+          "description" : "Admin only - Delete users from an organisation. Removes access but preserves data.",
           "args" : [ {
             "name" : "usernames",
             "description" : null,
@@ -9002,7 +9354,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeOwnPassword",
-          "description" : "Change own password",
+          "description" : "Change the current user's password. Requires providing the old password for verification.",
           "args" : [ {
             "name" : "password",
             "description" : null,
@@ -9039,7 +9391,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeOwnEmail",
-          "description" : "Requests email change. Sends a verification email to the new email address",
+          "description" : "Request an email address change for the current user. Sends verification email to new address.",
           "args" : [ {
             "name" : "newEmail",
             "description" : null,
@@ -9063,7 +9415,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changePassword",
-          "description" : "Change password for user. Only admin can change other users",
+          "description" : "Admin only - Change a user's password without requiring the old password.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -9100,14 +9452,14 @@
           "deprecationReason" : null
         }, {
           "name" : "consentToGeneralTerms",
-          "description" : null,
+          "description" : "Accept the general terms and conditions for the current user.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "User",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -9115,7 +9467,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setPermissionGroupForUsers",
-          "description" : "organisationid is optional. Defaults to current.",
+          "description" : "Admin only - Assign users to a permission group, controlling their access level and capabilities.",
           "args" : [ {
             "name" : "usernames",
             "description" : null,
@@ -9164,24 +9516,16 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "LIST",
-              "name" : null,
-              "ofType" : {
-                "kind" : "NON_NULL",
-                "name" : null,
-                "ofType" : {
-                  "kind" : "OBJECT",
-                  "name" : "User",
-                  "ofType" : null
-                }
-              }
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
             }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "setUserEmail",
-          "description" : "admin only",
+          "description" : "Admin only - Change a user's email address directly without verification.",
           "args" : [ {
             "name" : "oldEmail",
             "description" : null,
@@ -9210,15 +9554,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "User",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "setEarlyAccess",
-          "description" : "admin only",
+          "description" : "Admin only - Grant or revoke early access program features for a user.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -9247,15 +9595,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "User",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "setFtpPassword",
-          "description" : "admin only",
+          "description" : "Admin only - Set FTP password for a user to enable file transfers.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -9296,7 +9648,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createFileDownloadJob",
-          "description" : null,
+          "description" : "Create a download job for a single file. Returns job ID for download from file service. Optionally package as zip.",
           "args" : [ {
             "name" : "fileId",
             "description" : null,
@@ -9351,7 +9703,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createDownloadJob",
-          "description" : null,
+          "description" : "Create a download job for multiple files with custom folder structure. Returns job ID for download from file service.",
           "args" : [ {
             "name" : "selections",
             "description" : null,
@@ -9405,7 +9757,27 @@
           "deprecationReason" : null
         }, {
           "name" : "reRenderFile",
-          "description" : null,
+          "description" : "Trigger re-rendering of a file (regenerates tiles, previews, and metadata).",
+          "args" : [ {
+            "name" : "fileId",
+            "description" : null,
+            "type" : {
+              "kind" : "SCALAR",
+              "name" : "UUID",
+              "ofType" : null
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Boolean",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "reRenderColorSeparation",
+          "description" : "Trigger color separation re-rendering for a PDF file.",
           "args" : [ {
             "name" : "fileId",
             "description" : null,
@@ -9425,7 +9797,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteBarcode",
-          "description" : null,
+          "description" : "Delete a detected barcode from a file.",
           "args" : [ {
             "name" : "fileId",
             "description" : null,
@@ -9454,15 +9826,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "File",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "modifyBarcode",
-          "description" : null,
+          "description" : "Modify the position or boundaries of a detected barcode on a file.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -9478,15 +9854,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "File",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "createPrintSpecification",
-          "description" : null,
+          "description" : "Create a new print specification with default values. Returns the created specification's ID.",
           "args" : [ {
             "name" : "name",
             "description" : null,
@@ -9514,7 +9894,7 @@
           "deprecationReason" : null
         }, {
           "name" : "requestUpdateForPrintSpecification",
-          "description" : null,
+          "description" : "Request an update form for a print specification, optionally sending it to a specific email address.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -9551,7 +9931,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updatePrintSpecification",
-          "description" : null,
+          "description" : "Update an existing print specification with new packaging, print, decor, or instruction details.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -9579,7 +9959,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deletePrintSpecification",
-          "description" : null,
+          "description" : "Delete a print specification.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -9607,7 +9987,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeShares",
-          "description" : null,
+          "description" : "Delete one or more shares, removing access for recipients.",
           "args" : [ {
             "name" : "shareIds",
             "description" : null,
@@ -9643,7 +10023,7 @@
           "deprecationReason" : null
         }, {
           "name" : "markShareAsRead",
-          "description" : null,
+          "description" : "Mark a share as read by the current user.",
           "args" : [ {
             "name" : "shareId",
             "description" : null,
@@ -9662,8 +10042,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Share",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -9671,7 +10051,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createShare",
-          "description" : null,
+          "description" : "Create a share and send it to specified email addresses. Recipients must have accounts to access.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -9699,7 +10079,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createAnonymousShare",
-          "description" : null,
+          "description" : "Create an anonymous share that can be accessed via a public link without requiring an account.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -9727,7 +10107,7 @@
           "deprecationReason" : null
         }, {
           "name" : "markAllSharesAsRead",
-          "description" : null,
+          "description" : "Mark all shares received by the current user as read.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -9742,7 +10122,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createHubSpotContactIfMissing",
-          "description" : null,
+          "description" : "System admin only - Create a HubSpot contact for a user if they don't already exist in CRM.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -9770,7 +10150,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createHubSpotContactForAllUsers",
-          "description" : null,
+          "description" : "System admin only - Create HubSpot contacts for all users in the system.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -9785,7 +10165,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateHubSpotContactToCustomer",
-          "description" : null,
+          "description" : "System admin only - Update a HubSpot contact's lifecycle stage to customer.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -9813,7 +10193,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateAllHubSpotContactsToCustomer",
-          "description" : null,
+          "description" : "System admin only - Update all HubSpot contacts' lifecycle stage to customer.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -9828,7 +10208,7 @@
           "deprecationReason" : null
         }, {
           "name" : "reindexShare",
-          "description" : null,
+          "description" : "System admin only - Reindex a share in the search system.",
           "args" : [ {
             "name" : "shareId",
             "description" : null,
@@ -9856,7 +10236,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateOrganisationBaseInformation",
-          "description" : null,
+          "description" : "Admin only - Update organisation name and description.",
           "args" : [ {
             "name" : "organisationId",
             "description" : null,
@@ -9897,8 +10277,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -9906,7 +10286,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setOrganisationLogo",
-          "description" : null,
+          "description" : "Admin only - Set the organisation's logo image.",
           "args" : [ {
             "name" : "organisationId",
             "description" : null,
@@ -9947,7 +10327,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createArtworkCategory",
-          "description" : null,
+          "description" : "Create a new artwork category for organizing artworks within the organisation.",
           "args" : [ {
             "name" : "name",
             "description" : null,
@@ -9975,8 +10355,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -9984,7 +10364,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeNameAndDescriptionOfCategory",
-          "description" : null,
+          "description" : "Update the name and description of an existing artwork category.",
           "args" : [ {
             "name" : "categoryId",
             "description" : null,
@@ -10029,8 +10409,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -10038,7 +10418,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setArtworkCategoryAsDefault",
-          "description" : null,
+          "description" : "Set an artwork category as the default for new artworks.",
           "args" : [ {
             "name" : "categoryId",
             "description" : null,
@@ -10057,8 +10437,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -10066,7 +10446,7 @@
           "deprecationReason" : null
         }, {
           "name" : "archiveArtworkCategories",
-          "description" : null,
+          "description" : "Archive artwork categories (hide them but preserve existing usage).",
           "args" : [ {
             "name" : "categoryIds",
             "description" : null,
@@ -10093,8 +10473,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -10102,7 +10482,7 @@
           "deprecationReason" : null
         }, {
           "name" : "unArchiveArtworkCategories",
-          "description" : null,
+          "description" : "Restore archived artwork categories.",
           "args" : [ {
             "name" : "categoryIds",
             "description" : null,
@@ -10129,8 +10509,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -10138,7 +10518,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deactivateOrganisations",
-          "description" : "Admin only",
+          "description" : "System admin only - Deactivate organisations, preventing access to the system.",
           "args" : [ {
             "name" : "organisationIds",
             "description" : null,
@@ -10174,7 +10554,7 @@
           "deprecationReason" : null
         }, {
           "name" : "activateOrganisations",
-          "description" : "Admin only",
+          "description" : "System admin only - Reactivate previously deactivated organisations.",
           "args" : [ {
             "name" : "organisationIds",
             "description" : null,
@@ -10210,7 +10590,7 @@
           "deprecationReason" : null
         }, {
           "name" : "startSubscriptionPaymentFlow",
-          "description" : null,
+          "description" : "Start the payment flow for a subscription. Returns a URL to Stripe checkout.",
           "args" : [ {
             "name" : "productId",
             "description" : null,
@@ -10238,7 +10618,7 @@
           "deprecationReason" : null
         }, {
           "name" : "cancelSubscription",
-          "description" : null,
+          "description" : "Cancel the current subscription. Access continues until period end.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -10253,7 +10633,7 @@
           "deprecationReason" : null
         }, {
           "name" : "endTrial",
-          "description" : null,
+          "description" : "End trial period early and require subscription payment.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -10268,7 +10648,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeSubscription",
-          "description" : null,
+          "description" : "Change to a different subscription plan. Prorates charges/credits.",
           "args" : [ {
             "name" : "productId",
             "description" : null,
@@ -10296,7 +10676,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updatePaymentMethod",
-          "description" : "Returns a url to update your payment methods at Stripe",
+          "description" : "Get a URL to Stripe portal for updating payment methods.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -10311,7 +10691,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setDesktopTheme",
-          "description" : null,
+          "description" : "Customize the desktop application theme colors and wallpaper for the organisation.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -10326,8 +10706,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -10335,7 +10715,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createUserTeam",
-          "description" : "teamId is optional, if not set an id will be generated",
+          "description" : "Create a new user team for organizing users. Team ID will be generated if not provided.",
           "args" : [ {
             "name" : "teamId",
             "description" : null,
@@ -10371,6 +10751,15 @@
               }
             },
             "defaultValue" : null
+          }, {
+            "name" : "approvalMode",
+            "description" : null,
+            "type" : {
+              "kind" : "ENUM",
+              "name" : "ApprovalMode",
+              "ofType" : null
+            },
+            "defaultValue" : null
           } ],
           "type" : {
             "kind" : "NON_NULL",
@@ -10385,7 +10774,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setUserTeamNameAndDescription",
-          "description" : null,
+          "description" : "Update the name and description of a user team.",
           "args" : [ {
             "name" : "teamId",
             "description" : null,
@@ -10435,7 +10824,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteUserTeam",
-          "description" : "deprecated. Use deleteUserTeams(teamIds: [UUID!]!)",
+          "description" : "@deprecated. Use deleteUserTeams(teamIds: [UUID!]!)",
           "args" : [ {
             "name" : "teamId",
             "description" : null,
@@ -10463,7 +10852,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteUserTeams",
-          "description" : null,
+          "description" : "Delete one or more user teams.",
           "args" : [ {
             "name" : "teamIds",
             "description" : null,
@@ -10499,7 +10888,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addUsersToTeam",
-          "description" : null,
+          "description" : "Add users to a team with optional admin privileges.",
           "args" : [ {
             "name" : "teamId",
             "description" : null,
@@ -10548,7 +10937,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeUsersFromTeam",
-          "description" : null,
+          "description" : "Remove users from a team.",
           "args" : [ {
             "name" : "teamId",
             "description" : null,
@@ -10597,7 +10986,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setUserAsTeamAdmin",
-          "description" : null,
+          "description" : "Grant or revoke team admin privileges for a user.",
           "args" : [ {
             "name" : "teamId",
             "description" : null,
@@ -10650,8 +11039,49 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
+          "name" : "changeUserTeamApprovalMode",
+          "description" : "Change the approval mode for a team (ALL_REQUIRED or ANY_MEMBER).",
+          "args" : [ {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "approvalMode",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "ENUM",
+                "name" : "ApprovalMode",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
           "name" : "addApiKey",
-          "description" : null,
+          "description" : "Add an API key for programmatic access to the system with specified scopes.",
           "args" : [ {
             "name" : "token",
             "description" : null,
@@ -10709,7 +11139,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeApiKey",
-          "description" : null,
+          "description" : "Remove an API key, revoking its access.",
           "args" : [ {
             "name" : "keyId",
             "description" : null,
@@ -10737,7 +11167,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createEnterpriseSubscription",
-          "description" : "Admin only - Creates an enterprise subscription without requiring a payment flow",
+          "description" : "System admin only - Create an enterprise subscription without payment flow for manual billing.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -10752,7 +11182,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createWebhook",
-          "description" : null,
+          "description" : "Create a webhook to receive event notifications at a specified URL.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -10780,7 +11210,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateWebhook",
-          "description" : null,
+          "description" : "Update an existing webhook configuration.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -10808,7 +11238,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeWebhook",
-          "description" : null,
+          "description" : "Remove a webhook, stopping event notifications.",
           "args" : [ {
             "name" : "webhookId",
             "description" : null,
@@ -10836,7 +11266,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setCommunicationSettings",
-          "description" : null,
+          "description" : "Update communication settings for the organisation, such as default email notification preferences.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -10855,8 +11285,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Organisation",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -10864,7 +11294,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createFolder",
-          "description" : null,
+          "description" : "Create a new subfolder within an existing mediacenter folder.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -10892,7 +11322,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createRootFolder",
-          "description" : null,
+          "description" : "Create a new root-level folder in the mediacenter. Requires special permissions.",
           "args" : [ {
             "name" : "name",
             "description" : null,
@@ -10920,7 +11350,7 @@
           "deprecationReason" : null
         }, {
           "name" : "renameFolder",
-          "description" : null,
+          "description" : "Rename a mediacenter folder.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -10952,8 +11382,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Folder",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -10961,7 +11391,7 @@
           "deprecationReason" : null
         }, {
           "name" : "moveFolder",
-          "description" : null,
+          "description" : "Move a mediacenter folder to a new parent location. Can specify position relative to target.",
           "args" : [ {
             "name" : "sourceFolderId",
             "description" : null,
@@ -11020,7 +11450,7 @@
           "deprecationReason" : null
         }, {
           "name" : "copyFolder",
-          "description" : null,
+          "description" : "Copy a mediacenter folder and all its contents to a new location.",
           "args" : [ {
             "name" : "sourceFolderId",
             "description" : null,
@@ -11061,7 +11491,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteFolder",
-          "description" : null,
+          "description" : "Delete a mediacenter folder and all its contents. Use with caution.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11089,7 +11519,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addUserToFolder",
-          "description" : null,
+          "description" : "Grant a user access to a mediacenter folder with specific permissions (write, manage, share, download).",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11139,7 +11569,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeFolderUserPermission",
-          "description" : null,
+          "description" : "Change the permissions for a user who already has access to a mediacenter folder.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11193,7 +11623,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeUserFromFolder",
-          "description" : null,
+          "description" : "Remove a user's access to a mediacenter folder.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11234,7 +11664,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addArtworkToFolder",
-          "description" : null,
+          "description" : "Add a mediacenter artwork to a folder (creates a link/reference).",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11275,7 +11705,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addFileToFolder",
-          "description" : null,
+          "description" : "Add a file to a mediacenter folder.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11316,7 +11746,7 @@
           "deprecationReason" : null
         }, {
           "name" : "obsoleteFolderItem",
-          "description" : null,
+          "description" : "Mark a mediacenter item (artwork or file) as obsolete without deleting it.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11348,8 +11778,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "UNION",
-              "name" : "FolderItem",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -11357,7 +11787,7 @@
           "deprecationReason" : null
         }, {
           "name" : "unObsoleteFolderItem",
-          "description" : null,
+          "description" : "Restore a mediacenter item from obsolete status.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11389,8 +11819,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "UNION",
-              "name" : "FolderItem",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -11398,7 +11828,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeFolderItemName",
-          "description" : null,
+          "description" : "Rename a mediacenter item (artwork or file).",
           "args" : [ {
             "name" : "folderItemId",
             "description" : null,
@@ -11430,8 +11860,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "UNION",
-              "name" : "FolderItem",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -11439,7 +11869,7 @@
           "deprecationReason" : null
         }, {
           "name" : "moveFolderItems",
-          "description" : null,
+          "description" : "Move mediacenter items from one folder to another.",
           "args" : [ {
             "name" : "sourceFolderId",
             "description" : null,
@@ -11501,7 +11931,7 @@
           "deprecationReason" : null
         }, {
           "name" : "copyFolderItems",
-          "description" : null,
+          "description" : "Copy mediacenter items to another folder.",
           "args" : [ {
             "name" : "sourceFolderId",
             "description" : null,
@@ -11563,7 +11993,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeFolderItem",
-          "description" : null,
+          "description" : "Remove a mediacenter item from a folder (deletes the item).",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -11600,7 +12030,7 @@
           "deprecationReason" : null
         }, {
           "name" : "commentMediaCenterArtwork",
-          "description" : null,
+          "description" : "@deprecated(reason: \"Use commentMediaCenterArtworks instead\")",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -11619,8 +12049,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "MediaCenterArtwork",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -11628,7 +12058,7 @@
           "deprecationReason" : "Use commentMediaCenterArtworks instead"
         }, {
           "name" : "commentMediaCenterArtworks",
-          "description" : null,
+          "description" : "Add comments with optional annotations to mediacenter artworks. Comments can include markers and attached files.",
           "args" : [ {
             "name" : "comments",
             "description" : null,
@@ -11663,8 +12093,8 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
-          "name" : "inValidateComment",
-          "description" : null,
+          "name" : "inValidateMediaCenterArtworkComment",
+          "description" : "Mark a comment on a mediacenter artwork as invalid/deleted.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -11693,15 +12123,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "MediaCenterArtwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
-          "name" : "validateComment",
-          "description" : null,
+          "name" : "validateMediaCenterArtworkComment",
+          "description" : "Restore a previously invalidated comment on a mediacenter artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -11730,15 +12164,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "MediaCenterArtwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
-          "name" : "convertFileIntoArtwork",
-          "description" : null,
+          "name" : "convertFileIntoMediaCenterArtwork",
+          "description" : "Convert a file in the mediacenter into a mediacenter artwork with typed files (source, delivery, resource).",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -11762,7 +12200,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setMCArtworkFiles",
-          "description" : null,
+          "description" : "Set/replace all files on a mediacenter artwork with typed files (source, delivery, preview, resource).",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -11794,8 +12232,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "MediaCenterArtwork",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -11803,7 +12241,7 @@
           "deprecationReason" : null
         }, {
           "name" : "snapshotTree",
-          "description" : null,
+          "description" : "Create a snapshot of the mediacenter folder tree for backup/versioning purposes.",
           "args" : [ {
             "name" : "treeId",
             "description" : null,
@@ -11831,7 +12269,7 @@
           "deprecationReason" : null
         }, {
           "name" : "rollbackTree",
-          "description" : null,
+          "description" : "Rollback mediacenter folder tree to a specific event, undoing all changes after that point. Use with caution.",
           "args" : [ {
             "name" : "treeId",
             "description" : null,
@@ -11872,7 +12310,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeEventsFromTree",
-          "description" : null,
+          "description" : "Remove specific events from mediacenter folder tree history.",
           "args" : [ {
             "name" : "treeId",
             "description" : null,
@@ -11920,49 +12358,8 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
-          "name" : "setMediaCenterArtworkDraft",
-          "description" : "deprecated",
-          "args" : [ {
-            "name" : "artworkId",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "UUID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "draft",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "Boolean",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Boolean",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
           "name" : "setMediaCenterArtworksDraft",
-          "description" : null,
+          "description" : "Mark mediacenter artworks as draft (hidden from normal views) or published (visible).",
           "args" : [ {
             "name" : "artworkIds",
             "description" : null,
@@ -12011,7 +12408,7 @@
           "deprecationReason" : null
         }, {
           "name" : "saveMCArtworkPrintCoverage",
-          "description" : null,
+          "description" : "Save print coverage analysis data for a mediacenter artwork, including print and color canvas information.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -12092,7 +12489,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addArticleToMCArtwork",
-          "description" : null,
+          "description" : "Link an article/product to a mediacenter artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -12133,7 +12530,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeArticleFromMCArtwork",
-          "description" : null,
+          "description" : "Unlink an article/product from a mediacenter artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -12173,8 +12570,49 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
+          "name" : "changeMCArtworkCategory",
+          "description" : "Change the category of a mediacenter artwork. Cannot be used on artworks synchronized from projects.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "categoryId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
           "name" : "createArtwork",
-          "description" : null,
+          "description" : "Create a new project artwork within an existing project.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12193,8 +12631,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12202,7 +12640,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createArtworksFromFiles",
-          "description" : null,
+          "description" : "Create multiple project artworks from existing files. Each file becomes a separate artwork.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -12242,8 +12680,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12251,7 +12689,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createArtworksFromMediaCenterArtworks",
-          "description" : null,
+          "description" : "Create project artworks by copying from mediacenter artworks. Links the project artwork to the mediacenter artwork.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -12291,8 +12729,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12300,7 +12738,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createArtworksFromProjectArtworks",
-          "description" : null,
+          "description" : "Create new project artworks by copying from existing project artworks (within or across projects).",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -12349,7 +12787,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createProject",
-          "description" : null,
+          "description" : "Create a new project. Can optionally attach files or mediacenter artworks during creation.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12368,8 +12806,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12377,7 +12815,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteProjects",
-          "description" : null,
+          "description" : "Delete one or more projects. Use force=true to delete projects that are not in a deleteable state.",
           "args" : [ {
             "name" : "projectIds",
             "description" : null,
@@ -12422,7 +12860,7 @@
           "deprecationReason" : null
         }, {
           "name" : "launchProjects",
-          "description" : "deprecated - no need to launch when planned state is removed",
+          "description" : "@deprecated - no need to launch when planned state is removed",
           "args" : [ {
             "name" : "projectIds",
             "description" : null,
@@ -12454,7 +12892,7 @@
           "deprecationReason" : null
         }, {
           "name" : "closeProjects",
-          "description" : null,
+          "description" : "Close one or more projects, marking them as completed. Use force=true to close projects not in closeable state.",
           "args" : [ {
             "name" : "projectIds",
             "description" : null,
@@ -12495,7 +12933,7 @@
           "deprecationReason" : null
         }, {
           "name" : "reopenProjects",
-          "description" : null,
+          "description" : "Reopen previously closed projects, allowing further work to be done.",
           "args" : [ {
             "name" : "projectIds",
             "description" : null,
@@ -12527,7 +12965,7 @@
           "deprecationReason" : null
         }, {
           "name" : "assignUsersToArtworks",
-          "description" : null,
+          "description" : "Assign multiple users to multiple project artworks with specific roles (approver, receiver, supplier) in a single operation.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12543,15 +12981,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Project",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "addUserToArtwork",
-          "description" : null,
+          "description" : "Add a user to a project artwork (legacy operation, prefer assignUsersToArtworks for batch operations).",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12563,15 +13005,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "assignApproverToArtwork",
-          "description" : null,
+          "description" : "Assign a user as an approver to a project artwork. Approvers can approve or reject the artwork.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12583,15 +13029,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "assignReceiverToArtwork",
-          "description" : null,
+          "description" : "Assign a user as a receiver to a project artwork. Receivers are notified when the artwork is delivered.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12603,15 +13053,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "assignSupplierToArtwork",
-          "description" : null,
+          "description" : "Assign a user as a supplier to a project artwork. Suppliers are responsible for uploading revisions.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12623,15 +13077,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "removeApproverFromArtwork",
-          "description" : null,
+          "description" : "Remove a user's approver role from a project artwork.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12643,15 +13101,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "removeReceiverFromArtwork",
-          "description" : null,
+          "description" : "Remove a user's receiver role from a project artwork.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12663,15 +13125,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "removeSupplierFromArtwork",
-          "description" : null,
+          "description" : "Remove a user's supplier role from a project artwork.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12683,15 +13149,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "removeAllAssignmentsForUserFromArtwork",
-          "description" : null,
+          "description" : "Remove all role assignments (approver, receiver, supplier) for a user from a project artwork.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12703,15 +13173,401 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "attachTeamToArtwork",
+          "description" : "Attach a team from the organisation to an artwork with specified assignments.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "assignments",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "LIST",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "NON_NULL",
+                  "name" : null,
+                  "ofType" : {
+                    "kind" : "ENUM",
+                    "name" : "TeamAssignmentType",
+                    "ofType" : null
+                  }
+                }
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "approvalMode",
+            "description" : null,
+            "type" : {
+              "kind" : "ENUM",
+              "name" : "ApprovalMode",
+              "ofType" : null
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "removeTeamFromArtwork",
+          "description" : "Remove a team from an artwork.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "addTeamAssignmentToArtwork",
+          "description" : "Add an assignment type (APPROVER/RECEIVER/SUPPLIER) to a team on an artwork.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "assignmentType",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "ENUM",
+                "name" : "TeamAssignmentType",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "removeTeamAssignmentFromArtwork",
+          "description" : "Remove an assignment type from a team on an artwork.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "assignmentType",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "ENUM",
+                "name" : "TeamAssignmentType",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "addUserToArtworkTeam",
+          "description" : "Add a user to a team on an artwork.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "userId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "removeUserFromArtworkTeam",
+          "description" : "Remove a user from a team on an artwork.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "userId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "changeArtworkTeamApprovalMode",
+          "description" : "Change the approval mode for a team on an artwork.",
+          "args" : [ {
+            "name" : "artworkId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "teamId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "approvalMode",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "ENUM",
+                "name" : "ApprovalMode",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "removeSubApprovalForUser",
-          "description" : null,
+          "description" : "Remove a sub-approver's approval from a project artwork, optionally providing a reason.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12723,15 +13579,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "deliverProject",
-          "description" : null,
+          "description" : "Mark a project as delivered to the client.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -12755,7 +13615,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeBasicProjectData",
-          "description" : "Edit basic project data like name, description, dates and so on.",
+          "description" : "Edit basic project data like name, description, dates, and order number.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12770,8 +13630,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12779,7 +13639,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeOrderer",
-          "description" : null,
+          "description" : "Change the orderer (client) of a project. Requires appropriate permissions.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -12811,8 +13671,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12820,7 +13680,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setProjectManager",
-          "description" : null,
+          "description" : "Assign or change the project manager responsible for overseeing the project.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -12852,8 +13712,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12861,7 +13721,7 @@
           "deprecationReason" : null
         }, {
           "name" : "approveArtwork",
-          "description" : null,
+          "description" : "Approve a project artwork. The approver must be assigned to the artwork and the artwork must be in an approvable state.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -12877,15 +13737,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "rejectArtwork",
-          "description" : null,
+          "description" : "Reject a project artwork with an optional comment. Can optionally reset other users' approvals.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12897,15 +13761,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "addCorrection",
-          "description" : null,
+          "description" : "Add a correction (comment with annotations) to a project artwork. Can include markers and attached files.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -12924,8 +13792,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Artwork",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12933,7 +13801,7 @@
           "deprecationReason" : null
         }, {
           "name" : "newRevisionFromFile",
-          "description" : null,
+          "description" : "Upload a new revision for a project artwork from an existing file. Optionally include a comment explaining changes.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -12974,8 +13842,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Artwork",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -12983,7 +13851,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createBriefFromFile",
-          "description" : null,
+          "description" : "Attach a brief document (reference file) to a project artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -13024,7 +13892,7 @@
           "deprecationReason" : null
         }, {
           "name" : "invalidateCorrection",
-          "description" : null,
+          "description" : "Mark a correction as invalid/deleted. Invalid corrections are hidden from the approval workflow.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -13053,15 +13921,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "validateCorrection",
-          "description" : null,
+          "description" : "Restore a previously invalidated correction, making it visible again.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -13090,15 +13962,19 @@
             "defaultValue" : null
           } ],
           "type" : {
-            "kind" : "OBJECT",
-            "name" : "Artwork",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
           "name" : "exportProjectToFile",
-          "description" : null,
+          "description" : "Export a project and all its artworks to a downloadable file. Returns the file ID for download.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13126,7 +14002,7 @@
           "deprecationReason" : null
         }, {
           "name" : "remindApprover",
-          "description" : null,
+          "description" : "Send a reminder email to an approver who hasn't yet approved or rejected a project artwork.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -13150,7 +14026,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeArtworkName",
-          "description" : null,
+          "description" : "Change the name of a project artwork.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13195,8 +14071,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Artwork",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13204,7 +14080,7 @@
           "deprecationReason" : null
         }, {
           "name" : "approveArtworks",
-          "description" : null,
+          "description" : "Approve multiple project artworks at once. Current user must be assigned as approver to all artworks.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13244,8 +14120,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13253,7 +14129,7 @@
           "deprecationReason" : null
         }, {
           "name" : "rejectArtworks",
-          "description" : null,
+          "description" : "Reject multiple project artworks at once. Current user must be assigned as approver to all artworks.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13293,8 +14169,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13302,7 +14178,7 @@
           "deprecationReason" : null
         }, {
           "name" : "revokeArtworkApprovalOrRejection",
-          "description" : "deprecated. Remove this",
+          "description" : "@deprecated. Remove this",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13342,8 +14218,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13351,7 +14227,7 @@
           "deprecationReason" : null
         }, {
           "name" : "revokeArtworkApproval",
-          "description" : null,
+          "description" : "Revoke approval status from project artworks, allowing them to be worked on again. Requires appropriate permissions.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13400,7 +14276,7 @@
           "deprecationReason" : null
         }, {
           "name" : "revokeArtworkRejection",
-          "description" : null,
+          "description" : "Revoke rejection status from project artworks, allowing them to be resubmitted. Requires appropriate permissions.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13449,7 +14325,7 @@
           "deprecationReason" : null
         }, {
           "name" : "startArtworks",
-          "description" : null,
+          "description" : "Mark project artworks as started/in progress.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13489,8 +14365,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13498,7 +14374,7 @@
           "deprecationReason" : null
         }, {
           "name" : "bundleArtworks",
-          "description" : null,
+          "description" : "Bundle project artworks for delivery. Sets artwork files and transitions to bundled state.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13538,8 +14414,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13547,7 +14423,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deliverArtworks",
-          "description" : null,
+          "description" : "Deliver project artworks to receivers. Optionally include a delivery message. Triggers notifications.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13596,8 +14472,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13605,7 +14481,7 @@
           "deprecationReason" : null
         }, {
           "name" : "revokeBundlingOfArtworks",
-          "description" : null,
+          "description" : "Revoke bundling status from project artworks, returning them to their previous state.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13645,8 +14521,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13654,7 +14530,7 @@
           "deprecationReason" : null
         }, {
           "name" : "cancelArtworks",
-          "description" : null,
+          "description" : "Cancel project artworks, marking them as canceled and removing them from active work.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13694,8 +14570,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13703,7 +14579,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteArtworks",
-          "description" : null,
+          "description" : "Permanently delete project artworks from the project.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13743,8 +14619,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13752,7 +14628,7 @@
           "deprecationReason" : null
         }, {
           "name" : "revokeDeliveryOfArtworks",
-          "description" : null,
+          "description" : "Revoke delivery of project artworks, returning them to bundled state. Useful for fixing delivery mistakes.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13792,8 +14668,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13801,7 +14677,7 @@
           "deprecationReason" : null
         }, {
           "name" : "rejectAndChangeDeliveredArtworks",
-          "description" : null,
+          "description" : "Reject delivered project artworks and change their state. Requires special permissions.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13841,8 +14717,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13850,7 +14726,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeCategoryOfArtworks",
-          "description" : null,
+          "description" : "Change the category of multiple project artworks at once.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13903,8 +14779,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -13912,7 +14788,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeAllAssignmentsFromArtworks",
-          "description" : null,
+          "description" : "Remove all user assignments (approvers, receivers, suppliers) from project artworks.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -13952,248 +14828,16 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
-          "name" : "finishArtworkShortTask",
-          "description" : "deprecated. Remove this",
-          "args" : [ {
-            "name" : "projectId",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "UUID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "artworkId",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "UUID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "taskActionType",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "ENUM",
-                "name" : "TaskActionType",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Artwork",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "resetArtworkShortTask",
-          "description" : "deprecated. Remove this",
-          "args" : [ {
-            "name" : "projectId",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "UUID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "artworkId",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "UUID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "taskActionType",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "ENUM",
-                "name" : "TaskActionType",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Artwork",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "addArtworkShortTasks",
-          "description" : null,
-          "args" : [ {
-            "name" : "projectId",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "UUID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "artworkIds",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "LIST",
-                "name" : null,
-                "ofType" : {
-                  "kind" : "NON_NULL",
-                  "name" : null,
-                  "ofType" : {
-                    "kind" : "SCALAR",
-                    "name" : "UUID",
-                    "ofType" : null
-                  }
-                }
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "taskActionType",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "ENUM",
-                "name" : "TaskActionType",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "removeArtworkShortTasks",
-          "description" : null,
-          "args" : [ {
-            "name" : "projectId",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "UUID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "artworkIds",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "LIST",
-                "name" : null,
-                "ofType" : {
-                  "kind" : "NON_NULL",
-                  "name" : null,
-                  "ofType" : {
-                    "kind" : "SCALAR",
-                    "name" : "UUID",
-                    "ofType" : null
-                  }
-                }
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "taskActionType",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "ENUM",
-                "name" : "TaskActionType",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "finishArtworkShortTasks",
-          "description" : null,
+          "name" : "addArtworkActions",
+          "description" : "Add actions to multiple project artworks (e.g., deliver to mediacenter, create color proof).",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14254,8 +14898,132 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
-          "name" : "resetArtworkShortTasks",
-          "description" : null,
+          "name" : "removeArtworkActions",
+          "description" : "Remove actions from multiple project artworks.",
+          "args" : [ {
+            "name" : "projectId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "artworkIds",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "LIST",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "NON_NULL",
+                  "name" : null,
+                  "ofType" : {
+                    "kind" : "SCALAR",
+                    "name" : "UUID",
+                    "ofType" : null
+                  }
+                }
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "taskActionType",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "ENUM",
+                "name" : "TaskActionType",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "finishArtworkActions",
+          "description" : "Mark actions as completed on multiple project artworks.",
+          "args" : [ {
+            "name" : "projectId",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "SCALAR",
+                "name" : "UUID",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "artworkIds",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "LIST",
+                "name" : null,
+                "ofType" : {
+                  "kind" : "NON_NULL",
+                  "name" : null,
+                  "ofType" : {
+                    "kind" : "SCALAR",
+                    "name" : "UUID",
+                    "ofType" : null
+                  }
+                }
+              }
+            },
+            "defaultValue" : null
+          }, {
+            "name" : "taskActionType",
+            "description" : null,
+            "type" : {
+              "kind" : "NON_NULL",
+              "name" : null,
+              "ofType" : {
+                "kind" : "ENUM",
+                "name" : "TaskActionType",
+                "ofType" : null
+              }
+            },
+            "defaultValue" : null
+          } ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "resetArtworkActions",
+          "description" : "Reset completed actions on multiple project artworks to incomplete state.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14317,7 +15085,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateProjectNotes",
-          "description" : null,
+          "description" : "Update or set the notes field on a project (internal notes visible to project team).",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14349,8 +15117,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -14358,7 +15126,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setProjectArtworkFiles",
-          "description" : "setBundledState defaults to false",
+          "description" : "Set/replace all files on a project artwork with typed files (source, delivery, resource). Optionally set bundled state.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14421,7 +15189,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addArtworkFiles",
-          "description" : "setBundledState defaults to false",
+          "description" : "Add additional files to a project artwork. Does not replace existing files. Optionally set bundled state.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14484,7 +15252,7 @@
           "deprecationReason" : null
         }, {
           "name" : "synchronizeArtworksWithMediaCenter",
-          "description" : null,
+          "description" : "Synchronize multiple project artworks with their linked mediacenter artworks, updating content and metadata.",
           "args" : [ {
             "name" : "artworkIds",
             "description" : null,
@@ -14520,7 +15288,7 @@
           "deprecationReason" : null
         }, {
           "name" : "synchronizeArtworkWithMediaCenter",
-          "description" : "deprecated use synchronizeArtworksWithMediaCenter(artworkIds: [UUID!]!): Boolean!",
+          "description" : "@deprecated use synchronizeArtworksWithMediaCenter(artworkIds: [UUID!]!): Boolean!",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -14539,8 +15307,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Artwork",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -14548,7 +15316,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addFilesToProject",
-          "description" : null,
+          "description" : "Add reference or supporting files to a project (not tied to specific artworks).",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14588,8 +15356,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -14597,7 +15365,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeFilesFromProject",
-          "description" : null,
+          "description" : "Remove reference files from a project.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14637,8 +15405,8 @@
             "kind" : "NON_NULL",
             "name" : null,
             "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "Project",
+              "kind" : "SCALAR",
+              "name" : "Boolean",
               "ofType" : null
             }
           },
@@ -14646,7 +15414,7 @@
           "deprecationReason" : null
         }, {
           "name" : "replacePreviewFile",
-          "description" : null,
+          "description" : "Replace the preview/thumbnail file for a project artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -14687,7 +15455,7 @@
           "deprecationReason" : null
         }, {
           "name" : "rollBackProjectHistory",
-          "description" : null,
+          "description" : "Rollback project history to a specific event, undoing all events after that point. Use with caution.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14728,7 +15496,7 @@
           "deprecationReason" : null
         }, {
           "name" : "revertProjectEvents",
-          "description" : null,
+          "description" : "Revert specific project events by ID. More targeted than rollback.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14777,7 +15545,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setInvoiceNumber",
-          "description" : null,
+          "description" : "Set or update the invoice number for a project artwork (for billing/accounting purposes).",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -14831,7 +15599,7 @@
           "deprecationReason" : null
         }, {
           "name" : "savePrintCoverage",
-          "description" : null,
+          "description" : "Save print coverage analysis data for a project artwork, including print and color canvas information.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -14912,7 +15680,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createCollaborationForArtworks",
-          "description" : null,
+          "description" : "Create external collaboration links for project artworks, allowing non-users to view/comment via email.",
           "args" : [ {
             "name" : "artworkIds",
             "description" : null,
@@ -14974,7 +15742,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeCollaborationForArtworks",
-          "description" : null,
+          "description" : "Remove a collaboration link from a project artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -15015,7 +15783,7 @@
           "deprecationReason" : null
         }, {
           "name" : "addArtworkRule",
-          "description" : null,
+          "description" : "Add a validation rule to a project artwork (e.g., bleed requirements, color space).",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -15056,7 +15824,7 @@
           "deprecationReason" : null
         }, {
           "name" : "removeArtworkRule",
-          "description" : null,
+          "description" : "Remove a validation rule from a project artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -15097,7 +15865,7 @@
           "deprecationReason" : null
         }, {
           "name" : "changeArtworkRule",
-          "description" : null,
+          "description" : "Modify an existing validation rule on a project artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -15151,7 +15919,7 @@
           "deprecationReason" : null
         }, {
           "name" : "checkoutArtwork",
-          "description" : null,
+          "description" : "Check out a project artwork for editing (creates a work copy for desktop editing).",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -15179,7 +15947,7 @@
           "deprecationReason" : null
         }, {
           "name" : "checkinArtwork",
-          "description" : null,
+          "description" : "Check in a project artwork after editing, uploading the modified files.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -15203,7 +15971,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setProjectsSilent",
-          "description" : null,
+          "description" : "Set projects to silent mode (suppress email notifications) or unset silent mode.",
           "args" : [ {
             "name" : "projectIds",
             "description" : null,
@@ -15252,7 +16020,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createArticle",
-          "description" : "Returns id",
+          "description" : "Create a new article. Returns the created article's ID.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -15276,7 +16044,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateArticle",
-          "description" : "null values are not changed except for brandId that means the brand is removed",
+          "description" : "@deprecated(reason: \"Use updateArticles instead\")",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -15374,7 +16142,7 @@
           "deprecationReason" : "Use updateArticles instead"
         }, {
           "name" : "updateArticles",
-          "description" : null,
+          "description" : "Update one or more articles with new information. Null values are not changed except brandId/marketId (null removes them).",
           "args" : [ {
             "name" : "articles",
             "description" : null,
@@ -15410,7 +16178,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteArticle",
-          "description" : null,
+          "description" : "@deprecated(reason: \"Use deleteArticles instead\")",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -15438,7 +16206,7 @@
           "deprecationReason" : "Use deleteArticles instead"
         }, {
           "name" : "deleteArticles",
-          "description" : null,
+          "description" : "Delete one or more articles.",
           "args" : [ {
             "name" : "ids",
             "description" : null,
@@ -15474,7 +16242,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setArticleCategories",
-          "description" : "Set article categories - replaces all existing categories for multiple articles",
+          "description" : "Set categories for multiple articles at once, replacing all existing categories.",
           "args" : [ {
             "name" : "articles",
             "description" : null,
@@ -15510,7 +16278,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setArticleMarket",
-          "description" : "Set article market - null removes the market for multiple articles",
+          "description" : "Set market for multiple articles at once. Null removes the market.",
           "args" : [ {
             "name" : "articles",
             "description" : null,
@@ -15546,7 +16314,7 @@
           "deprecationReason" : null
         }, {
           "name" : "setArticleBrand",
-          "description" : "Set article brand - null removes the brand for multiple articles",
+          "description" : "Set brand for multiple articles at once. Null removes the brand.",
           "args" : [ {
             "name" : "articles",
             "description" : null,
@@ -15582,7 +16350,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createArticleCategory",
-          "description" : null,
+          "description" : "Create a new article category with optional parent for hierarchy.",
           "args" : [ {
             "name" : "name",
             "description" : null,
@@ -15619,7 +16387,7 @@
           "deprecationReason" : null
         }, {
           "name" : "renameArticleCategory",
-          "description" : null,
+          "description" : "Rename an article category.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -15660,7 +16428,7 @@
           "deprecationReason" : null
         }, {
           "name" : "deleteArticleCategory",
-          "description" : null,
+          "description" : "Delete an article category.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -15688,7 +16456,7 @@
           "deprecationReason" : null
         }, {
           "name" : "moveArticleCategory",
-          "description" : null,
+          "description" : "Move an article category to a different parent in the hierarchy.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -15725,7 +16493,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createMarket",
-          "description" : null,
+          "description" : "Create a new market for geographical organization.",
           "args" : [ {
             "name" : "name",
             "description" : null,
@@ -15753,7 +16521,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateMarket",
-          "description" : null,
+          "description" : "Update a market's name.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -15794,7 +16562,7 @@
           "deprecationReason" : null
         }, {
           "name" : "createBrand",
-          "description" : "Will generate UUID if id not supplied",
+          "description" : "Create a new brand. UUID will be generated if not supplied.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -15831,7 +16599,7 @@
           "deprecationReason" : null
         }, {
           "name" : "updateBrand",
-          "description" : null,
+          "description" : "Update a brand's name.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -19438,7 +20206,7 @@
         "description" : null,
         "fields" : [ {
           "name" : "plannerProjects",
-          "description" : null,
+          "description" : "Get all projects with planning information including dates, completion percentage, and artwork details.",
           "args" : [ ],
           "type" : {
             "kind" : "LIST",
@@ -19464,7 +20232,7 @@
           "deprecationReason" : null
         }, {
           "name" : "findUsers",
-          "description" : null,
+          "description" : "Search for users within the current organisation by username. Returns partial matches.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -19492,7 +20260,7 @@
           "deprecationReason" : null
         }, {
           "name" : "findUsersPage",
-          "description" : null,
+          "description" : "Search for users within the current organisation with pagination support.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -19525,7 +20293,7 @@
           "deprecationReason" : null
         }, {
           "name" : "findUsersAndTeamsPage",
-          "description" : null,
+          "description" : "Search for both users and teams within the current organisation with pagination. Useful for assignment operations.",
           "args" : [ {
             "name" : "search",
             "description" : null,
@@ -19558,7 +20326,7 @@
           "deprecationReason" : null
         }, {
           "name" : "findUsersInAnyOrganisation",
-          "description" : null,
+          "description" : "System admin only - Search for users across all organisations by username.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -19586,7 +20354,7 @@
           "deprecationReason" : null
         }, {
           "name" : "getUser",
-          "description" : null,
+          "description" : "Get detailed information about a specific user by username.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -19606,7 +20374,7 @@
           "deprecationReason" : null
         }, {
           "name" : "getPermissionGroups",
-          "description" : "Admin only",
+          "description" : "Admin only - Get all available permission groups for the current organisation.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -19629,7 +20397,7 @@
           "deprecationReason" : null
         }, {
           "name" : "possibleTrophies",
-          "description" : null,
+          "description" : "Get all possible trophies/achievements that can be earned in the system.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -19652,7 +20420,7 @@
           "deprecationReason" : null
         }, {
           "name" : "validateEmails",
-          "description" : null,
+          "description" : "Validate a list of email addresses for deliverability and check if they're already registered users.",
           "args" : [ {
             "name" : "emails",
             "description" : null,
@@ -19696,7 +20464,7 @@
           "deprecationReason" : null
         }, {
           "name" : "exportUserSearch",
-          "description" : null,
+          "description" : "Export user search results as a downloadable file. Returns a file ID.",
           "args" : [ {
             "name" : "username",
             "description" : null,
@@ -19720,7 +20488,7 @@
           "deprecationReason" : null
         }, {
           "name" : "file",
-          "description" : null,
+          "description" : "Get file metadata and information by its ID.",
           "args" : [ {
             "name" : "uuid",
             "description" : null,
@@ -19744,7 +20512,7 @@
           "deprecationReason" : null
         }, {
           "name" : "existsInArchive",
-          "description" : null,
+          "description" : "Check if a file exists in the archive storage.",
           "args" : [ {
             "name" : "uuid",
             "description" : null,
@@ -19772,7 +20540,7 @@
           "deprecationReason" : null
         }, {
           "name" : "artworkZipStructure",
-          "description" : null,
+          "description" : "Get the file structure for a project artwork as it would appear in a downloaded zip file.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -19808,7 +20576,7 @@
           "deprecationReason" : null
         }, {
           "name" : "mcArtworkZipStructure",
-          "description" : null,
+          "description" : "Get the file structure for a mediacenter artwork as it would appear in a downloaded zip file.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -19844,7 +20612,7 @@
           "deprecationReason" : null
         }, {
           "name" : "shareZipStructure",
-          "description" : null,
+          "description" : "Get the file structure for a share as it would appear in a downloaded zip file.",
           "args" : [ {
             "name" : "shareId",
             "description" : null,
@@ -19880,7 +20648,7 @@
           "deprecationReason" : null
         }, {
           "name" : "tempFileUploadUrl",
-          "description" : null,
+          "description" : "Get a temporary URL for uploading a file directly to storage.",
           "args" : [ {
             "name" : "fileId",
             "description" : null,
@@ -19917,7 +20685,7 @@
           "deprecationReason" : null
         }, {
           "name" : "tempFileDownloadUrl",
-          "description" : null,
+          "description" : "Get a temporary URL for downloading a file directly from storage.",
           "args" : [ {
             "name" : "fileId",
             "description" : null,
@@ -19945,7 +20713,7 @@
           "deprecationReason" : null
         }, {
           "name" : "tempUrlForVideo",
-          "description" : null,
+          "description" : "Get a temporary streaming URL for a video file.",
           "args" : [ {
             "name" : "fileId",
             "description" : null,
@@ -19973,7 +20741,7 @@
           "deprecationReason" : null
         }, {
           "name" : "printSpecification",
-          "description" : null,
+          "description" : "Get a single print specification by its ID.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -20001,7 +20769,7 @@
           "deprecationReason" : null
         }, {
           "name" : "printSpecifications",
-          "description" : null,
+          "description" : "Get all print specifications in the organisation.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20024,7 +20792,7 @@
           "deprecationReason" : null
         }, {
           "name" : "findShares",
-          "description" : null,
+          "description" : "Search for shares with optional filters. By default excludes read shares unless includeRead is true.",
           "args" : [ {
             "name" : "fileNameFilter",
             "description" : null,
@@ -20075,7 +20843,7 @@
           "deprecationReason" : null
         }, {
           "name" : "share",
-          "description" : null,
+          "description" : "Get a single share by ID. Requires authentication and access to the share.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -20099,7 +20867,7 @@
           "deprecationReason" : null
         }, {
           "name" : "anonymousShare",
-          "description" : null,
+          "description" : "Get a single anonymous share by ID. No authentication required, works with public share links.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -20123,7 +20891,7 @@
           "deprecationReason" : null
         }, {
           "name" : "status",
-          "description" : null,
+          "description" : "System admin only - Get system status including renderer status, version info, and command/query statistics.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20138,7 +20906,7 @@
           "deprecationReason" : null
         }, {
           "name" : "hubSpotCompanies",
-          "description" : null,
+          "description" : "System admin only - Get all companies from HubSpot CRM.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20161,7 +20929,7 @@
           "deprecationReason" : null
         }, {
           "name" : "searchHubSpotContacts",
-          "description" : null,
+          "description" : "System admin only - Search for contacts in HubSpot CRM by email address.",
           "args" : [ {
             "name" : "email",
             "description" : null,
@@ -20197,7 +20965,7 @@
           "deprecationReason" : null
         }, {
           "name" : "openAiImage",
-          "description" : "default size 1024x1024. Return format is b64json",
+          "description" : "Generate an image using OpenAI's DALL-E. Default size 1024x1024. Returns base64 encoded JSON.",
           "args" : [ {
             "name" : "prompt",
             "description" : null,
@@ -20234,7 +21002,7 @@
           "deprecationReason" : null
         }, {
           "name" : "askForOneDrivePermission",
-          "description" : null,
+          "description" : "Get a URL to request OneDrive permissions for file integration.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20249,7 +21017,7 @@
           "deprecationReason" : null
         }, {
           "name" : "organisation",
-          "description" : "Get the organisation by id",
+          "description" : "Get organisation details by ID. If no ID provided, returns current user's organisation.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -20269,7 +21037,7 @@
           "deprecationReason" : null
         }, {
           "name" : "organisations",
-          "description" : "All organisations. Only for use by Admin",
+          "description" : "System admin only - Get all organisations in the system.",
           "args" : [ ],
           "type" : {
             "kind" : "LIST",
@@ -20284,7 +21052,7 @@
           "deprecationReason" : null
         }, {
           "name" : "organisationMediaCenterStorageStorage",
-          "description" : "Admin only",
+          "description" : "Admin only - Get mediacenter storage usage for a specific organisation with size in specified unit.",
           "args" : [ {
             "name" : "organisationId",
             "description" : null,
@@ -20321,7 +21089,7 @@
           "deprecationReason" : null
         }, {
           "name" : "mediaCenterStorageForAllOrganisations",
-          "description" : null,
+          "description" : "System admin only - Get mediacenter storage usage across all organisations.",
           "args" : [ {
             "name" : "unit",
             "description" : null,
@@ -20353,7 +21121,7 @@
           "deprecationReason" : null
         }, {
           "name" : "organisationAuditLogs",
-          "description" : null,
+          "description" : "Get login audit logs for the current organisation showing user access history.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20376,7 +21144,7 @@
           "deprecationReason" : null
         }, {
           "name" : "assistantQuery",
-          "description" : "Returns threadId",
+          "description" : "Query the AI assistant with a prompt. Returns a thread ID for retrieving responses.",
           "args" : [ {
             "name" : "prompt",
             "description" : null,
@@ -20409,7 +21177,7 @@
           "deprecationReason" : null
         }, {
           "name" : "subscriptionProducts",
-          "description" : null,
+          "description" : "Get all available subscription products and pricing for purchasing/upgrading.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20432,7 +21200,7 @@
           "deprecationReason" : null
         }, {
           "name" : "webhookEventTypes",
-          "description" : null,
+          "description" : "Get all available webhook event types that can be subscribed to.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20455,7 +21223,7 @@
           "deprecationReason" : null
         }, {
           "name" : "tree",
-          "description" : null,
+          "description" : "Get all mediacenter folders for the current organisation as a flattened list. Reconstruct the tree structure using parent IDs.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20478,7 +21246,7 @@
           "deprecationReason" : null
         }, {
           "name" : "folder",
-          "description" : null,
+          "description" : "Get a single mediacenter folder by ID with its subfolders.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -20506,7 +21274,7 @@
           "deprecationReason" : null
         }, {
           "name" : "itemsForFolder",
-          "description" : null,
+          "description" : "Search and retrieve mediacenter items (artworks and files) within a folder with optional filtering and pagination.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -20548,7 +21316,7 @@
           "deprecationReason" : null
         }, {
           "name" : "itemsForOrganisation",
-          "description" : null,
+          "description" : "Search mediacenter items across the entire organisation with optional filtering and pagination.",
           "args" : [ {
             "name" : "input",
             "description" : null,
@@ -20581,7 +21349,7 @@
           "deprecationReason" : null
         }, {
           "name" : "usersForFolder",
-          "description" : null,
+          "description" : "Get all users with access to a specific mediacenter folder and their permissions.",
           "args" : [ {
             "name" : "folderId",
             "description" : null,
@@ -20617,7 +21385,7 @@
           "deprecationReason" : null
         }, {
           "name" : "mediaCenterArtwork",
-          "description" : null,
+          "description" : "Get a single mediacenter artwork by ID. Note: This retrieves a mediacenter artwork, not a project artwork.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -20641,7 +21409,7 @@
           "deprecationReason" : null
         }, {
           "name" : "artworkLocationsForProjectArtwork",
-          "description" : null,
+          "description" : "Find all mediacenter locations where a project artwork is linked/stored.",
           "args" : [ {
             "name" : "projectArtworkId",
             "description" : null,
@@ -20677,7 +21445,7 @@
           "deprecationReason" : null
         }, {
           "name" : "mediaCenterArtworkForProjectArtwork",
-          "description" : "system admin only",
+          "description" : "System admin only - Get the mediacenter artwork linked to a project artwork.",
           "args" : [ {
             "name" : "projectArtworkId",
             "description" : null,
@@ -20701,7 +21469,7 @@
           "deprecationReason" : null
         }, {
           "name" : "mediaCenterTreeHistory",
-          "description" : null,
+          "description" : "Get the complete event history for a mediacenter folder tree.",
           "args" : [ {
             "name" : "treeId",
             "description" : null,
@@ -20737,7 +21505,7 @@
           "deprecationReason" : null
         }, {
           "name" : "projects",
-          "description" : "search projects",
+          "description" : "Search and filter projects with pagination. Returns projects visible to the current user.",
           "args" : [ {
             "name" : "filter",
             "description" : null,
@@ -20766,7 +21534,7 @@
           "deprecationReason" : null
         }, {
           "name" : "project",
-          "description" : "get single project by id",
+          "description" : "Get a single project by its ID. Returns full project details including all artworks.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -20790,7 +21558,7 @@
           "deprecationReason" : null
         }, {
           "name" : "artwork",
-          "description" : "get single artwork by id",
+          "description" : "Get a single project artwork by its ID. Note: This retrieves a project artwork, not a mediacenter artwork.",
           "args" : [ {
             "name" : "id",
             "description" : null,
@@ -20814,7 +21582,7 @@
           "deprecationReason" : null
         }, {
           "name" : "projectHistory",
-          "description" : null,
+          "description" : "Get the complete event history for a project, including all changes and actions performed.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -20850,7 +21618,7 @@
           "deprecationReason" : null
         }, {
           "name" : "artworkHistory",
-          "description" : null,
+          "description" : "Get the complete event history for a project artwork, including revisions, comments, and state changes.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -20886,7 +21654,7 @@
           "deprecationReason" : null
         }, {
           "name" : "artworksToApprove",
-          "description" : null,
+          "description" : "Get all project artworks awaiting approval by the current user.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20909,7 +21677,7 @@
           "deprecationReason" : null
         }, {
           "name" : "artworksToUpload",
-          "description" : null,
+          "description" : "Get all project artworks where the current user is assigned as a supplier and needs to upload a revision.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -20932,7 +21700,7 @@
           "deprecationReason" : null
         }, {
           "name" : "openAIProjectSummary",
-          "description" : null,
+          "description" : "Generate an AI-powered project summary tailored to a specific audience (project manager, orderer, or graphics creator).",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -20973,7 +21741,7 @@
           "deprecationReason" : null
         }, {
           "name" : "artworkAIAnalysis",
-          "description" : "returns threadId",
+          "description" : "Start an AI analysis of a project artwork. Returns a thread ID for retrieving the analysis results.",
           "args" : [ {
             "name" : "artworkId",
             "description" : null,
@@ -21001,7 +21769,7 @@
           "deprecationReason" : null
         }, {
           "name" : "projectHistorySummary",
-          "description" : "returns threadId",
+          "description" : "Generate an AI summary of a project's history. Returns a thread ID for retrieving the summary.",
           "args" : [ {
             "name" : "projectId",
             "description" : null,
@@ -21029,7 +21797,7 @@
           "deprecationReason" : null
         }, {
           "name" : "openProjectsCountByMonth",
-          "description" : "Get the number of open projects per month for the past year",
+          "description" : "Get the number of open projects per month for the past year. Useful for trend analysis and capacity planning.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -21052,7 +21820,7 @@
           "deprecationReason" : null
         }, {
           "name" : "articles",
-          "description" : null,
+          "description" : "Search articles with optional filters on article number, name, GTIN, category, or brand. Returns paginated results.",
           "args" : [ {
             "name" : "articleNo",
             "description" : null,
@@ -21121,7 +21889,7 @@
           "deprecationReason" : null
         }, {
           "name" : "article",
-          "description" : null,
+          "description" : "Get a single article by its ID.",
           "args" : [ {
             "name" : "articleId",
             "description" : null,
@@ -21145,7 +21913,7 @@
           "deprecationReason" : null
         }, {
           "name" : "articleCategories",
-          "description" : "Flattened tree",
+          "description" : "Get all article categories as a flattened list (includes hierarchy via lineage field).",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -21168,7 +21936,7 @@
           "deprecationReason" : null
         }, {
           "name" : "projectArtworksForArticle",
-          "description" : null,
+          "description" : "Get all project artworks linked to a specific article.",
           "args" : [ {
             "name" : "articleId",
             "description" : null,
@@ -21204,7 +21972,7 @@
           "deprecationReason" : null
         }, {
           "name" : "mediaCenterArtworksForArticle",
-          "description" : null,
+          "description" : "Get all mediacenter artworks linked to a specific article.",
           "args" : [ {
             "name" : "articleId",
             "description" : null,
@@ -21240,7 +22008,7 @@
           "deprecationReason" : null
         }, {
           "name" : "markets",
-          "description" : null,
+          "description" : "Get all available markets for organizing articles geographically.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -21263,7 +22031,7 @@
           "deprecationReason" : null
         }, {
           "name" : "brands",
-          "description" : null,
+          "description" : "Get all available brands for organizing articles by brand.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -21286,7 +22054,7 @@
           "deprecationReason" : null
         }, {
           "name" : "statistics",
-          "description" : null,
+          "description" : "Get comprehensive statistics and analytics for the organisation including approvals, storage, deliveries, and user metrics.",
           "args" : [ ],
           "type" : {
             "kind" : "NON_NULL",
@@ -23579,6 +24347,137 @@
         } ],
         "possibleTypes" : null
       }, {
+        "kind" : "ENUM",
+        "name" : "TeamApprovalState",
+        "description" : null,
+        "fields" : null,
+        "inputFields" : null,
+        "interfaces" : null,
+        "enumValues" : [ {
+          "name" : "UNDECIDED",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "APPROVED",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "REJECTED",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        } ],
+        "possibleTypes" : null
+      }, {
+        "kind" : "ENUM",
+        "name" : "TeamAssignmentType",
+        "description" : null,
+        "fields" : null,
+        "inputFields" : null,
+        "interfaces" : null,
+        "enumValues" : [ {
+          "name" : "APPROVER",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "RECEIVER",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "SUPPLIER",
+          "description" : null,
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        } ],
+        "possibleTypes" : null
+      }, {
+        "kind" : "OBJECT",
+        "name" : "TeamMemberApproval",
+        "description" : null,
+        "fields" : [ {
+          "name" : "user",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "OBJECT",
+              "name" : "User",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "approved",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Boolean",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "approvedAt",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "LocalDateTime",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "approvedRevision",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "UUID",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "clearOnNextRevision",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "Boolean",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "deadline",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "LocalDateTime",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        } ],
+        "inputFields" : null,
+        "interfaces" : [ ],
+        "enumValues" : null,
+        "possibleTypes" : null
+      }, {
         "kind" : "OBJECT",
         "name" : "TeamUser",
         "description" : null,
@@ -24986,6 +25885,17 @@
                 }
               }
             }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "approvalMode",
+          "description" : "Approval mode for the team. Defaults to ALL_REQUIRED if not set.",
+          "args" : [ ],
+          "type" : {
+            "kind" : "ENUM",
+            "name" : "ApprovalMode",
+            "ofType" : null
           },
           "isDeprecated" : false,
           "deprecationReason" : null

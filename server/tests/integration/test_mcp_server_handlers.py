@@ -160,8 +160,8 @@ class TestGetActiveProjectsHandler:
         result = await mcp_server._execute_tool("get_active_projects", {})
         
         # Assert
-        assert "active_projects" in result
-        assert len(result["active_projects"]) == 2
+        assert "projects" in result
+        assert len(result["projects"]) == 2
 
 
 class TestGetCompletedProjectsHandler:
@@ -188,8 +188,8 @@ class TestGetCompletedProjectsHandler:
         result = await mcp_server._execute_tool("get_completed_projects", {})
         
         # Assert
-        assert "completed_projects" in result
-        assert len(result["completed_projects"]) == 1
+        assert "projects" in result
+        assert len(result["projects"]) == 1
 
 
 class TestListUsersHandler:
@@ -371,9 +371,9 @@ class TestGetSystemStatusHandler:
         result = await mcp_server._execute_tool("get_system_status", {})
         
         # Assert
-        assert "system_status" in result
-        assert result["system_status"]["connected"] is True
-        assert "login_info" in result["system_status"]
+        assert "status" in result
+        assert result["connected"] is True
+        assert "login_info" in result
 
 
 class TestUnknownToolHandler:

@@ -132,7 +132,8 @@ class TestProjectExtended:
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
-            assert project.status == status
+            # Status is converted to enum
+            assert project.status == ProjectState[status]
             
     def test_project_with_all_fields(self) -> None:
         """Test creating project with all fields."""

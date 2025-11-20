@@ -34,10 +34,26 @@ from ..domain.temporal_kpi_entities import (
     StagnationAlert
 )
 from ..indexing.mcp_indexing_service import get_indexing_service
+from .tool_definitions import get_all_tools
 
 
-# Set up logging
-logging.basicConfig(level=getattr(logging, settings.log_level.upper()))
+# Set up logging - redirect to file and stderr to avoid interfering with stdio protocol
+import sys
+from pathlib import Path
+
+# Ensure log directory exists
+log_dir = Path(settings.log_dir)
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / "mcp_server.log"
+
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper()),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler(sys.stderr)  # Log to stderr, not stdout
+    ]
+)
 logger = logging.getLogger(__name__)
 
 
@@ -516,406 +532,8 @@ class CwayMCPServer:
         async def list_tools() -> ListToolsResult:
             """List available tools."""
             logger.info("🔧 list_tools called")
-            tools = [
-                Tool(
-                    name="list_projects",
-                    description="List all Cway planner projects",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="get_project",
-                    description="Get a specific Cway project by ID",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "project_id": {
-                                "type": "string",
-                                "description": "The UUID of the project to retrieve"
-                            }
-                        },
-                        "required": ["project_id"]
-                    }
-                ),
-                Tool(
-                    name="get_active_projects",
-                    description="Get all active (in progress) projects",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="get_completed_projects", 
-                    description="Get all completed projects",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="list_users",
-                    description="List all Cway users",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="get_user",
-                    description="Get a specific Cway user by ID",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "user_id": {
-                                "type": "string",
-                                "description": "The UUID of the user to retrieve"
-                            }
-                        },
-                        "required": ["user_id"]
-                    }
-                ),
-                Tool(
-                    name="find_user_by_email",
-                    description="Find a Cway user by email address",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "email": {
-                                "type": "string",
-                                "format": "email",
-                                "description": "The email address of the user to find"
-                            }
-                        },
-                        "required": ["email"]
-                    }
-                ),
-                Tool(
-                    name="get_users_page",
-                    description="Get users with pagination",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "page": {
-                                "type": "integer",
-                                "description": "Page number (0-based)",
-                                "default": 0
-                            },
-                            "size": {
-                                "type": "integer",
-                                "description": "Page size",
-                                "default": 10
-                            }
-                        },
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="get_system_status",
-                    description="Get Cway system connection status",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="analyze_project_velocity",
-                    description="Analyze velocity trends and patterns for a specific project",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "project_id": {
-                                "type": "string",
-                                "description": "The UUID of the project to analyze"
-                            }
-                        },
-                        "required": ["project_id"]
-                    }
-                ),
-                Tool(
-                    name="get_temporal_dashboard",
-                    description="Get comprehensive temporal KPI dashboard with velocity and stagnation analysis",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "analysis_period_days": {
-                                "type": "integer",
-                                "description": "Number of days to analyze (default: 90)",
-                                "default": 90
-                            }
-                        },
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="get_stagnation_alerts",
-                    description="Get projects at risk of stagnation with urgency scores and recommendations",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "min_urgency_score": {
-                                "type": "integer",
-                                "description": "Minimum urgency score (1-10, default: 5)",
-                                "default": 5
-                            }
-                        },
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="index_all_content",
-                    description="Index all documents and site pages to configured targets",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "targets": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "Specific target names to index to (default: all enabled)"
-                            }
-                        },
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="quick_backup",
-                    description="Quick backup of all content to local files",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="index_project_content",
-                    description="Index documents and pages for a specific project",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "project_id": {
-                                "type": "string",
-                                "description": "The UUID of the project to index"
-                            },
-                            "targets": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "Specific target names to index to (optional)"
-                            }
-                        },
-                        "required": ["project_id"]
-                    }
-                ),
-                Tool(
-                    name="configure_indexing_target",
-                    description="Add or update an indexing target configuration",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "description": "Name of the indexing target"
-                            },
-                            "platform": {
-                                "type": "string",
-                                "description": "Platform type (elasticsearch, file, algolia, etc.)"
-                            },
-                            "description": {
-                                "type": "string",
-                                "description": "Description of what this target is for"
-                            },
-                            "config": {
-                                "type": "object",
-                                "description": "Platform-specific configuration"
-                            },
-                            "enabled": {
-                                "type": "boolean",
-                                "description": "Whether this target is enabled",
-                                "default": True
-                            }
-                        },
-                        "required": ["name", "platform", "description"]
-                    }
-                ),
-                Tool(
-                    name="get_indexing_job_status",
-                    description="Get status of a specific indexing job",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "job_id": {
-                                "type": "string",
-                                "description": "The ID of the indexing job to check"
-                            }
-                        },
-                        "required": ["job_id"]
-                    }
-                ),
-                Tool(
-                    name="get_login_info",
-                    description="Get current user login information",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="search_users",
-                    description="Search for users by username",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "query": {
-                                "type": "string",
-                                "description": "Search query for username (optional)"
-                            }
-                        },
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="search_projects",
-                    description="Search for projects",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "query": {
-                                "type": "string",
-                                "description": "Search query (optional)"
-                            },
-                            "limit": {
-                                "type": "integer",
-                                "description": "Maximum number of results (default: 10)",
-                                "default": 10
-                            }
-                        },
-                        "required": []
-                    }
-                ),
-                Tool(
-                    name="get_project_by_id",
-                    description="Get a regular project by ID (not planner project)",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "project_id": {
-                                "type": "string",
-                                "description": "The UUID of the project"
-                            }
-                        },
-                        "required": ["project_id"]
-                    }
-                ),
-                Tool(
-                    name="create_user",
-                    description="Create a new user",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "email": {
-                                "type": "string",
-                                "description": "User email address"
-                            },
-                            "username": {
-                                "type": "string",
-                                "description": "Username"
-                            },
-                            "first_name": {
-                                "type": "string",
-                                "description": "First name (optional)"
-                            },
-                            "last_name": {
-                                "type": "string",
-                                "description": "Last name (optional)"
-                            }
-                        },
-                        "required": ["email", "username"]
-                    }
-                ),
-                Tool(
-                    name="update_user_name",
-                    description="Update user's real name",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "username": {
-                                "type": "string",
-                                "description": "Username"
-                            },
-                            "first_name": {
-                                "type": "string",
-                                "description": "First name (optional)"
-                            },
-                            "last_name": {
-                                "type": "string",
-                                "description": "Last name (optional)"
-                            }
-                        },
-                        "required": ["username"]
-                    }
-                ),
-                Tool(
-                    name="delete_user",
-                    description="Delete a user",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "username": {
-                                "type": "string",
-                                "description": "Username of user to delete"
-                            }
-                        },
-                        "required": ["username"]
-                    }
-                ),
-                Tool(
-                    name="create_project",
-                    description="Create a new project",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string",
-                                "description": "Project name"
-                            },
-                            "description": {
-                                "type": "string",
-                                "description": "Project description (optional)"
-                            }
-                        },
-                        "required": ["name"]
-                    }
-                ),
-                Tool(
-                    name="update_project",
-                    description="Update an existing project",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "project_id": {
-                                "type": "string",
-                                "description": "Project ID"
-                            },
-                            "name": {
-                                "type": "string",
-                                "description": "New project name (optional)"
-                            },
-                            "description": {
-                                "type": "string",
-                                "description": "New project description (optional)"
-                            }
-                        },
-                        "required": ["project_id"]
-                    }
-                )
-            ]
+            # Use modular tool definitions from tool_definitions.py
+            tools = get_all_tools()
             return ListToolsResult(tools=tools)
             
         @self.server.call_tool()
@@ -972,6 +590,20 @@ class CwayMCPServer:
             
     async def _execute_tool(self, name: str, arguments: Dict[str, Any]) -> Any:
         """Execute a specific tool."""
+        # Tool name aliases for consistency
+        if name == "list_all_users":
+            name = "list_users"
+        elif name == "get_planner_projects":
+            name = "list_projects"
+        elif name == "get_project_details":
+            name = "get_project_by_id"
+        elif name == "create_cway_user":
+            name = "create_user"
+        elif name == "create_cway_project":
+            name = "create_project"
+        elif name == "update_cway_project":
+            name = "update_project"
+        
         if name == "list_projects":
             projects = await self.project_repo.get_planner_projects()
             return {
@@ -1010,10 +642,11 @@ class CwayMCPServer:
         elif name == "get_active_projects":
             projects = await self.project_repo.get_active_projects()
             return {
-                "active_projects": [
+                "projects": [
                     {
                         "id": p.id,
                         "name": p.name,
+                        "state": p.state.value,
                         "percentageDone": p.percentageDone,
                         "startDate": str(p.startDate) if p.startDate else None,
                         "endDate": str(p.endDate) if p.endDate else None
@@ -1025,10 +658,12 @@ class CwayMCPServer:
         elif name == "get_completed_projects":
             projects = await self.project_repo.get_completed_projects()
             return {
-                "completed_projects": [
+                "projects": [
                     {
                         "id": p.id,
                         "name": p.name,
+                        "state": p.state.value,
+                        "percentageDone": p.percentageDone,
                         "startDate": str(p.startDate) if p.startDate else None,
                         "endDate": str(p.endDate) if p.endDate else None
                     }
@@ -1118,11 +753,10 @@ class CwayMCPServer:
             login_info = await self.system_repo.get_login_info()
             
             return {
-                "system_status": {
-                    "connected": is_connected,
-                    "api_url": settings.cway_api_url,
-                    "login_info": login_info
-                }
+                "connected": is_connected,
+                "status": "online" if is_connected else "offline",
+                "api_url": settings.cway_api_url,
+                "login_info": login_info
             }
             
         elif name == "analyze_project_velocity":
@@ -1310,7 +944,9 @@ class CwayMCPServer:
         
         elif name == "get_login_info":
             login_info = await self.system_repo.get_login_info()
-            return {"login_info": login_info}
+            if login_info:
+                return {"login_info": login_info}
+            return {"login_info": None, "message": "Login info not available"}
         
         elif name == "search_users":
             query = arguments.get("query")
@@ -1334,18 +970,23 @@ class CwayMCPServer:
             query = arguments.get("query")
             limit = arguments.get("limit", 10)
             result = await self.project_repo.search_projects(query, limit)
-            return result
+            return {
+                "projects": result.get("projects", []),
+                "total_hits": result.get("total_hits", 0)
+            }
         
         elif name == "get_project_by_id":
             project_id = arguments["project_id"]
             project = await self.project_repo.get_project_by_id(project_id)
-            return {"project": project}
+            if project:
+                return {"project": project}
+            return {"project": None, "message": "Project not found"}
         
         elif name == "create_user":
             email = arguments["email"]
             username = arguments["username"]
-            first_name = arguments.get("first_name")
-            last_name = arguments.get("last_name")
+            first_name = arguments.get("first_name") or arguments.get("firstName")
+            last_name = arguments.get("last_name") or arguments.get("lastName")
             user = await self.user_repo.create_user(email, username, first_name, last_name)
             return {
                 "user": {
@@ -1356,13 +997,14 @@ class CwayMCPServer:
                     "firstName": user.firstName,
                     "lastName": user.lastName,
                     "enabled": user.enabled
-                }
+                },
+                "message": "User created successfully"
             }
         
         elif name == "update_user_name":
             username = arguments["username"]
-            first_name = arguments.get("first_name")
-            last_name = arguments.get("last_name")
+            first_name = arguments.get("first_name") or arguments.get("firstName")
+            last_name = arguments.get("last_name") or arguments.get("lastName")
             user = await self.user_repo.update_user_name(username, first_name, last_name)
             if user:
                 return {
@@ -1374,27 +1016,239 @@ class CwayMCPServer:
                         "name": user.name,
                         "email": user.email,
                         "enabled": user.enabled
-                    }
+                    },
+                    "message": "User updated successfully"
                 }
             return {"user": None, "message": "User not found"}
         
         elif name == "delete_user":
             username = arguments["username"]
             success = await self.user_repo.delete_user(username)
-            return {"success": success}
+            message = f"User '{username}' deleted successfully" if success else f"Failed to delete user '{username}'"
+            return {"success": success, "message": message}
         
         elif name == "create_project":
             name_val = arguments["name"]
             description = arguments.get("description")
             project = await self.project_repo.create_project(name_val, description)
-            return {"project": project}
+            return {"project": project, "message": "Project created successfully"}
         
         elif name == "update_project":
             project_id = arguments["project_id"]
             name_val = arguments.get("name")
             description = arguments.get("description")
             project = await self.project_repo.update_project(project_id, name_val, description)
-            return {"project": project}
+            return {"project": project, "message": "Project updated successfully"}
+        
+        # Project workflow tools
+        elif name == "close_projects":
+            project_ids = arguments["project_ids"]
+            force = arguments.get("force", False)
+            success = await self.project_repo.close_projects(project_ids, force)
+            return {
+                "success": success,
+                "closed_count": len(project_ids) if success else 0,
+                "message": f"Successfully closed {len(project_ids)} projects" if success else "Failed to close projects"
+            }
+        
+        elif name == "reopen_projects":
+            project_ids = arguments["project_ids"]
+            success = await self.project_repo.reopen_projects(project_ids)
+            return {
+                "success": success,
+                "reopened_count": len(project_ids) if success else 0,
+                "message": f"Successfully reopened {len(project_ids)} projects" if success else "Failed to reopen projects"
+            }
+        
+        elif name == "delete_projects":
+            project_ids = arguments["project_ids"]
+            force = arguments.get("force", False)
+            success = await self.project_repo.delete_projects(project_ids, force)
+            return {
+                "success": success,
+                "deleted_count": len(project_ids) if success else 0,
+                "message": f"Successfully deleted {len(project_ids)} projects" if success else "Failed to delete projects"
+            }
+        
+        # Artwork tools
+        elif name == "get_artwork":
+            artwork_id = arguments["artwork_id"]
+            artwork = await self.project_repo.get_artwork(artwork_id)
+            if artwork:
+                return {"artwork": artwork}
+            return {"artwork": None, "message": "Artwork not found"}
+        
+        elif name == "create_artwork":
+            project_id = arguments["project_id"]
+            artwork_name = arguments["name"]
+            description = arguments.get("description")
+            artwork = await self.project_repo.create_artwork(project_id, artwork_name, description)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": "Artwork created successfully"
+            }
+        
+        elif name == "approve_artwork":
+            artwork_id = arguments["artwork_id"]
+            artwork = await self.project_repo.approve_artwork(artwork_id)
+            return {
+                "artwork": artwork,
+                "success": artwork is not None,
+                "message": "Artwork approved successfully" if artwork else "Failed to approve artwork"
+            }
+        
+        elif name == "reject_artwork":
+            artwork_id = arguments["artwork_id"]
+            reason = arguments.get("reason")
+            artwork = await self.project_repo.reject_artwork(artwork_id, reason)
+            return {
+                "artwork": artwork,
+                "success": artwork is not None,
+                "message": "Artwork rejected successfully" if artwork else "Failed to reject artwork"
+            }
+        
+        elif name == "get_my_artworks":
+            result = await self.project_repo.get_my_artworks()
+            return {
+                "artworks": result,
+                "message": f"Found {result['total_count']} artworks requiring action"
+            }
+        
+        elif name == "get_artworks_to_approve":
+            artworks = await self.project_repo.get_artworks_to_approve()
+            return {
+                "artworks": artworks,
+                "count": len(artworks),
+                "message": f"Found {len(artworks)} artworks awaiting approval"
+            }
+        
+        elif name == "get_artworks_to_upload":
+            artworks = await self.project_repo.get_artworks_to_upload()
+            return {
+                "artworks": artworks,
+                "count": len(artworks),
+                "message": f"Found {len(artworks)} artworks requiring upload"
+            }
+        
+        elif name == "download_artworks":
+            artwork_ids = arguments["artwork_ids"]
+            zip_name = arguments.get("zip_name")
+            job_id = await self.project_repo.create_artwork_download_job(artwork_ids, zip_name)
+            return {
+                "job_id": job_id,
+                "artwork_count": len(artwork_ids),
+                "success": True,
+                "message": f"Download job created for {len(artwork_ids)} artworks. Job ID: {job_id}"
+            }
+        
+        elif name == "get_artwork_preview":
+            artwork_id = arguments["artwork_id"]
+            preview = await self.project_repo.get_artwork_preview(artwork_id)
+            if preview:
+                return {
+                    "preview": preview,
+                    "message": "Preview file retrieved successfully"
+                }
+            return {
+                "preview": None,
+                "message": "No preview available for this artwork"
+            }
+        
+        # Folder tools
+        elif name == "get_folder_tree":
+            folders = await self.project_repo.get_folder_tree()
+            return {"folders": folders}
+        
+        elif name == "get_folder":
+            folder_id = arguments["folder_id"]
+            folder = await self.project_repo.get_folder(folder_id)
+            if folder:
+                return {"folder": folder}
+            return {"folder": None, "message": "Folder not found"}
+        
+        elif name == "get_folder_items":
+            folder_id = arguments["folder_id"]
+            page = arguments.get("page", 0)
+            size = arguments.get("size", 20)
+            result = await self.project_repo.get_folder_items(folder_id, page, size)
+            return {
+                "items": result.get("items", []),
+                "total_hits": result.get("totalHits", 0),
+                "page": result.get("page", 0)
+            }
+        
+        # Project status tools
+        elif name == "get_project_status_summary":
+            summary = await self.project_repo.get_project_status_summary()
+            return {
+                "summary": summary,
+                "message": f"Analyzed {summary['total']} projects"
+            }
+        
+        elif name == "compare_projects":
+            project_ids = arguments["project_ids"]
+            comparison = await self.project_repo.compare_projects(project_ids)
+            return {
+                "comparison": comparison,
+                "project_count": len(comparison['projects']),
+                "message": f"Compared {len(comparison['projects'])} projects"
+            }
+        
+        elif name == "get_project_history":
+            project_id = arguments["project_id"]
+            history = await self.project_repo.get_project_history(project_id)
+            return {
+                "history": history,
+                "event_count": len(history),
+                "message": f"Retrieved {len(history)} events"
+            }
+        
+        # Media center tools
+        elif name == "search_media_center":
+            query = arguments.get("query")
+            folder_id = arguments.get("folder_id")
+            limit = arguments.get("limit", 50)
+            result = await self.project_repo.search_media_center(query, folder_id, limit=limit)
+            return {
+                "results": result,
+                "message": f"Found {result['total_hits']} items matching search"
+            }
+        
+        elif name == "get_media_center_stats":
+            stats = await self.project_repo.get_media_center_stats()
+            return {
+                "stats": stats,
+                "message": "Media center statistics retrieved"
+            }
+        
+        elif name == "download_folder_contents":
+            folder_id = arguments["folder_id"]
+            zip_name = arguments.get("zip_name")
+            job_id = await self.project_repo.download_folder_contents(folder_id, zip_name)
+            return {
+                "job_id": job_id,
+                "success": True,
+                "message": f"Download job created for folder. Job ID: {job_id}"
+            }
+        
+        elif name == "download_project_media":
+            project_id = arguments["project_id"]
+            zip_name = arguments.get("zip_name")
+            job_id = await self.project_repo.download_project_media(project_id, zip_name)
+            return {
+                "job_id": job_id,
+                "success": True,
+                "message": f"Download job created for project media. Job ID: {job_id}"
+            }
+        
+        # File tools
+        elif name == "get_file":
+            file_id = arguments["file_id"]
+            file = await self.project_repo.get_file(file_id)
+            if file:
+                return {"file": file}
+            return {"file": None, "message": "File not found"}
             
         else:
             raise ValueError(f"Unknown tool: {name}")
@@ -1423,200 +1277,6 @@ class CwayMCPServer:
             raise
         finally:
             await self._cleanup()
-            
-    async def run_sse(self, host: str = "localhost", port: int = 8000, with_dashboard: bool = False, dashboard_port: int = 8080) -> None:
-        """Run the MCP server with modern StreamableHTTP transport protocol.
-        
-        Args:
-            host: Host to bind the MCP server to
-            port: Port for the MCP server
-            with_dashboard: If True, also start the WebSocket dashboard server
-            dashboard_port: Port for the WebSocket dashboard server
-        """
-        from mcp.server.streamable_http import StreamableHTTPServerTransport
-        from starlette.applications import Starlette
-        from starlette.routing import Route, Mount
-        from starlette.requests import Request
-        from starlette.responses import Response, JSONResponse
-        from starlette.middleware import Middleware
-        from starlette.middleware.cors import CORSMiddleware
-        import uvicorn
-        
-        logger.info(f"Starting Cway MCP Server (StreamableHTTP) on {host}:{port}...")
-        if with_dashboard:
-            logger.info(f"Dashboard mode enabled on port {dashboard_port}")
-        
-        try:
-            await self._ensure_initialized()
-            logger.info(f"Server initialized and ready")
-            logger.info(f"Connected to Cway API at {settings.cway_api_url}")
-            
-            # Initialize WebSocket dashboard if requested
-            ws_server = None
-            if with_dashboard:
-                from src.utils.websocket_server import initialize_websocket_server, add_websocket_handler_to_logger
-                logger.info("🌐 Starting WebSocket server for dashboard...")
-                ws_server = await initialize_websocket_server(port=dashboard_port)
-                logger.info(f"✅ WebSocket server started on http://localhost:{dashboard_port}")
-                
-                # Attach WebSocket handler to loggers
-                add_websocket_handler_to_logger()  # Root logger
-                add_websocket_handler_to_logger('src.presentation.cway_mcp_server')
-                add_websocket_handler_to_logger('src.infrastructure.graphql_client')
-                add_websocket_handler_to_logger('src.application')
-                logger.info("✅ Dashboard logging integration complete")
-                logger.info("📊 Dashboard available at: http://localhost:3001")
-                
-                # Test that WebSocket logging is working
-                logger.info("🧪 TEST: WebSocket logging pipeline active - you should see this in dashboard")
-                logger.warning("🧪 TEST: Warning level message for dashboard")
-                logger.error("🧪 TEST: Error level message for dashboard")
-            
-            # Create StreamableHTTP session manager
-            # The manager handles HTTP requests and manages MCP sessions
-            from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
-            from starlette.applications import Starlette as StarletteApp
-            
-            manager = StreamableHTTPSessionManager(self.server)
-            
-            async def health_check(request):
-                """Health check endpoint."""
-                return JSONResponse({
-                    "status": "healthy",
-                    "service": "cway-mcp-server",
-                    "transport": "streamable-http"
-                })
-            
-            # Create Starlette app with CORS middleware
-            middleware = [
-                Middleware(
-                    CORSMiddleware,
-                    allow_origins=["*"],
-                    allow_methods=["GET", "POST", "OPTIONS"],
-                    allow_headers=["*"],
-                    allow_credentials=True,
-                )
-            ]
-            
-            # Use manager.run() as async context manager  
-            async with manager.run():
-                # MCP logging middleware - captures all requests/responses
-                async def mcp_logging_middleware(scope, receive, send):
-                    """Log all MCP requests and responses."""
-                    if scope["type"] == "http" and scope["path"] == "/sse":
-                        # Capture request body
-                        body_parts = []
-                        request_start_time = asyncio.get_event_loop().time()
-                        
-                        async def logging_receive():
-                            message = await receive()
-                            if message["type"] == "http.request":
-                                body = message.get("body", b"")
-                                if body:
-                                    body_parts.append(body)
-                                    # Try to parse and log MCP request
-                                    try:
-                                        import json as json_module
-                                        request_data = json_module.loads(body.decode())
-                                        method = request_data.get("method", "unknown")
-                                        req_id = str(request_data.get("id", "unknown"))
-                                        
-                                        # Log to console
-                                        logger.info(f"📨 MCP Request: method={method}, id={req_id}")
-                                        if "params" in request_data:
-                                            logger.info(f"   Parameters: {json_module.dumps(request_data['params'], indent=2)}")
-                                        
-                                        # Emit flow event to dashboard
-                                        from src.utils.websocket_server import emit_flow_to_dashboard
-                                        await emit_flow_to_dashboard(
-                                            request_id=req_id,
-                                            step="mcp-request",
-                                            source="mcp-client",
-                                            target="mcp-server",
-                                            operation=method,
-                                            status="pending"
-                                        )
-                                    except Exception as e:
-                                        logger.debug(f"Could not parse MCP request: {e}")
-                            return message
-                        
-                        # Capture response to emit success flow event
-                        async def logging_send(message):
-                            if message["type"] == "http.response.body":
-                                # Calculate duration
-                                duration_ms = int((asyncio.get_event_loop().time() - request_start_time) * 1000)
-                                
-                                # Emit success flow event
-                                if body_parts:
-                                    try:
-                                        import json as json_module
-                                        request_data = json_module.loads(body_parts[0].decode())
-                                        req_id = str(request_data.get("id", "unknown"))
-                                        method = request_data.get("method", "unknown")
-                                        
-                                        from src.utils.websocket_server import emit_flow_to_dashboard
-                                        await emit_flow_to_dashboard(
-                                            request_id=req_id,
-                                            step="mcp-response",
-                                            source="mcp-server",
-                                            target="response",
-                                            operation=f"{method} completed",
-                                            status="success",
-                                            duration=duration_ms
-                                        )
-                                    except:
-                                        pass
-                            await send(message)
-                        
-                        # Call the actual handler with logging receive and send
-                        await route_handler(scope, logging_receive, logging_send)
-                    else:
-                        await route_handler(scope, receive, send)
-                
-                # Custom router that handles /sse without trailing slash issues
-                async def route_handler(scope, receive, send):
-                    path = scope["path"]
-                    
-                    if path == "/health":
-                        # Handle health check
-                        request = Request(scope, receive)
-                        response = await health_check(request)
-                        await response(scope, receive, send)
-                    elif path == "/sse":
-                        # Handle MCP SSE requests directly
-                        await manager.handle_request(scope, receive, send)
-                    else:
-                        # 404 for other paths
-                        response = Response("Not Found", status_code=404)
-                        await response(scope, receive, send)
-                
-                # Wrap with CORS middleware manually
-                from starlette.middleware.cors import CORSMiddleware
-                app = CORSMiddleware(
-                    mcp_logging_middleware,  # Use logging middleware instead of direct router
-                    allow_origins=["*"],
-                    allow_methods=["GET", "POST", "OPTIONS"],
-                    allow_headers=["*"],
-                    allow_credentials=True,
-                )
-                
-                logger.info(f"StreamableHTTP server configured")
-                logger.info(f"Endpoints: GET/POST /sse, GET /health")
-                
-                # Run with uvicorn
-                config = uvicorn.Config(app, host=host, port=port, log_level="info")
-                server = uvicorn.Server(config)
-                await server.serve()
-            
-        except Exception as e:
-            logger.error(f"SSE Server error: {e}")
-            raise
-        finally:
-            await self._cleanup()
-            
-    async def cleanup(self) -> None:
-        """Public cleanup method."""
-        await self._cleanup()
             
     async def _cleanup(self) -> None:
         """Cleanup resources."""

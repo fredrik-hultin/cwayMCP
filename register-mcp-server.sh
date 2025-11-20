@@ -34,12 +34,10 @@ cat > "$MCP_CONFIG_FILE" << EOF
   "mcpServers": {
     "cway": {
       "name": "Cway MCP Server",
-      "description": "MCP server for Cway GraphQL API integration with real-time dashboard",
+      "description": "MCP server for Cway GraphQL API integration (stdio mode)",
       "command": "$PROJECT_DIR/venv/bin/python",
       "args": [
-        "$PROJECT_DIR/server/main.py",
-        "--mode",
-        "mcp"
+        "$PROJECT_DIR/server/main.py"
       ],
       "cwd": "$PROJECT_DIR",
       "env": {

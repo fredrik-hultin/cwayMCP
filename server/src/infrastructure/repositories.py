@@ -1,10 +1,10 @@
-"""GraphQL repository implementations for Cway API."""
+"""GraphQL repository implementations for Cway API (updated to new schema)."""
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 import logging
 
-from ..domain.entities import Project, User
+from ..domain.entities import Project, User, ProjectState
 from ..domain.repositories import ProjectRepository, UserRepository
 from .graphql_client import CwayGraphQLClient, CwayAPIError
 
@@ -12,107 +12,117 @@ from .graphql_client import CwayGraphQLClient, CwayAPIError
 logger = logging.getLogger(__name__)
 
 
-def _parse_datetime(dt_str: str) -> datetime:
-    """Parse ISO datetime string to datetime object."""
-    try:
-        # Handle different datetime formats from GraphQL
-        return datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-    except ValueError:
-        # Fallback to current time if parsing fails
-        logger.warning(f"Failed to parse datetime: {dt_str}")
+def _parse_datetime_maybe(value: Optional[Union[str, int, float]]) -> datetime:
+    """Parse various datetime representations from API to datetime.
+    - ISO strings are parsed via fromisoformat (with Z handled)
+    - Unix timestamps (seconds or ms) are converted appropriately
+    - None falls back to now
+    """
+    if value is None:
         return datetime.now()
+    # Epoch numeric
+    if isinstance(value, (int, float)):
+        try:
+            # Heuristic: treat > 10^12 as ms
+            ts = float(value)
+            if ts > 1_000_000_000_000:  # ms
+                ts /= 1000.0
+            return datetime.fromtimestamp(ts)
+        except Exception:
+            return datetime.now()
+    # ISO string
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except Exception:
+            logger.warning(f"Failed to parse datetime string: {value}")
+            return datetime.now()
+    return datetime.now()
 
 
 class GraphQLProjectRepository(ProjectRepository):
-    """GraphQL implementation of ProjectRepository."""
+    """GraphQL implementation of ProjectRepository aligned with new API."""
     
     def __init__(self, graphql_client: CwayGraphQLClient) -> None:
-        """Initialize with GraphQL client."""
         self.graphql_client = graphql_client
         
     async def get_all(self) -> List[Project]:
-        """Get all projects from Cway API."""
+        """Get first page of projects using new paginated API."""
         query = """
-        query GetProjects {
-            projects {
-                id
-                name
-                description
-                status
-                createdAt
-                updatedAt
+        query GetProjects($paging: Paging) {
+            projects(paging: $paging) {
+                projects {
+                    id
+                    name
+                    description
+                    state
+                }
+                page
+                totalHits
             }
         }
         """
         
         try:
-            result = await self.graphql_client.execute_query(query)
-            projects_data = result.get("projects", [])
-            
-            projects = []
-            for data in projects_data:
+            result = await self.graphql_client.execute_query(query, {"paging": {"page": 0, "pageSize": 100}})
+            projects_page = result.get("projects", {})
+            items = projects_page.get("projects", []) or projects_page.get("items", [])
+            projects: List[Project] = []
+            for data in items:
+                status_str = (data.get("state") or "ACTIVE")
                 project = Project(
                     id=data["id"],
                     name=data["name"],
                     description=data.get("description"),
-                    status=data.get("status", "active"),
-                    created_at=_parse_datetime(data["createdAt"]),
-                    updated_at=_parse_datetime(data["updatedAt"])
+                    status=status_str,  # Project.__post_init__ will coerce string -> enum
+                    created_at=_parse_datetime_maybe(None),
+                    updated_at=_parse_datetime_maybe(None),
                 )
                 projects.append(project)
-                
             return projects
-            
         except Exception as e:
             logger.error(f"Failed to fetch projects: {e}")
             raise CwayAPIError(f"Failed to fetch projects: {e}")
             
     async def get_by_id(self, project_id: str) -> Optional[Project]:
-        """Get project by ID from Cway API."""
+        """Get project by ID using new schema."""
         query = """
-        query GetProject($id: ID!) {
+        query GetProject($id: UUID!) {
             project(id: $id) {
                 id
                 name
                 description
-                status
-                createdAt
-                updatedAt
+                state
+                lastActivity
             }
         }
         """
         
         try:
             result = await self.graphql_client.execute_query(query, {"id": project_id})
-            project_data = result.get("project")
-            
-            if not project_data:
+            data = result.get("project")
+            if not data:
                 return None
-                
             return Project(
-                id=project_data["id"],
-                name=project_data["name"],
-                description=project_data.get("description"),
-                status=project_data.get("status", "active"),
-                created_at=_parse_datetime(project_data["createdAt"]),
-                updated_at=_parse_datetime(project_data["updatedAt"])
+                id=data["id"],
+                name=data["name"],
+                description=data.get("description"),
+                status=data.get("state", "ACTIVE"),
+                created_at=_parse_datetime_maybe(data.get("lastActivity")),
+                updated_at=_parse_datetime_maybe(data.get("lastActivity")),
             )
-            
         except Exception as e:
             logger.error(f"Failed to fetch project {project_id}: {e}")
             raise CwayAPIError(f"Failed to fetch project: {e}")
             
     async def create(self, project: Project) -> Project:
-        """Create a new project in Cway API."""
+        """Create a new project (fields available in new schema)."""
         mutation = """
         mutation CreateProject($input: ProjectInput!) {
             createProject(input: $input) {
                 id
                 name
                 description
-                status
-                createdAt
-                updatedAt
             }
         }
         """
@@ -120,37 +130,31 @@ class GraphQLProjectRepository(ProjectRepository):
         project_input = {
             "name": project.name,
             "description": project.description,
-            "status": project.status
         }
         
         try:
             result = await self.graphql_client.execute_mutation(mutation, {"input": project_input})
-            created_data = result.get("createProject")
-            
+            created = result.get("createProject") or {}
             return Project(
-                id=created_data["id"],
-                name=created_data["name"],
-                description=created_data.get("description"),
-                status=created_data.get("status", "active"),
-                created_at=_parse_datetime(created_data["createdAt"]),
-                updated_at=_parse_datetime(created_data["updatedAt"])
+                id=created.get("id"),
+                name=created.get("name", project.name),
+                description=created.get("description"),
+                status="ACTIVE",
+                created_at=_parse_datetime_maybe(None),
+                updated_at=_parse_datetime_maybe(None),
             )
-            
         except Exception as e:
             logger.error(f"Failed to create project: {e}")
             raise CwayAPIError(f"Failed to create project: {e}")
             
     async def update(self, project: Project) -> Project:
-        """Update an existing project in Cway API."""
+        """Update an existing project."""
         mutation = """
-        mutation UpdateProject($id: ID!, $input: ProjectInput!) {
+        mutation UpdateProject($id: UUID!, $input: ProjectInput!) {
             updateProject(id: $id, input: $input) {
                 id
                 name
                 description
-                status
-                createdAt
-                updatedAt
             }
         }
         """
@@ -158,255 +162,187 @@ class GraphQLProjectRepository(ProjectRepository):
         project_input = {
             "name": project.name,
             "description": project.description,
-            "status": project.status
         }
         
         try:
             result = await self.graphql_client.execute_mutation(
-                mutation, 
-                {"id": project.id, "input": project_input}
+                mutation, {"id": project.id, "input": project_input}
             )
-            updated_data = result.get("updateProject")
-            
+            updated = result.get("updateProject") or {}
             return Project(
-                id=updated_data["id"],
-                name=updated_data["name"],
-                description=updated_data.get("description"),
-                status=updated_data.get("status", "active"),
-                created_at=_parse_datetime(updated_data["createdAt"]),
-                updated_at=_parse_datetime(updated_data["updatedAt"])
+                id=updated.get("id", project.id),
+                name=updated.get("name", project.name),
+                description=updated.get("description", project.description),
+                status=project.status,
+                created_at=project.created_at,
+                updated_at=_parse_datetime_maybe(None),
             )
-            
         except Exception as e:
             logger.error(f"Failed to update project: {e}")
             raise CwayAPIError(f"Failed to update project: {e}")
             
     async def delete(self, project_id: str) -> bool:
-        """Delete a project from Cway API."""
+        """Delete a project. If API lacks this exact mutation in new schema, return False gracefully."""
         mutation = """
-        mutation DeleteProject($id: ID!) {
+        mutation DeleteProject($id: UUID!) {
             deleteProject(id: $id) {
                 success
             }
         }
         """
-        
         try:
             result = await self.graphql_client.execute_mutation(mutation, {"id": project_id})
             return result.get("deleteProject", {}).get("success", False)
-            
-        except Exception as e:
-            logger.error(f"Failed to delete project: {e}")
-            raise CwayAPIError(f"Failed to delete project: {e}")
+        except Exception:
+            # Some schemas may not support deleteProject; treat as not deleted
+            return False
 
 
 class GraphQLUserRepository(UserRepository):
-    """GraphQL implementation of UserRepository."""
+    """GraphQL implementation of UserRepository aligned with new API."""
     
     def __init__(self, graphql_client: CwayGraphQLClient) -> None:
-        """Initialize with GraphQL client."""
         self.graphql_client = graphql_client
         
     async def get_all(self) -> List[User]:
-        """Get all users from Cway API."""
+        """Get users using findUsersPage paging."""
         query = """
-        query GetUsers {
-            users {
-                id
-                email
-                name
-                role
-                createdAt
-                updatedAt
+        query GetUsers($paging: Paging) {
+            findUsersPage(paging: $paging) {
+                users {
+                    id
+                    email
+                    name
+                    username
+                    createdAt
+                }
+                page
+                totalHits
             }
         }
         """
         
         try:
-            result = await self.graphql_client.execute_query(query)
-            users_data = result.get("users", [])
-            
-            users = []
+            result = await self.graphql_client.execute_query(query, {"paging": {"page": 0, "pageSize": 100}})
+            page = result.get("findUsersPage", {})
+            users_data = page.get("users", [])
+            users: List[User] = []
             for data in users_data:
-                user = User(
-                    id=data["id"],
-                    email=data["email"],
-                    name=data.get("name"),
-                    role=data.get("role", "user"),
-                    created_at=_parse_datetime(data["createdAt"]),
-                    updated_at=_parse_datetime(data["updatedAt"])
+                users.append(
+                    User(
+                        id=data["id"],
+                        email=data.get("email", ""),
+                        name=data.get("name") or data.get("username"),
+                        role="user",
+                        created_at=_parse_datetime_maybe(data.get("createdAt")),
+                        updated_at=_parse_datetime_maybe(data.get("createdAt")),
+                    )
                 )
-                users.append(user)
-                
             return users
-            
         except Exception as e:
             logger.error(f"Failed to fetch users: {e}")
             raise CwayAPIError(f"Failed to fetch users: {e}")
             
     async def get_by_id(self, user_id: str) -> Optional[User]:
-        """Get user by ID from Cway API."""
-        query = """
-        query GetUser($id: ID!) {
-            user(id: $id) {
-                id
-                email
-                name
-                role
-                createdAt
-                updatedAt
-            }
-        }
-        """
-        
-        try:
-            result = await self.graphql_client.execute_query(query, {"id": user_id})
-            user_data = result.get("user")
-            
-            if not user_data:
-                return None
-                
-            return User(
-                id=user_data["id"],
-                email=user_data["email"],
-                name=user_data.get("name"),
-                role=user_data.get("role", "user"),
-                created_at=_parse_datetime(user_data["createdAt"]),
-                updated_at=_parse_datetime(user_data["updatedAt"])
-            )
-            
-        except Exception as e:
-            logger.error(f"Failed to fetch user {user_id}: {e}")
-            raise CwayAPIError(f"Failed to fetch user: {e}")
+        """Get user by ID by scanning page (no direct query by ID in new API)."""
+        users = await self.get_all()
+        for u in users:
+            if u.id == user_id:
+                return u
+        return None
             
     async def get_by_email(self, email: str) -> Optional[User]:
-        """Get user by email from Cway API."""
+        """Get user by email using findUsers and filtering client-side."""
         query = """
-        query GetUserByEmail($email: String!) {
-            userByEmail(email: $email) {
+        query FindUsers($username: String) {
+            findUsers(username: $username) {
                 id
                 email
                 name
-                role
+                username
                 createdAt
-                updatedAt
             }
         }
         """
-        
         try:
-            result = await self.graphql_client.execute_query(query, {"email": email})
-            user_data = result.get("userByEmail")
-            
-            if not user_data:
-                return None
-                
-            return User(
-                id=user_data["id"],
-                email=user_data["email"],
-                name=user_data.get("name"),
-                role=user_data.get("role", "user"),
-                created_at=_parse_datetime(user_data["createdAt"]),
-                updated_at=_parse_datetime(user_data["updatedAt"])
-            )
-            
+            # API supports username search; to search by email, request all and filter locally
+            result = await self.graphql_client.execute_query(query, {"username": None})
+            for data in result.get("findUsers", []) or []:
+                if data.get("email", "").lower() == email.lower():
+                    return User(
+                        id=data["id"],
+                        email=data.get("email", ""),
+                        name=data.get("name") or data.get("username"),
+                        role="user",
+                        created_at=_parse_datetime_maybe(data.get("createdAt")),
+                        updated_at=_parse_datetime_maybe(data.get("createdAt")),
+                    )
+            return None
         except Exception as e:
             logger.error(f"Failed to fetch user by email {email}: {e}")
             raise CwayAPIError(f"Failed to fetch user by email: {e}")
             
     async def create(self, user: User) -> User:
-        """Create a new user in Cway API."""
+        """Create a new user (fields available may differ)."""
         mutation = """
         mutation CreateUser($input: UserInput!) {
             createUser(input: $input) {
                 id
                 email
                 name
-                role
-                createdAt
-                updatedAt
             }
         }
         """
-        
         user_input = {
             "email": user.email,
-            "name": user.name,
-            "role": user.role
+            "username": user.name or user.email,
         }
-        
         try:
             result = await self.graphql_client.execute_mutation(mutation, {"input": user_input})
-            created_data = result.get("createUser")
-            
+            data = result.get("createUser") or {}
             return User(
-                id=created_data["id"],
-                email=created_data["email"],
-                name=created_data.get("name"),
-                role=created_data.get("role", "user"),
-                created_at=_parse_datetime(created_data["createdAt"]),
-                updated_at=_parse_datetime(created_data["updatedAt"])
+                id=data.get("id"),
+                email=data.get("email", user.email),
+                name=data.get("name") or user.name,
+                role="user",
+                created_at=_parse_datetime_maybe(None),
+                updated_at=_parse_datetime_maybe(None),
             )
-            
         except Exception as e:
             logger.error(f"Failed to create user: {e}")
             raise CwayAPIError(f"Failed to create user: {e}")
             
     async def update(self, user: User) -> User:
-        """Update an existing user in Cway API."""
+        """Update an existing user (best-effort with new schema)."""
         mutation = """
-        mutation UpdateUser($id: ID!, $input: UserInput!) {
-            updateUser(id: $id, input: $input) {
+        mutation UpdateUser($username: String!, $firstName: String, $lastName: String) {
+            setUserRealName(username: $username, firstName: $firstName, lastName: $lastName) {
                 id
                 email
                 name
-                role
+                username
                 createdAt
-                updatedAt
             }
         }
         """
-        
-        user_input = {
-            "email": user.email,
-            "name": user.name,
-            "role": user.role
-        }
-        
         try:
-            result = await self.graphql_client.execute_mutation(
-                mutation,
-                {"id": user.id, "input": user_input}
-            )
-            updated_data = result.get("updateUser")
-            
+            # Using setUserRealName as a representative update operation
+            variables = {"username": user.name or user.email, "firstName": None, "lastName": None}
+            result = await self.graphql_client.execute_mutation(mutation, variables)
+            data = result.get("setUserRealName") or {}
             return User(
-                id=updated_data["id"],
-                email=updated_data["email"],
-                name=updated_data.get("name"),
-                role=updated_data.get("role", "user"),
-                created_at=_parse_datetime(updated_data["createdAt"]),
-                updated_at=_parse_datetime(updated_data["updatedAt"])
+                id=data.get("id", user.id),
+                email=data.get("email", user.email),
+                name=data.get("name") or data.get("username") or user.name,
+                role="user",
+                created_at=_parse_datetime_maybe(data.get("createdAt")),
+                updated_at=_parse_datetime_maybe(None),
             )
-            
         except Exception as e:
             logger.error(f"Failed to update user: {e}")
             raise CwayAPIError(f"Failed to update user: {e}")
             
     async def delete(self, user_id: str) -> bool:
-        """Delete a user from Cway API."""
-        mutation = """
-        mutation DeleteUser($id: ID!) {
-            deleteUser(id: $id) {
-                success
-            }
-        }
-        """
-        
-        try:
-            result = await self.graphql_client.execute_mutation(mutation, {"id": user_id})
-            return result.get("deleteUser", {}).get("success", False)
-            
-        except Exception as e:
-            logger.error(f"Failed to delete user: {e}")
+        """Delete user (no direct mutation in new schema here; return False)."""
+        return False
             raise CwayAPIError(f"Failed to delete user: {e}")

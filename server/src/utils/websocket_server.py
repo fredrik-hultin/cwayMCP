@@ -25,6 +25,7 @@ class WebSocketLogServer:
         self.app = web.Application()
         self.sio.attach(self.app)
         self.clients: Set[str] = set()
+        self.client_info: Dict[str, Dict[str, Any]] = {}  # sid -> {ip, connected_at, user_agent}
         self.log_history: List[Dict[str, Any]] = []
         self.flow_history: List[Dict[str, Any]] = []
         
@@ -36,8 +37,30 @@ class WebSocketLogServer:
         @self.sio.event
         async def connect(sid, environ):
             """Handle client connection."""
+            # Extract client IP and info
+            headers = environ.get('aiohttp.request', {}).headers if 'aiohttp.request' in environ else {}
+            remote_addr = environ.get('REMOTE_ADDR', 'unknown')
+            
+            # Try to get real IP from headers (in case of proxy)
+            client_ip = (
+                headers.get('X-Forwarded-For', '').split(',')[0].strip() or
+                headers.get('X-Real-IP', '') or
+                remote_addr
+            )
+            
+            user_agent = headers.get('User-Agent', 'unknown')
+            
             self.clients.add(sid)
-            logger.info(f"Dashboard client connected: {sid}")
+            self.client_info[sid] = {
+                'ip': client_ip,
+                'connected_at': datetime.now().isoformat(),
+                'user_agent': user_agent
+            }
+            
+            logger.info(f"Dashboard client connected: {sid} from {client_ip}")
+            
+            # Broadcast updated connection list to all clients
+            await self._broadcast_connections()
             
             # Send historical data
             if self.log_history:
@@ -48,8 +71,13 @@ class WebSocketLogServer:
         @self.sio.event
         async def disconnect(sid):
             """Handle client disconnection."""
+            client_ip = self.client_info.get(sid, {}).get('ip', 'unknown')
             self.clients.discard(sid)
-            logger.info(f"Dashboard client disconnected: {sid}")
+            self.client_info.pop(sid, None)
+            logger.info(f"Dashboard client disconnected: {sid} from {client_ip}")
+            
+            # Broadcast updated connection list to all clients
+            await self._broadcast_connections()
             
         @self.sio.event
         async def request_historical_data(sid):
@@ -82,7 +110,29 @@ class WebSocketLogServer:
             
     async def _health_check(self, request):
         """Health check endpoint."""
-        return web.json_response({'status': 'healthy', 'clients': len(self.clients)})
+        return web.json_response({
+            'status': 'healthy',
+            'clients': len(self.clients),
+            'connections': list(self.client_info.values())
+        })
+    
+    async def _broadcast_connections(self):
+        """Broadcast current connection list to all clients."""
+        connections_data = [
+            {
+                'sid': sid,
+                'ip': info['ip'],
+                'connected_at': info['connected_at'],
+                'user_agent': info['user_agent']
+            }
+            for sid, info in self.client_info.items()
+        ]
+        
+        if self.clients:
+            await self.sio.emit('connections_update', {
+                'connections': connections_data,
+                'total': len(connections_data)
+            })
         
     async def emit_log(self, level: str, source: str, message: str, request_id: Optional[str] = None):
         """Emit log message to all connected clients."""

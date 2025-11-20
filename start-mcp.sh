@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start the Cway MCP Server
+# Start the Cway MCP Server in stdio mode
 
 # Get the script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -9,4 +9,4 @@ source "$SCRIPT_DIR/venv/bin/activate"
 
 # Start the MCP server
 cd "$SCRIPT_DIR/server"
-python main.py --mode mcp
+python main.py

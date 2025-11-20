@@ -180,9 +180,9 @@ class TestServerBusinessLogic:
         
         result = await server_with_mocks._execute_tool("get_active_projects", {})
         
-        assert "active_projects" in result
-        assert len(result["active_projects"]) == 1
-        assert result["active_projects"][0]["name"] == "Sample Project"
+        assert "projects" in result
+        assert len(result["projects"]) == 1
+        assert result["projects"][0]["name"] == "Sample Project"
         
     async def test_execute_get_completed_projects(self, server_with_mocks: CwayMCPServer) -> None:
         """Test executing get_completed_projects tool."""
@@ -198,9 +198,9 @@ class TestServerBusinessLogic:
         
         result = await server_with_mocks._execute_tool("get_completed_projects", {})
         
-        assert "completed_projects" in result
-        assert len(result["completed_projects"]) == 1
-        assert result["completed_projects"][0]["name"] == "Completed Project"
+        assert "projects" in result
+        assert len(result["projects"]) == 1
+        assert result["projects"][0]["name"] == "Completed Project"
         
     async def test_execute_list_users(
         self,
@@ -326,11 +326,10 @@ class TestServerBusinessLogic:
         
         result = await server_with_mocks._execute_tool("get_system_status", {})
         
-        assert "system_status" in result
-        status = result["system_status"]
-        assert status["connected"] is True
-        assert "user" in status["login_info"]
-        assert "api_url" in status
+        assert "status" in result
+        assert result["connected"] is True
+        assert "user" in result["login_info"]
+        assert "api_url" in result
         
     async def test_execute_unknown_tool(self, server_with_mocks: CwayMCPServer) -> None:
         """Test executing unknown tool raises error."""

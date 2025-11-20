@@ -16,7 +16,6 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from config.settings import settings
 from src.utils.logging_config import initialize_logging
 from src.utils.websocket_server import initialize_websocket_server, add_websocket_handler_to_logger
-from src.presentation.cway_mcp_server import CwayMCPServer
 
 
 async def main():
@@ -47,13 +46,17 @@ async def main():
         add_websocket_handler_to_logger('src.application')  # Application layer loggers
         logger.info("✅ Dashboard logging integration complete")
         
-        # Initialize MCP server
-        logger.info("🔧 Initializing MCP server...")
-        mcp_server = CwayMCPServer()
-        # The MCP server initializes on first use via _ensure_initialized()
-        # Just log that it's ready
+        # Initialize MCP server (optional; skip if MCP framework not available)
+        try:
+            logger.info("🔧 Initializing MCP server...")
+            from src.presentation.cway_mcp_server import CwayMCPServer  # deferred import
+            mcp_server = CwayMCPServer()
+            logger.info("✅ MCP server initialized (will connect on first use)")
+        except Exception as e:
+            logger.warning(f"⚠️ MCP server not initialized (framework missing or error): {e}")
+            mcp_server = None
         
-        logger.info("🎯 All servers initialized successfully!")
+        logger.info("🎯 All services initialized successfully!")
         logger.info("📊 Dashboard available at: http://localhost:3001")
         logger.info("🔌 WebSocket server at: http://localhost:8080")
         logger.info("🔑 Using Cway API: %s", settings.cway_api_url)

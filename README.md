@@ -2,6 +2,23 @@
 
 > A comprehensive Model Context Protocol (MCP) server for seamless Cway GraphQL API integration with real-time dashboard monitoring.
 
+## 🤖 ChatGPT Desktop Integration
+
+**Using ChatGPT Desktop App?** The app requires stdio (not HTTP/SSE) communication.
+
+👉 **See [CHATGPT_SETUP.md](CHATGPT_SETUP.md)** for complete ChatGPT Desktop integration guide.
+
+**Quick Setup:**
+```bash
+# 1. Setup and test
+./start-mcp.sh
+
+# 2. Register with ChatGPT Desktop
+./register-chatgpt-mcp.sh
+```
+
+**Note:** The React dashboard (`client/`) is optional for ChatGPT Desktop usage. See [REMOVE_CLIENT.md](REMOVE_CLIENT.md) if you want to remove it.
+
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Node.js 18+](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-blue.svg)](https://www.typescriptlang.org/)
@@ -13,6 +30,7 @@
 - **GraphQL API Integration** - Direct connection to Cway's GraphQL endpoint
 - **Resource Management** - Structured access to projects, users, and system data  
 - **Tool Framework** - Extensible tool system for data operations
+- **REST API** - FastAPI-based REST API with OpenAPI documentation for ChatGPT GPT integration
 - **Type Safety** - Full TypeScript/Python type definitions
 
 ### 📊 Real-time Dashboard
@@ -109,10 +127,28 @@ cd client && npm start
 cd server && python main.py --mode mcp
 ```
 
-### 5️⃣ Access Dashboard
+**🌐 REST API Server**
+```bash
+# Start REST API server (port 8000)
+cd server && python main.py --mode rest
+
+# Or use dedicated script
+cd server && python start_rest_api.py
+```
+
+### 5️⃣ Access Points
+
+**Dashboard & Monitoring:**
 - **📊 React Dashboard**: http://localhost:3001
 - **🔌 WebSocket Server**: http://localhost:8080  
 - **❤️ Health Check**: http://localhost:8080/health
+
+**REST API (when running in REST mode):**
+- **🌐 API Root**: http://localhost:8000/
+- **📚 Swagger UI**: http://localhost:8000/docs
+- **📖 ReDoc**: http://localhost:8000/redoc
+- **📄 OpenAPI Spec**: http://localhost:8000/openapi.json
+- **❤️ API Health**: http://localhost:8000/health
 
 ## 🛠️ Development Workflow
 

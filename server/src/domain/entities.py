@@ -104,8 +104,8 @@ class Project(CwayEntity):
     
     name: str
     description: Optional[str] = None
-    status: str = "ACTIVE"
-    state: Optional[ProjectState] = None
+    status: ProjectState = ProjectState.ACTIVE
+    state: Optional[ProjectState] = None  # Deprecated, use status
     
     # Progress tracking
     completion_percentage: float = 0.0
@@ -147,11 +147,6 @@ class Project(CwayEntity):
     estimated_work_hours: float = 0.0
     time_spent_per_phase: Dict[str, float] = field(default_factory=dict)
     
-    VALID_STATUSES = {
-        "ACTIVE", "INACTIVE", "COMPLETED", "CANCELLED", 
-        "PLANNED", "IN_PROGRESS", "DELIVERED", "ARCHIVED"
-    }
-    
     def __post_init__(self) -> None:
         """Validate and initialize project."""
         super().__post_init__()
@@ -159,8 +154,13 @@ class Project(CwayEntity):
         if not self.name:
             raise ValueError("Project name cannot be empty")
             
-        if self.status not in self.VALID_STATUSES:
-            raise ValueError(f"Status must be one of {self.VALID_STATUSES}, got: {self.status}")
+        # Convert string to enum if needed (for backward compatibility)
+        if isinstance(self.status, str):
+            try:
+                self.status = ProjectState[self.status.upper()]
+            except KeyError:
+                valid_values = ", ".join([s.value for s in ProjectState])
+                raise ValueError(f"Status must be one of {valid_values}, got: {self.status}")
         
         # Initialize temporal metadata if not provided
         if self.temporal_metadata is None:

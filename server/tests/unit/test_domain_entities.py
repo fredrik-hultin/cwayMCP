@@ -6,7 +6,7 @@ import pytest
 
 from src.domain.entities import (
     Project, User, CwayEntity, Artwork, Revision,
-    RevisionStatus, ArtworkType
+    RevisionStatus, ArtworkType, ProjectState
 )
 
 
@@ -70,7 +70,7 @@ class TestProject:
         assert project.id == project_data["id"]
         assert project.name == project_data["name"]
         assert project.description == project_data["description"]
-        assert project.status == project_data["status"]
+        assert project.status == ProjectState.ACTIVE  # Converted to enum
         
     def test_project_creation_minimal(self) -> None:
         """Test creating a Project with minimal required fields."""
@@ -84,13 +84,14 @@ class TestProject:
         assert project.id == "proj-123"
         assert project.name == "Test Project"
         assert project.description is None
-        assert project.status == "ACTIVE"  # Default value
+        assert project.status == ProjectState.ACTIVE  # Default value
         
     def test_project_status_validation(self) -> None:
         """Test that Project status validation works."""
         valid_statuses = ["ACTIVE", "INACTIVE", "ARCHIVED"]
+        expected_enums = [ProjectState.ACTIVE, ProjectState.INACTIVE, ProjectState.ARCHIVED]
         
-        for status in valid_statuses:
+        for status, expected_enum in zip(valid_statuses, expected_enums):
             project = Project(
                 id="proj-123",
                 name="Test Project",
@@ -98,7 +99,7 @@ class TestProject:
                 created_at=datetime.now(),
                 updated_at=datetime.now()
             )
-            assert project.status == status
+            assert project.status == expected_enum  # Should be converted to enum
             
         # Invalid status should raise ValueError
         with pytest.raises(ValueError, match="Status must be one of"):
