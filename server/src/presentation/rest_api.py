@@ -13,11 +13,11 @@ from fastapi.responses import JSONResponse
 
 from config.settings import settings
 from ..infrastructure.graphql_client import CwayGraphQLClient, CwayAPIError
-from ..infrastructure.cway_repositories import (
-    CwayUserRepository,
-    CwayProjectRepository,
-    CwaySystemRepository
+from ..infrastructure.repositories import (
+    UserRepository,
+    ProjectRepository
 )
+from ..infrastructure.cway_repositories import CwaySystemRepository
 from ..application.kpi_use_cases import KPIUseCases
 from ..application.temporal_kpi_use_cases import TemporalKPICalculator
 from .rest_models import (
@@ -49,8 +49,8 @@ class APIContext:
     
     def __init__(self):
         self.graphql_client: Optional[CwayGraphQLClient] = None
-        self.user_repo: Optional[CwayUserRepository] = None
-        self.project_repo: Optional[CwayProjectRepository] = None
+        self.user_repo: Optional[UserRepository] = None
+        self.project_repo: Optional[ProjectRepository] = None
         self.system_repo: Optional[CwaySystemRepository] = None
         self.kpi_use_cases: Optional[KPIUseCases] = None
         self.temporal_kpi_calculator: Optional[TemporalKPICalculator] = None
@@ -63,8 +63,8 @@ class APIContext:
         await self.graphql_client.connect()
         
         # Initialize repositories
-        self.user_repo = CwayUserRepository(self.graphql_client)
-        self.project_repo = CwayProjectRepository(self.graphql_client)
+        self.user_repo = UserRepository(self.graphql_client)
+        self.project_repo = ProjectRepository(self.graphql_client)
         self.system_repo = CwaySystemRepository(self.graphql_client)
         
         # Initialize use cases

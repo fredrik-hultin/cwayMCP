@@ -19,12 +19,17 @@ from mcp.types import (
 
 from config.settings import settings
 from ..infrastructure.graphql_client import CwayGraphQLClient, CwayAPIError
-from ..infrastructure.cway_repositories import (
-    CwayUserRepository, 
-    CwayProjectRepository,
-    CwayCategoryRepository,
-    CwaySystemRepository
+from ..infrastructure.repositories import (
+    UserRepository,
+    ProjectRepository,
+    ArtworkRepository,
+    MediaRepository,
+    ShareRepository,
+    TeamRepository,
+    SearchRepository,
+    CategoryRepository
 )
+from ..infrastructure.cway_repositories import CwaySystemRepository
 from ..domain.cway_entities import ProjectState
 from ..application.kpi_use_cases import KPIUseCases
 from ..application.temporal_kpi_use_cases import TemporalKPICalculator
@@ -65,9 +70,14 @@ class CwayMCPServer:
         """Initialize the MCP server."""
         self.server = Server("cway-mcp-server")
         self.graphql_client: Optional[CwayGraphQLClient] = None
-        self.user_repo: Optional[CwayUserRepository] = None
-        self.project_repo: Optional[CwayProjectRepository] = None
-        self.category_repo: Optional[CwayCategoryRepository] = None
+        self.user_repo: Optional[UserRepository] = None
+        self.project_repo: Optional[ProjectRepository] = None
+        self.artwork_repo: Optional[ArtworkRepository] = None
+        self.media_repo: Optional[MediaRepository] = None
+        self.share_repo: Optional[ShareRepository] = None
+        self.team_repo: Optional[TeamRepository] = None
+        self.search_repo: Optional[SearchRepository] = None
+        self.category_repo: Optional[CategoryRepository] = None
         self.system_repo: Optional[CwaySystemRepository] = None
         self.kpi_use_cases: Optional[KPIUseCases] = None
         self.temporal_kpi_calculator: Optional[TemporalKPICalculator] = None
@@ -568,9 +578,14 @@ class CwayMCPServer:
             await self.graphql_client.connect()
             
             # Initialize repositories
-            self.user_repo = CwayUserRepository(self.graphql_client)
-            self.project_repo = CwayProjectRepository(self.graphql_client)
-            self.category_repo = CwayCategoryRepository(self.graphql_client)
+            self.user_repo = UserRepository(self.graphql_client)
+            self.project_repo = ProjectRepository(self.graphql_client)
+            self.artwork_repo = ArtworkRepository(self.graphql_client)
+            self.media_repo = MediaRepository(self.graphql_client)
+            self.share_repo = ShareRepository(self.graphql_client)
+            self.team_repo = TeamRepository(self.graphql_client)
+            self.search_repo = SearchRepository(self.graphql_client)
+            self.category_repo = CategoryRepository(self.graphql_client)
             self.system_repo = CwaySystemRepository(self.graphql_client)
             
             # Initialize KPI use cases

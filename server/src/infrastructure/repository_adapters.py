@@ -3,15 +3,15 @@
 from typing import List, Optional
 from datetime import datetime
 from ..domain.entities import Project, User
-from ..domain.repository_interfaces import ProjectRepository, UserRepository
-from ..infrastructure.cway_repositories import CwayProjectRepository, CwayUserRepository
+from ..domain.repository_interfaces import ProjectRepository as ProjectRepositoryInterface, UserRepository as UserRepositoryInterface
+from ..infrastructure.repositories import ProjectRepository, UserRepository
 from ..domain.cway_entities import PlannerProject, CwayUser
 
 
-class CwayProjectRepositoryAdapter(ProjectRepository):
+class CwayProjectRepositoryAdapter(ProjectRepositoryInterface):
     """Adapter to convert CwayProject entities to domain Project entities."""
     
-    def __init__(self, cway_project_repo: CwayProjectRepository):
+    def __init__(self, cway_project_repo: ProjectRepository):
         self.cway_project_repo = cway_project_repo
     
     async def get_all_projects(self) -> List[Project]:
@@ -197,10 +197,10 @@ class CwayProjectRepositoryAdapter(ProjectRepository):
                 return datetime.now()
 
 
-class CwayUserRepositoryAdapter(UserRepository):
+class CwayUserRepositoryAdapter(UserRepositoryInterface):
     """Adapter to convert CwayUser entities to domain User entities."""
     
-    def __init__(self, cway_user_repo: CwayUserRepository):
+    def __init__(self, cway_user_repo: UserRepository):
         self.cway_user_repo = cway_user_repo
     
     async def get_all_users(self) -> List[User]:
