@@ -21,7 +21,8 @@ from config.settings import settings
 from ..infrastructure.graphql_client import CwayGraphQLClient, CwayAPIError
 from ..infrastructure.cway_repositories import (
     CwayUserRepository, 
-    CwayProjectRepository, 
+    CwayProjectRepository,
+    CwayCategoryRepository,
     CwaySystemRepository
 )
 from ..domain.cway_entities import ProjectState
@@ -66,6 +67,7 @@ class CwayMCPServer:
         self.graphql_client: Optional[CwayGraphQLClient] = None
         self.user_repo: Optional[CwayUserRepository] = None
         self.project_repo: Optional[CwayProjectRepository] = None
+        self.category_repo: Optional[CwayCategoryRepository] = None
         self.system_repo: Optional[CwaySystemRepository] = None
         self.kpi_use_cases: Optional[KPIUseCases] = None
         self.temporal_kpi_calculator: Optional[TemporalKPICalculator] = None
@@ -568,6 +570,7 @@ class CwayMCPServer:
             # Initialize repositories
             self.user_repo = CwayUserRepository(self.graphql_client)
             self.project_repo = CwayProjectRepository(self.graphql_client)
+            self.category_repo = CwayCategoryRepository(self.graphql_client)
             self.system_repo = CwaySystemRepository(self.graphql_client)
             
             # Initialize KPI use cases
@@ -1027,6 +1030,36 @@ class CwayMCPServer:
             message = f"User '{username}' deleted successfully" if success else f"Failed to delete user '{username}'"
             return {"success": success, "message": message}
         
+        elif name == "find_users_and_teams":
+            search = arguments.get("search")
+            page = arguments.get("page", 0)
+            size = arguments.get("size", 10)
+            result = await self.user_repo.find_users_and_teams(search, page, size)
+            return {
+                "items": result["items"],
+                "page": result["page"],
+                "total_hits": result["totalHits"],
+                "message": f"Found {result['totalHits']} users and teams"
+            }
+        
+        elif name == "get_permission_groups":
+            groups = await self.user_repo.get_permission_groups()
+            return {
+                "permission_groups": groups,
+                "count": len(groups),
+                "message": f"Retrieved {len(groups)} permission groups"
+            }
+        
+        elif name == "set_user_permissions":
+            usernames = arguments["usernames"]
+            permission_group_id = arguments["permission_group_id"]
+            success = await self.user_repo.set_user_permissions(usernames, permission_group_id)
+            return {
+                "success": success,
+                "users_updated": len(usernames) if success else 0,
+                "message": f"Updated permissions for {len(usernames)} users" if success else "Failed to update permissions"
+            }
+        
         elif name == "create_project":
             name_val = arguments["name"]
             description = arguments.get("description")
@@ -1155,6 +1188,239 @@ class CwayMCPServer:
                 "message": "No preview available for this artwork"
             }
         
+        elif name == "get_artwork_history":
+            artwork_id = arguments["artwork_id"]
+            history = await self.project_repo.get_artwork_history(artwork_id)
+            return {
+                "history": history,
+                "event_count": len(history),
+                "message": f"Retrieved {len(history)} artwork events"
+            }
+        
+        elif name == "analyze_artwork_ai":
+            artwork_id = arguments["artwork_id"]
+            thread_id = await self.project_repo.analyze_artwork_ai(artwork_id)
+            return {
+                "thread_id": thread_id,
+                "success": True,
+                "message": f"AI analysis started. Thread ID: {thread_id}"
+            }
+        
+        elif name == "generate_project_summary_ai":
+            project_id = arguments["project_id"]
+            audience = arguments.get("audience", "PROJECT_MANAGER")
+            summary = await self.project_repo.generate_project_summary_ai(project_id, audience)
+            return {
+                "summary": summary,
+                "audience": audience,
+                "success": True,
+                "message": "AI summary generated successfully"
+            }
+        
+        # Artwork workflow tools
+        elif name == "submit_artwork_for_review":
+            artwork_id = arguments["artwork_id"]
+            artwork = await self.project_repo.submit_artwork_for_review(artwork_id)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": "Artwork submitted for review"
+            }
+        
+        elif name == "request_artwork_changes":
+            artwork_id = arguments["artwork_id"]
+            reason = arguments["reason"]
+            artwork = await self.project_repo.request_artwork_changes(artwork_id, reason)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": "Changes requested on artwork"
+            }
+        
+        elif name == "get_artwork_comments":
+            artwork_id = arguments["artwork_id"]
+            limit = arguments.get("limit", 50)
+            comments = await self.project_repo.get_artwork_comments(artwork_id, limit)
+            return {
+                "comments": comments,
+                "comment_count": len(comments),
+                "message": f"Retrieved {len(comments)} comments"
+            }
+        
+        elif name == "add_artwork_comment":
+            artwork_id = arguments["artwork_id"]
+            text = arguments["text"]
+            comment = await self.project_repo.add_artwork_comment(artwork_id, text)
+            return {
+                "comment": comment,
+                "success": True,
+                "message": "Comment added to artwork"
+            }
+        
+        elif name == "get_artwork_versions":
+            artwork_id = arguments["artwork_id"]
+            versions = await self.project_repo.get_artwork_versions(artwork_id)
+            return {
+                "versions": versions,
+                "version_count": len(versions),
+                "message": f"Retrieved {len(versions)} versions"
+            }
+        
+        elif name == "restore_artwork_version":
+            artwork_id = arguments["artwork_id"]
+            version_id = arguments["version_id"]
+            artwork = await self.project_repo.restore_artwork_version(artwork_id, version_id)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": "Artwork rolled back to previous version"
+            }
+        
+        elif name == "assign_artwork":
+            artwork_id = arguments["artwork_id"]
+            user_id = arguments["user_id"]
+            artwork = await self.project_repo.assign_artwork(artwork_id, user_id)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": f"Artwork assigned to user {user_id}"
+            }
+        
+        elif name == "duplicate_artwork":
+            artwork_id = arguments["artwork_id"]
+            new_name = arguments.get("new_name")
+            artwork = await self.project_repo.duplicate_artwork(artwork_id, new_name)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": f"Artwork duplicated successfully. New ID: {artwork.get('id')}"
+            }
+        
+        elif name == "archive_artwork":
+            artwork_id = arguments["artwork_id"]
+            artwork = await self.project_repo.archive_artwork(artwork_id)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": "Artwork archived successfully"
+            }
+        
+        elif name == "unarchive_artwork":
+            artwork_id = arguments["artwork_id"]
+            artwork = await self.project_repo.unarchive_artwork(artwork_id)
+            return {
+                "artwork": artwork,
+                "success": True,
+                "message": "Artwork unarchived successfully"
+            }
+        
+        # Team management tools
+        elif name == "get_team_members":
+            project_id = arguments["project_id"]
+            team_members = await self.project_repo.get_team_members(project_id)
+            return {
+                "team_members": team_members,
+                "member_count": len(team_members),
+                "message": f"Retrieved {len(team_members)} team members"
+            }
+        
+        elif name == "add_team_member":
+            project_id = arguments["project_id"]
+            user_id = arguments["user_id"]
+            role = arguments.get("role")
+            team_member = await self.project_repo.add_team_member(project_id, user_id, role)
+            return {
+                "team_member": team_member,
+                "success": True,
+                "message": f"User added to team with role: {team_member.get('role', 'Member')}"
+            }
+        
+        elif name == "remove_team_member":
+            project_id = arguments["project_id"]
+            user_id = arguments["user_id"]
+            result = await self.project_repo.remove_team_member(project_id, user_id)
+            return {
+                "success": result.get("success", False),
+                "message": result.get("message", "Team member removed successfully")
+            }
+        
+        elif name == "update_team_member_role":
+            project_id = arguments["project_id"]
+            user_id = arguments["user_id"]
+            role = arguments["role"]
+            team_member = await self.project_repo.update_team_member_role(project_id, user_id, role)
+            return {
+                "team_member": team_member,
+                "success": True,
+                "message": f"Team member role updated to: {role}"
+            }
+        
+        elif name == "get_user_roles":
+            roles = await self.project_repo.get_user_roles()
+            return {
+                "roles": roles,
+                "role_count": len(roles),
+                "message": f"Retrieved {len(roles)} user roles"
+            }
+        
+        elif name == "transfer_project_ownership":
+            project_id = arguments["project_id"]
+            new_owner_id = arguments["new_owner_id"]
+            project = await self.project_repo.transfer_project_ownership(project_id, new_owner_id)
+            return {
+                "project": project,
+                "success": True,
+                "message": f"Project ownership transferred to user {new_owner_id}"
+            }
+        
+        # Search and activity tools
+        elif name == "search_artworks":
+            query = arguments.get("query")
+            project_id = arguments.get("project_id")
+            status = arguments.get("status")
+            limit = arguments.get("limit", 50)
+            page = arguments.get("page", 0)
+            result = await self.project_repo.search_artworks(query, project_id, status, limit, page)
+            return {
+                "artworks": result.get("artworks", []),
+                "total_hits": result.get("totalHits", 0),
+                "page": result.get("page", 0),
+                "message": f"Found {result.get('totalHits', 0)} artworks matching criteria"
+            }
+        
+        elif name == "get_project_timeline":
+            project_id = arguments["project_id"]
+            limit = arguments.get("limit", 100)
+            timeline = await self.project_repo.get_project_timeline(project_id, limit)
+            return {
+                "timeline": timeline,
+                "event_count": len(timeline),
+                "message": f"Retrieved {len(timeline)} timeline events"
+            }
+        
+        elif name == "get_user_activity":
+            user_id = arguments["user_id"]
+            days = arguments.get("days", 30)
+            limit = arguments.get("limit", 100)
+            activities = await self.project_repo.get_user_activity(user_id, days, limit)
+            return {
+                "activities": activities,
+                "activity_count": len(activities),
+                "message": f"Retrieved {len(activities)} user activities from last {days} days"
+            }
+        
+        elif name == "bulk_update_artwork_status":
+            artwork_ids = arguments["artwork_ids"]
+            status = arguments["status"]
+            result = await self.project_repo.bulk_update_artwork_status(artwork_ids, status)
+            return {
+                "updated_artworks": result.get("updatedArtworks", []),
+                "success_count": result.get("successCount", 0),
+                "failed_count": result.get("failedCount", 0),
+                "success": True,
+                "message": f"Updated {result.get('successCount', 0)} artworks to status: {status}"
+            }
+        
         # Folder tools
         elif name == "get_folder_tree":
             folders = await self.project_repo.get_folder_tree()
@@ -1204,6 +1470,14 @@ class CwayMCPServer:
                 "message": f"Retrieved {len(history)} events"
             }
         
+        elif name == "get_monthly_project_trends":
+            trends = await self.project_repo.get_monthly_project_trends()
+            return {
+                "trends": trends,
+                "month_count": len(trends),
+                "message": f"Retrieved {len(trends)} months of project data"
+            }
+        
         # Media center tools
         elif name == "search_media_center":
             query = arguments.get("query")
@@ -1249,6 +1523,249 @@ class CwayMCPServer:
             if file:
                 return {"file": file}
             return {"file": None, "message": "File not found"}
+        
+        # Project collaboration tools
+        elif name == "get_project_members":
+            project_id = arguments["project_id"]
+            members = await self.project_repo.get_project_members(project_id)
+            return {
+                "members": members,
+                "member_count": len(members),
+                "message": f"Retrieved {len(members)} team members"
+            }
+        
+        elif name == "add_project_member":
+            project_id = arguments["project_id"]
+            user_id = arguments["user_id"]
+            role = arguments.get("role", "MEMBER")
+            result = await self.project_repo.add_project_member(project_id, user_id, role)
+            return {
+                "member": result,
+                "success": True,
+                "message": f"User added to project with role: {role}"
+            }
+        
+        elif name == "remove_project_member":
+            project_id = arguments["project_id"]
+            user_id = arguments["user_id"]
+            success = await self.project_repo.remove_project_member(project_id, user_id)
+            return {
+                "success": success,
+                "message": "User removed from project" if success else "Failed to remove user"
+            }
+        
+        elif name == "update_project_member_role":
+            project_id = arguments["project_id"]
+            user_id = arguments["user_id"]
+            role = arguments["role"]
+            result = await self.project_repo.update_project_member_role(project_id, user_id, role)
+            return {
+                "member": result,
+                "success": True,
+                "message": f"User role updated to: {role}"
+            }
+        
+        elif name == "get_project_comments":
+            project_id = arguments["project_id"]
+            limit = arguments.get("limit", 50)
+            comments = await self.project_repo.get_project_comments(project_id, limit)
+            return {
+                "comments": comments,
+                "comment_count": len(comments),
+                "message": f"Retrieved {len(comments)} comments"
+            }
+        
+        elif name == "add_project_comment":
+            project_id = arguments["project_id"]
+            text = arguments["text"]
+            comment = await self.project_repo.add_project_comment(project_id, text)
+            return {
+                "comment": comment,
+                "success": True,
+                "message": "Comment added to project"
+            }
+        
+        elif name == "get_project_attachments":
+            project_id = arguments["project_id"]
+            attachments = await self.project_repo.get_project_attachments(project_id)
+            return {
+                "attachments": attachments,
+                "attachment_count": len(attachments),
+                "message": f"Retrieved {len(attachments)} attachments"
+            }
+        
+        elif name == "upload_project_attachment":
+            project_id = arguments["project_id"]
+            file_id = arguments["file_id"]
+            name = arguments["name"]
+            attachment = await self.project_repo.upload_project_attachment(project_id, file_id, name)
+            return {
+                "attachment": attachment,
+                "success": True,
+                "message": f"File '{name}' attached to project"
+            }
+        
+        # Category, brand, and specification tools
+        elif name == "get_categories":
+            categories = await self.category_repo.get_categories()
+            return {
+                "categories": categories,
+                "count": len(categories),
+                "message": f"Retrieved {len(categories)} categories"
+            }
+        
+        elif name == "get_brands":
+            brands = await self.category_repo.get_brands()
+            return {
+                "brands": brands,
+                "count": len(brands),
+                "message": f"Retrieved {len(brands)} brands"
+            }
+        
+        elif name == "get_print_specifications":
+            specs = await self.category_repo.get_print_specifications()
+            return {
+                "specifications": specs,
+                "count": len(specs),
+                "message": f"Retrieved {len(specs)} print specifications"
+            }
+        
+        elif name == "create_category":
+            name_arg = arguments["name"]
+            description = arguments.get("description")
+            color = arguments.get("color")
+            category = await self.category_repo.create_category(name_arg, description, color)
+            return {
+                "category": category,
+                "success": True,
+                "message": f"Category '{name_arg}' created successfully"
+            }
+        
+        elif name == "create_brand":
+            name_arg = arguments["name"]
+            description = arguments.get("description")
+            brand = await self.category_repo.create_brand(name_arg, description)
+            return {
+                "brand": brand,
+                "success": True,
+                "message": f"Brand '{name_arg}' created successfully"
+            }
+        
+        elif name == "create_print_specification":
+            name_arg = arguments["name"]
+            width = arguments["width"]
+            height = arguments["height"]
+            unit = arguments.get("unit", "mm")
+            description = arguments.get("description")
+            spec = await self.category_repo.create_print_specification(name_arg, width, height, unit, description)
+            return {
+                "specification": spec,
+                "success": True,
+                "message": f"Print specification '{name_arg}' created successfully"
+            }
+        
+        # Share tools
+        elif name == "find_shares":
+            limit = arguments.get("limit", 50)
+            shares = await self.project_repo.find_shares(limit)
+            return {
+                "shares": shares,
+                "count": len(shares),
+                "message": f"Retrieved {len(shares)} shares"
+            }
+        
+        elif name == "get_share":
+            share_id = arguments["share_id"]
+            share = await self.project_repo.get_share(share_id)
+            if share:
+                return {
+                    "share": share,
+                    "message": "Share retrieved successfully"
+                }
+            return {"share": None, "message": "Share not found"}
+        
+        elif name == "create_share":
+            name_arg = arguments["name"]
+            file_ids = arguments["file_ids"]
+            description = arguments.get("description")
+            expires_at = arguments.get("expires_at")
+            max_downloads = arguments.get("max_downloads")
+            password = arguments.get("password")
+            share = await self.project_repo.create_share(
+                name_arg, file_ids, description, expires_at, max_downloads, password
+            )
+            return {
+                "share": share,
+                "success": True,
+                "message": f"Share '{name_arg}' created with {len(file_ids)} files"
+            }
+        
+        elif name == "delete_share":
+            share_id = arguments["share_id"]
+            success = await self.project_repo.delete_share(share_id)
+            return {
+                "success": success,
+                "message": "Share deleted successfully" if success else "Failed to delete share"
+            }
+        
+        # Media management tools
+        elif name == "create_folder":
+            name_arg = arguments["name"]
+            parent_folder_id = arguments.get("parent_folder_id")
+            description = arguments.get("description")
+            folder = await self.project_repo.create_folder(name_arg, parent_folder_id, description)
+            return {
+                "folder": folder,
+                "success": True,
+                "message": f"Folder '{name_arg}' created successfully"
+            }
+        
+        elif name == "rename_file":
+            file_id = arguments["file_id"]
+            new_name = arguments["new_name"]
+            file = await self.project_repo.rename_file(file_id, new_name)
+            return {
+                "file": file,
+                "success": True,
+                "message": f"File renamed to '{new_name}'"
+            }
+        
+        elif name == "rename_folder":
+            folder_id = arguments["folder_id"]
+            new_name = arguments["new_name"]
+            folder = await self.project_repo.rename_folder(folder_id, new_name)
+            return {
+                "folder": folder,
+                "success": True,
+                "message": f"Folder renamed to '{new_name}'"
+            }
+        
+        elif name == "move_files":
+            file_ids = arguments["file_ids"]
+            target_folder_id = arguments["target_folder_id"]
+            result = await self.project_repo.move_files(file_ids, target_folder_id)
+            return {
+                "success": result.get("success", False),
+                "moved_count": result.get("movedCount", 0),
+                "message": f"Moved {result.get('movedCount', 0)} files" if result.get("success") else "Failed to move files"
+            }
+        
+        elif name == "delete_file":
+            file_id = arguments["file_id"]
+            success = await self.project_repo.delete_file(file_id)
+            return {
+                "success": success,
+                "message": "File deleted successfully" if success else "Failed to delete file"
+            }
+        
+        elif name == "delete_folder":
+            folder_id = arguments["folder_id"]
+            force = arguments.get("force", False)
+            success = await self.project_repo.delete_folder(folder_id, force)
+            return {
+                "success": success,
+                "message": "Folder deleted successfully" if success else "Failed to delete folder"
+            }
             
         else:
             raise ValueError(f"Unknown tool: {name}")

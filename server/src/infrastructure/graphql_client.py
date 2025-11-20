@@ -50,12 +50,14 @@ class CwayGraphQLClient:
         
     def _create_token_provider_from_settings(self) -> TokenProvider:
         """Create token provider based on settings configuration."""
+        # Validate settings first
+        try:
+            settings.validate_auth_config()
+        except ValueError as e:
+            logger.error(f"Authentication configuration error: {e}")
+            raise
+        
         if settings.auth_method == "oauth2":
-            if not settings.azure_tenant_id or not settings.azure_client_id:
-                raise ValueError(
-                    "OAuth2 authentication requires AZURE_TENANT_ID and AZURE_CLIENT_ID"
-                )
-            
             logger.info("Initializing OAuth2 authentication")
             return OAuth2TokenProvider(
                 tenant_id=settings.azure_tenant_id,
@@ -66,10 +68,6 @@ class CwayGraphQLClient:
             )
         else:
             # Default to static token
-            if not settings.cway_api_token:
-                raise ValueError(
-                    "Static authentication requires CWAY_API_TOKEN in environment"
-                )
             logger.info("Using static token authentication")
             return StaticTokenProvider(settings.cway_api_token)
     

@@ -10,9 +10,10 @@ A production-ready Model Context Protocol (MCP) server for seamless integration 
 
 ## ✨ Features
 
-- 🔐 **Secure Authentication** - Bearer token authentication with Cway GraphQL API
+- 🔐 **Secure Authentication** - Bearer token + OAuth2 support with Cway GraphQL API
 - 🏗️ **CLEAN Architecture** - Maintainable and testable code with clear separation of concerns
-- 🧪 **Test-Driven Development** - 91% test coverage with comprehensive test suite
+- 🧪 **Test-Driven Development** - 301 tests passing, 55% repository coverage
+- 🛠️ **80 MCP Tools** - 31% GraphQL API coverage across projects, users, artworks, collaboration
 - ⚡ **High Performance** - Async/await throughout with connection pooling
 - 🐳 **Docker Ready** - Multi-stage builds with security best practices
 - 🔧 **Developer Experience** - Pre-commit hooks, auto-formatting, and comprehensive tooling
@@ -147,24 +148,71 @@ Set the following environment variables:
 
 ## MCP Tools Available
 
-The server provides the following tools for AI agents:
+**80 tools across 10 categories** providing comprehensive Cway platform integration:
 
-### Project Management
-- **`list_projects`**: List all Cway projects
-- **`get_project`**: Get a specific project by ID
-- **`create_project`**: Create a new project
-- **`update_project`**: Update an existing project
+### 📁 Project Management (12+ tools)
+- List, create, update, delete projects
+- Project members and collaboration
+- Project comments and attachments
+- Project analytics and trends
 
-### User Management
-- **`list_users`**: List all Cway users
-- **`get_user`**: Get a specific user by ID
-- **`get_user_by_email`**: Get a user by email address
-- **`create_user`**: Create a new user
+### 👥 User Management (8+ tools)
+- List, create, update users
+- Find users by email
+- Permission groups and access control
+- User and team search
+
+### 🎨 Artwork Operations (17+ tools)
+- CRUD operations for artworks
+- Artwork approval workflows
+- Revision history and version control
+- Comments and collaboration
+- AI-powered artwork analysis
+
+### 📦 Media Center (10+ tools)
+- File and folder management
+- Search and download operations
+- Storage statistics
+- File sharing
+
+### 🏷️ Categories & Setup (6 tools)
+- Categories, brands, print specifications
+- Create and manage organizational data
+
+### 🔗 Collaboration & Sharing (8 tools)
+- File shares with expiry and download limits
+- Project member management
+- Comments and attachments
+
+### 📊 Analytics & KPIs (8+ tools)
+- Project health scores
+- Temporal velocity analysis
+- Stagnation alerts
+- Critical project identification
+
+### 🤖 AI Features (2 tools)
+- AI artwork analysis
+- AI project summaries
+
+### 🔍 Search & Discovery (5+ tools)
+- Media center search
+- Project search
+- User and team search
+
+### ⚙️ System (4+ tools)
+- System status
+- Login info
+- Indexing operations
+
+**📖 See [Complete Tool Catalog](docs/TOOL_CATALOG.md) for detailed documentation with examples and usage patterns**
 
 ### Resources
-- **`cway://projects`**: Access to all projects data
-- **`cway://users`**: Access to all users data
-- **`cway://schema`**: GraphQL API schema information
+- **`cway://projects`**: All projects data
+- **`cway://projects/active`**: Active projects
+- **`cway://projects/completed`**: Completed projects
+- **`cway://users`**: All users data
+- **`cway://kpis/dashboard`**: KPI dashboard
+- **`cway://temporal-kpis/dashboard`**: Temporal analysis
 
 ## Usage with AI Agents
 

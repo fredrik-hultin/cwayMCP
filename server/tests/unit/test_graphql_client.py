@@ -24,24 +24,25 @@ class TestCwayGraphQLClient:
     def test_init(self, client: CwayGraphQLClient) -> None:
         """Test client initialization."""
         assert client.api_url == "https://test-api.cway.com"
-        assert client.api_token == "test-token-123"
+        assert client.token_provider is not None
         assert client._client is None
         
     def test_init_with_custom_params(self) -> None:
         """Test initialization with custom parameters."""
         client = CwayGraphQLClient("https://custom.com", "custom-token")
         assert client.api_url == "https://custom.com"
-        assert client.api_token == "custom-token"
+        assert client.token_provider is not None
         
     def test_init_with_defaults(self) -> None:
         """Test initialization with settings defaults."""
         with patch('src.infrastructure.graphql_client.settings') as mock_settings:
             mock_settings.cway_api_url = "https://default.com"
             mock_settings.cway_api_token = "default-token"
+            mock_settings.auth_method = "static"
             
             client = CwayGraphQLClient()
             assert client.api_url == "https://default.com"
-            assert client.api_token == "default-token"
+            assert client.token_provider is not None
     
     @pytest.mark.asyncio
     async def test_connect(self, client: CwayGraphQLClient) -> None:

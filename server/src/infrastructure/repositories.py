@@ -345,4 +345,3 @@ class GraphQLUserRepository(UserRepository):
     async def delete(self, user_id: str) -> bool:
         """Delete user (no direct mutation in new schema here; return False)."""
         return False
-            raise CwayAPIError(f"Failed to delete user: {e}")

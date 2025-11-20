@@ -33,17 +33,20 @@ class TestSettings:
         assert settings.log_level == "DEBUG"
         assert settings.debug is True
         
-    def test_settings_requires_api_token(self) -> None:
-        """Test that settings validation fails without required API token."""
-        with pytest.raises(ValidationError) as exc_info:
-            # Try to create settings without CWAY_API_TOKEN in environment
-            with patch.dict(os.environ, {}, clear=True):
-                Settings(_env_file=None)
+    def test_settings_requires_api_token_or_oauth2(self) -> None:
+        """Test that settings allows either static token or OAuth2 config."""
+        # With OAuth2 support, CWAY_API_TOKEN is now optional
+        # Settings should work with no token if AUTH_METHOD is oauth2
+        with patch.dict(os.environ, {"AUTH_METHOD": "oauth2", "AZURE_TENANT_ID": "test", "AZURE_CLIENT_ID": "test"}, clear=True):
+            settings = Settings(_env_file=None)
+            assert settings.cway_api_token is None
+            assert settings.auth_method == "oauth2"
         
-        # Verify the error is about the missing cway_api_token field
-        errors = exc_info.value.errors()
-        assert any(error["loc"] == ("cway_api_token",) for error in errors)
-        assert any("Field required" in str(error["msg"]) for error in errors)
+        # Static auth (default) works with token
+        with patch.dict(os.environ, {"CWAY_API_TOKEN": "test_token"}, clear=True):
+            settings = Settings(_env_file=None)
+            assert settings.cway_api_token == "test_token"
+            assert settings.auth_method == "static"
         
     def test_settings_api_token_from_environment(self) -> None:
         """Test that API token can be read from environment variables."""

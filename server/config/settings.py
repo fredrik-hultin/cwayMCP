@@ -57,6 +57,26 @@ class Settings(BaseSettings):
     # Request Configuration
     request_timeout: int = Field(default=30, description="HTTP request timeout in seconds")
     max_retries: int = Field(default=3, description="Maximum number of API retries")
+    
+    def validate_auth_config(self) -> None:
+        """Validate that authentication configuration is complete."""
+        if self.auth_method == "static":
+            if not self.cway_api_token:
+                raise ValueError(
+                    "Static authentication requires CWAY_API_TOKEN environment variable. "
+                    "Either set CWAY_API_TOKEN or switch to AUTH_METHOD=oauth2"
+                )
+        elif self.auth_method in ["oauth2", "oauth2_obo"]:
+            if not self.azure_tenant_id or not self.azure_client_id:
+                raise ValueError(
+                    f"{self.auth_method} requires AZURE_TENANT_ID and AZURE_CLIENT_ID. "
+                    "Please configure these environment variables."
+                )
+            if not self.azure_client_secret and not self.use_device_code_flow:
+                raise ValueError(
+                    f"{self.auth_method} requires either AZURE_CLIENT_SECRET or "
+                    "USE_DEVICE_CODE_FLOW=true"
+                )
         
 
 # Global settings instance
