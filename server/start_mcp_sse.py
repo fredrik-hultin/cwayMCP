@@ -97,41 +97,39 @@ def create_server():
     return CwayMCPServer()
 
 
-async def app_lifespan(app):
-    """Lifespan context manager for the Starlette app."""
-    # Create MCP server and transport on startup
-    mcp_server = create_server()
-    sse = SseServerTransport("/messages")
-    
-    # Store in app state
-    app.state.mcp_server = mcp_server
-    app.state.sse = sse
-    
-    # Run MCP server in background
-    async def run_mcp():
-        async with mcp_server.server.run(
-            sse.read_stream,
-            sse.write_stream,
-            mcp_server.server.create_initialization_options()
-        ):
-            await asyncio.Event().wait()
-    
-    task = asyncio.create_task(run_mcp())
-    
-    yield
-    
-    # Cleanup on shutdown
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
-
-
 def create_app():
     """Create the Starlette application."""
-    # Create SSE transport  
+    # Create SSE transport - shared instance
     sse = SseServerTransport("/messages")
+    
+    async def app_lifespan(app):
+        """Lifespan context manager for the Starlette app."""
+        # Create MCP server on startup
+        mcp_server = create_server()
+        
+        # Store in app state
+        app.state.mcp_server = mcp_server
+        app.state.sse = sse
+        
+        # Run MCP server in background
+        async def run_mcp():
+            async with mcp_server.server.run(
+                sse.read_stream,
+                sse.write_stream,
+                mcp_server.server.create_initialization_options()
+            ):
+                await asyncio.Event().wait()
+        
+        task = asyncio.create_task(run_mcp())
+        
+        yield
+        
+        # Cleanup on shutdown
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
     
     # Create wrapper app for SSE handlers
     async def sse_app(scope, receive, send):
