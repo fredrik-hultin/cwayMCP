@@ -1913,6 +1913,794 @@ def get_organization_tools() -> List[Tool]:
     ]
 
 
+def get_confirmation_pattern_tools() -> List[Tool]:
+    """Get all prepare/confirm pattern tool definitions for dangerous operations."""
+    return [
+        # DELETE OPERATIONS
+        Tool(
+            name="prepare_delete_file",
+            description="Prepare to delete a file. Returns preview with warnings and confirmation token.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_id": {"type": "string", "description": "File UUID"}
+                },
+                "required": ["file_id"]
+            }
+        ),
+        Tool(
+            name="confirm_delete_file",
+            description="Confirm and execute file deletion with token from prepare_delete_file.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string", "description": "Token from prepare_delete_file"},
+                    "file_id": {"type": "string", "description": "File UUID (must match token)"}
+                },
+                "required": ["confirmation_token", "file_id"]
+            }
+        ),
+        Tool(
+            name="prepare_delete_folder",
+            description="Prepare to delete a folder. Returns preview with warnings and confirmation token.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "folder_id": {"type": "string", "description": "Folder UUID"},
+                    "force": {"type": "boolean", "description": "Force delete non-empty folder", "default": False}
+                },
+                "required": ["folder_id"]
+            }
+        ),
+        Tool(
+            name="confirm_delete_folder",
+            description="Confirm and execute folder deletion.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "folder_id": {"type": "string"},
+                    "force": {"type": "boolean", "default": False}
+                },
+                "required": ["confirmation_token", "folder_id"]
+            }
+        ),
+        Tool(
+            name="prepare_delete_share",
+            description="Prepare to delete a file share.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "share_id": {"type": "string", "description": "Share UUID"}
+                },
+                "required": ["share_id"]
+            }
+        ),
+        Tool(
+            name="confirm_delete_share",
+            description="Confirm and execute share deletion.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "share_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "share_id"]
+            }
+        ),
+        
+        # ARCHIVE OPERATIONS
+        Tool(
+            name="prepare_archive_artwork",
+            description="Prepare to archive artwork. Shows status and warnings.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"}
+                },
+                "required": ["artwork_id"]
+            }
+        ),
+        Tool(
+            name="confirm_archive_artwork",
+            description="Confirm and execute artwork archival.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id"]
+            }
+        ),
+        
+        # STATE CHANGE OPERATIONS
+        Tool(
+            name="prepare_approve_artwork",
+            description="Prepare to approve artwork for production.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"}
+                },
+                "required": ["artwork_id"]
+            }
+        ),
+        Tool(
+            name="confirm_approve_artwork",
+            description="Confirm and execute artwork approval.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id"]
+            }
+        ),
+        Tool(
+            name="prepare_reject_artwork",
+            description="Prepare to reject artwork with reason.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"},
+                    "reason": {"type": "string", "description": "Reason for rejection"}
+                },
+                "required": ["artwork_id", "reason"]
+            }
+        ),
+        Tool(
+            name="confirm_reject_artwork",
+            description="Confirm and execute artwork rejection.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"},
+                    "reason": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id", "reason"]
+            }
+        ),
+        Tool(
+            name="prepare_submit_artwork",
+            description="Prepare to submit artwork for review.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"}
+                },
+                "required": ["artwork_id"]
+            }
+        ),
+        Tool(
+            name="confirm_submit_artwork",
+            description="Confirm and execute artwork submission.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id"]
+            }
+        ),
+        Tool(
+            name="prepare_request_changes",
+            description="Prepare to request changes on artwork.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"},
+                    "reason": {"type": "string"}
+                },
+                "required": ["artwork_id", "reason"]
+            }
+        ),
+        Tool(
+            name="confirm_request_changes",
+            description="Confirm and execute change request.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"},
+                    "reason": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id", "reason"]
+            }
+        ),
+        Tool(
+            name="prepare_restore_version",
+            description="Prepare to restore artwork to previous version.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"},
+                    "version_id": {"type": "string"}
+                },
+                "required": ["artwork_id", "version_id"]
+            }
+        ),
+        Tool(
+            name="confirm_restore_version",
+            description="Confirm and execute version restoration.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"},
+                    "version_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id", "version_id"]
+            }
+        ),
+        Tool(
+            name="prepare_bulk_update_status",
+            description="Prepare to bulk update artwork statuses.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_ids": {"type": "array", "items": {"type": "string"}},
+                    "status": {"type": "string"}
+                },
+                "required": ["artwork_ids", "status"]
+            }
+        ),
+        Tool(
+            name="confirm_bulk_update_status",
+            description="Confirm and execute bulk status update.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_ids": {"type": "array", "items": {"type": "string"}},
+                    "status": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_ids", "status"]
+            }
+        ),
+        
+        # CREATE OPERATIONS
+        Tool(
+            name="prepare_create_project",
+            description="Prepare to create new project.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["name"]
+            }
+        ),
+        Tool(
+            name="confirm_create_project",
+            description="Confirm and execute project creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["confirmation_token", "name"]
+            }
+        ),
+        Tool(
+            name="prepare_create_user",
+            description="Prepare to create new user.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "email": {"type": "string"},
+                    "username": {"type": "string"},
+                    "first_name": {"type": "string"},
+                    "last_name": {"type": "string"}
+                },
+                "required": ["email", "username"]
+            }
+        ),
+        Tool(
+            name="confirm_create_user",
+            description="Confirm and execute user creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "email": {"type": "string"},
+                    "username": {"type": "string"},
+                    "first_name": {"type": "string"},
+                    "last_name": {"type": "string"}
+                },
+                "required": ["confirmation_token", "email", "username"]
+            }
+        ),
+        Tool(
+            name="prepare_create_artwork",
+            description="Prepare to create new artwork.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["project_id", "name"]
+            }
+        ),
+        Tool(
+            name="confirm_create_artwork",
+            description="Confirm and execute artwork creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["confirmation_token", "project_id", "name"]
+            }
+        ),
+        Tool(
+            name="prepare_create_folder",
+            description="Prepare to create new folder.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "parent_folder_id": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["name"]
+            }
+        ),
+        Tool(
+            name="confirm_create_folder",
+            description="Confirm and execute folder creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "name": {"type": "string"},
+                    "parent_folder_id": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["confirmation_token", "name"]
+            }
+        ),
+        Tool(
+            name="prepare_create_category",
+            description="Prepare to create new category.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "color": {"type": "string"}
+                },
+                "required": ["name"]
+            }
+        ),
+        Tool(
+            name="confirm_create_category",
+            description="Confirm and execute category creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "color": {"type": "string"}
+                },
+                "required": ["confirmation_token", "name"]
+            }
+        ),
+        Tool(
+            name="prepare_create_brand",
+            description="Prepare to create new brand.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["name"]
+            }
+        ),
+        Tool(
+            name="confirm_create_brand",
+            description="Confirm and execute brand creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["confirmation_token", "name"]
+            }
+        ),
+        Tool(
+            name="prepare_create_print_spec",
+            description="Prepare to create new print specification.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "width": {"type": "number"},
+                    "height": {"type": "number"},
+                    "unit": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["name", "width", "height", "unit"]
+            }
+        ),
+        Tool(
+            name="confirm_create_print_spec",
+            description="Confirm and execute print spec creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "name": {"type": "string"},
+                    "width": {"type": "number"},
+                    "height": {"type": "number"},
+                    "unit": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["confirmation_token", "name", "width", "height", "unit"]
+            }
+        ),
+        Tool(
+            name="prepare_create_share",
+            description="Prepare to create file share.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "file_ids": {"type": "array", "items": {"type": "string"}},
+                    "description": {"type": "string"},
+                    "password": {"type": "string"},
+                    "max_downloads": {"type": "integer"}
+                },
+                "required": ["name", "file_ids"]
+            }
+        ),
+        Tool(
+            name="confirm_create_share",
+            description="Confirm and execute share creation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "name": {"type": "string"},
+                    "file_ids": {"type": "array", "items": {"type": "string"}},
+                    "description": {"type": "string"},
+                    "password": {"type": "string"},
+                    "max_downloads": {"type": "integer"},
+                    "expires_at": {"type": "string"}
+                },
+                "required": ["confirmation_token", "name", "file_ids"]
+            }
+        ),
+        
+        # PERMISSION OPERATIONS
+        Tool(
+            name="prepare_add_member",
+            description="Prepare to add member to project.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "user_id": {"type": "string"},
+                    "role": {"type": "string"}
+                },
+                "required": ["project_id", "user_id", "role"]
+            }
+        ),
+        Tool(
+            name="confirm_add_member",
+            description="Confirm and execute adding member.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "user_id": {"type": "string"},
+                    "role": {"type": "string"}
+                },
+                "required": ["confirmation_token", "project_id", "user_id", "role"]
+            }
+        ),
+        Tool(
+            name="prepare_remove_member",
+            description="Prepare to remove member from project.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "user_id": {"type": "string"}
+                },
+                "required": ["project_id", "user_id"]
+            }
+        ),
+        Tool(
+            name="confirm_remove_member",
+            description="Confirm and execute removing member.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "user_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "project_id", "user_id"]
+            }
+        ),
+        Tool(
+            name="prepare_update_member_role",
+            description="Prepare to update member role.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "user_id": {"type": "string"},
+                    "role": {"type": "string"}
+                },
+                "required": ["project_id", "user_id", "role"]
+            }
+        ),
+        Tool(
+            name="confirm_update_member_role",
+            description="Confirm and execute role update.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "user_id": {"type": "string"},
+                    "role": {"type": "string"}
+                },
+                "required": ["confirmation_token", "project_id", "user_id", "role"]
+            }
+        ),
+        Tool(
+            name="prepare_transfer_ownership",
+            description="Prepare to transfer project ownership. WARNING: Irreversible!",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "new_owner_id": {"type": "string"}
+                },
+                "required": ["project_id", "new_owner_id"]
+            }
+        ),
+        Tool(
+            name="confirm_transfer_ownership",
+            description="Confirm and execute ownership transfer.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "new_owner_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "project_id", "new_owner_id"]
+            }
+        ),
+        Tool(
+            name="prepare_set_permissions",
+            description="Prepare to set user permissions.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "usernames": {"type": "array", "items": {"type": "string"}},
+                    "permission_group_id": {"type": "string"}
+                },
+                "required": ["usernames", "permission_group_id"]
+            }
+        ),
+        Tool(
+            name="confirm_set_permissions",
+            description="Confirm and execute permission update.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "usernames": {"type": "array", "items": {"type": "string"}},
+                    "permission_group_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "usernames", "permission_group_id"]
+            }
+        ),
+        
+        # UPDATE/MOVE OPERATIONS
+        Tool(
+            name="prepare_update_project",
+            description="Prepare to update project.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["project_id"]
+            }
+        ),
+        Tool(
+            name="confirm_update_project",
+            description="Confirm and execute project update.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"}
+                },
+                "required": ["confirmation_token", "project_id"]
+            }
+        ),
+        Tool(
+            name="prepare_update_user_name",
+            description="Prepare to update user name.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "username": {"type": "string"},
+                    "first_name": {"type": "string"},
+                    "last_name": {"type": "string"}
+                },
+                "required": ["username"]
+            }
+        ),
+        Tool(
+            name="confirm_update_user_name",
+            description="Confirm and execute user name update.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "username": {"type": "string"},
+                    "first_name": {"type": "string"},
+                    "last_name": {"type": "string"}
+                },
+                "required": ["confirmation_token", "username"]
+            }
+        ),
+        Tool(
+            name="prepare_rename_file",
+            description="Prepare to rename file.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_id": {"type": "string"},
+                    "new_name": {"type": "string"}
+                },
+                "required": ["file_id", "new_name"]
+            }
+        ),
+        Tool(
+            name="confirm_rename_file",
+            description="Confirm and execute file rename.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "file_id": {"type": "string"},
+                    "new_name": {"type": "string"}
+                },
+                "required": ["confirmation_token", "file_id", "new_name"]
+            }
+        ),
+        Tool(
+            name="prepare_rename_folder",
+            description="Prepare to rename folder.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "folder_id": {"type": "string"},
+                    "new_name": {"type": "string"}
+                },
+                "required": ["folder_id", "new_name"]
+            }
+        ),
+        Tool(
+            name="confirm_rename_folder",
+            description="Confirm and execute folder rename.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "folder_id": {"type": "string"},
+                    "new_name": {"type": "string"}
+                },
+                "required": ["confirmation_token", "folder_id", "new_name"]
+            }
+        ),
+        Tool(
+            name="prepare_move_files",
+            description="Prepare to move files to different folder.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_ids": {"type": "array", "items": {"type": "string"}},
+                    "target_folder_id": {"type": "string"}
+                },
+                "required": ["file_ids", "target_folder_id"]
+            }
+        ),
+        Tool(
+            name="confirm_move_files",
+            description="Confirm and execute file move.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "file_ids": {"type": "array", "items": {"type": "string"}},
+                    "target_folder_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "file_ids", "target_folder_id"]
+            }
+        ),
+        Tool(
+            name="prepare_assign_artwork",
+            description="Prepare to assign artwork to user.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"},
+                    "user_id": {"type": "string"}
+                },
+                "required": ["artwork_id", "user_id"]
+            }
+        ),
+        Tool(
+            name="confirm_assign_artwork",
+            description="Confirm and execute artwork assignment.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"},
+                    "user_id": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id", "user_id"]
+            }
+        ),
+        Tool(
+            name="prepare_duplicate_artwork",
+            description="Prepare to duplicate artwork.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "artwork_id": {"type": "string"},
+                    "new_name": {"type": "string"}
+                },
+                "required": ["artwork_id"]
+            }
+        ),
+        Tool(
+            name="confirm_duplicate_artwork",
+            description="Confirm and execute artwork duplication.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {"type": "string"},
+                    "artwork_id": {"type": "string"},
+                    "new_name": {"type": "string"}
+                },
+                "required": ["confirmation_token", "artwork_id"]
+            }
+        ),
+    ]
+
+
 def get_all_tools() -> List[Tool]:
     """Get all tool definitions."""
     return (
@@ -1930,5 +2718,6 @@ def get_all_tools() -> List[Tool]:
         get_analytics_tools() +
         get_indexing_tools() +
         get_auth_tools() +
-        get_organization_tools()
+        get_organization_tools() +
+        get_confirmation_pattern_tools()
     )
