@@ -114,12 +114,20 @@ def create_app():
             # Get MCP server from app state
             mcp_server = scope["app"].state.mcp_server
             # Connect SSE and run MCP server for this connection
+            logger.info("🔌 SSE connection established, starting MCP session...")
             async with sse.connect_sse(scope, receive, send) as streams:
-                await mcp_server.server.run(
-                    streams[0],  # read stream
-                    streams[1],  # write stream
-                    mcp_server.server.create_initialization_options()
-                )
+                logger.info("✅ SSE streams ready, running MCP server...")
+                try:
+                    await mcp_server.server.run(
+                        streams[0],  # read stream
+                        streams[1],  # write stream
+                        mcp_server.server.create_initialization_options()
+                    )
+                    logger.info("🏁 MCP server.run() completed normally")
+                except Exception as e:
+                    logger.error(f"❌ MCP server.run() error: {e}", exc_info=True)
+                    raise
+            logger.info("🔌 SSE connection closed")
         elif path == "/messages":
             await sse.handle_post_message(scope, receive, send)
         else:
