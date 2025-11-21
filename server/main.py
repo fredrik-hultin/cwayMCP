@@ -115,12 +115,11 @@ def create_app():
             mcp_server = scope["app"].state.mcp_server
             # Connect SSE and run MCP server for this connection
             async with sse.connect_sse(scope, receive, send) as streams:
-                async with mcp_server.server.run(
+                await mcp_server.server.run(
                     streams[0],  # read stream
                     streams[1],  # write stream
                     mcp_server.server.create_initialization_options()
-                ):
-                    await asyncio.Event().wait()
+                )
         elif path == "/messages":
             await sse.handle_post_message(scope, receive, send)
         else:
