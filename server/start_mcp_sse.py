@@ -114,7 +114,7 @@ def create_app():
         # Run MCP server in background
         async def run_mcp():
             async with mcp_server.server.run(
-                sse.read_stream,
+                sse.read_client_stream,
                 sse.write_stream,
                 mcp_server.server.create_initialization_options()
             ):
@@ -135,10 +135,12 @@ def create_app():
     async def sse_app(scope, receive, send):
         path = scope.get("path", "")
         if path == "/sse":
-            # connect_sse returns a context manager
+            # connect_sse returns a context manager that handles the connection
+            # We need to await it to keep the connection open
             handler = sse.connect_sse(scope, receive, send)
-            async with handler:
-                pass  # The context manager handles the SSE connection
+            async with handler as connection:
+                # Keep the connection alive - it will close when client disconnects
+                await connection
         elif path == "/messages":
             await sse.handle_post_message(scope, receive, send)
         else:
