@@ -104,6 +104,7 @@ def create_app():
     
     async def app_lifespan(app):
         """Lifespan context manager for the Starlette app."""
+        logger.info("🚀 Lifespan: Starting MCP server...")
         # Create MCP server on startup
         mcp_server = create_server()
         
@@ -113,16 +114,21 @@ def create_app():
         
         # Run MCP server in background
         async def run_mcp():
+            logger.info("✅ MCP server background task started")
             async with mcp_server.server.run(
-                sse.read_client_stream,
+                sse.read_stream,
                 sse.write_stream,
                 mcp_server.server.create_initialization_options()
             ):
+                logger.info("✅ MCP server is now running and ready for requests")
                 await asyncio.Event().wait()
         
         task = asyncio.create_task(run_mcp())
+        logger.info("✅ MCP server task created, yielding control to app")
         
         yield
+        
+        logger.info("🛑 Lifespan: Shutting down MCP server...")
         
         # Cleanup on shutdown
         task.cancel()
