@@ -149,7 +149,7 @@ def create_app():
     # Create SSE transport
     sse = SseServerTransport("/messages")
     
-    # Create Starlette app with SSE routes and authentication middleware
+    # Create Starlette app with SSE routes
     app = Starlette(
         routes=[
             Route("/sse", endpoint=sse.connect_sse),
@@ -190,12 +190,11 @@ def main():
     # Create and run app
     app = create_app()
     
-    # Run with uvicorn
+    # Run with uvicorn (no reload support with app instance)
     uvicorn.run(
         app,
         host=host,
         port=port,
-        reload=settings.debug,  # Auto-reload on code changes in debug mode
         log_level=settings.log_level.lower()
     )
 
