@@ -11,7 +11,7 @@
       ],
       "env": {
         "PYTHONPATH": "/Users/fredrik.hultin/Developer/cwayMCP/server/src",
-        "CWAY_API_TOKEN": "f20f14d8-f40f-4e8e-aa13-f5ec6d3497ba",
+        "CWAY_USERNAME": "fredrik.hultin@example.com",
         "CWAY_API_URL": "https://app.cway.se/graphql"
       }
     }

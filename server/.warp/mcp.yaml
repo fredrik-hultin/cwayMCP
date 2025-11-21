@@ -68,10 +68,10 @@ tools:
 # Configuration Requirements
 configuration:
   required:
-    - name: "CWAY_API_TOKEN"
-      description: "Bearer token for authenticating with the Cway GraphQL API"
+    - name: "CWAY_USERNAME"
+      description: "User email for per-user authentication (requires pre-authentication via cway_login.py)"
       type: "string"
-      sensitive: true
+      sensitive: false
   optional:
     - name: "CWAY_API_URL"
       description: "Cway GraphQL API endpoint URL"
@@ -86,6 +86,10 @@ configuration:
       description: "Enable debug mode for detailed logging"
       type: "boolean"
       default: false
+    - name: "CWAY_API_TOKEN"
+      description: "[LEGACY] Static bearer token (only if AUTH_METHOD=static)"
+      type: "string"
+      sensitive: true
 
 # Dashboard Integration
 dashboard:

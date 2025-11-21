@@ -89,9 +89,12 @@ class CwayMCPServer:
             default_expiry_minutes=5
         )
         
+        # Token manager (for OAuth2 mode) - None for static token mode
+        self.token_manager = None
+        
         # Organization management support
         self.org_use_cases = OrganizationUseCases()
-        logger.info(f"🔐 Using API token for organization: {settings.active_org or 'default'}")
+        logger.info("🔐 Using configured API authentication")
         
         # Register handlers
         self._register_handlers()

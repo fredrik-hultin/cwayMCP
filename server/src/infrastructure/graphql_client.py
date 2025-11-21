@@ -57,7 +57,7 @@ class CwayGraphQLClient:
             self.token_provider = self._create_token_provider_from_settings()
         
     def _create_token_provider_from_settings(self) -> TokenProvider:
-        """Create token provider based on settings configuration (static token with multi-org support)."""
+        """Create token provider based on settings configuration (static token mode)."""
         # Validate settings first
         try:
             settings.validate_auth_config()
@@ -65,13 +65,9 @@ class CwayGraphQLClient:
             logger.error(f"Authentication configuration error: {e}")
             raise
         
-        # Use active token (supports multi-org)
-        active_token = settings.get_active_token()
-        if settings.active_org:
-            logger.info(f"Using API token for organization: {settings.active_org}")
-        else:
-            logger.info("Using default API token")
-        return StaticTokenProvider(active_token)
+        # Use configured API token
+        logger.info("Using configured API token")
+        return StaticTokenProvider(settings.cway_api_token)
     
     async def __aenter__(self) -> "CwayGraphQLClient":
         """Async context manager entry."""

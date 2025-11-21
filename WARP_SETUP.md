@@ -1,161 +1,225 @@
-# Connecting cwayMCP Server to Warp
+# Warp MCP Server Setup Guide - Per-User Authentication
 
-## 🚀 Quick Connect
+This guide shows how to configure the Cway MCP Server in Warp with per-user SSO authentication.
 
-The MCP server is ready to connect to Warp. Here's how:
+## Prerequisites
 
-### Method 1: Using Warp's Settings (Recommended)
+1. **Azure AD app configured** (see `docs/AZURE_AD_SETUP.md`)
+2. **Server environment configured** (`server/.env` with AUTH_METHOD=oauth2)
+3. **Virtual environment activated**
 
-1. **Open Warp Settings**
-   - Press `Cmd + ,` or go to Warp → Settings
+## Step-by-Step Setup
 
-2. **Navigate to MCP Servers**
-   - Look for "MCP" or "Model Context Protocol" section
-   - Click "Add Server" or "+"
+### 1. Configure Server Environment
 
-3. **Configure the Server**
-   - **Name**: `cway-mcp-server`
-   - **Command**: `/Users/fredrik.hultin/Developer/cwayMCP/venv/bin/python`
-   - **Args**: 
-     ```
-     /Users/fredrik.hultin/Developer/cwayMCP/server/main.py
-     --mode
-     mcp
-     ```
-   - **Working Directory**: `/Users/fredrik.hultin/Developer/cwayMCP`
+First, ensure your `server/.env` has OAuth2 enabled:
 
-4. **Environment Variables** (if needed):
-   ```
-   PYTHONPATH=/Users/fredrik.hultin/Developer/cwayMCP/server/src
-   ```
-
-5. **Save and Enable**
-
-### Method 2: Using the Startup Script
-
-1. **Test the script first**:
-   ```bash
-   /Users/fredrik.hultin/Developer/cwayMCP/start-mcp.sh
-   ```
-
-2. **In Warp Settings**:
-   - **Command**: `/Users/fredrik.hultin/Developer/cwayMCP/start-mcp.sh`
-   - **Args**: (leave empty)
-
-### Method 3: Manual Configuration File
-
-If Warp supports config file import, use:
 ```bash
-/Users/fredrik.hultin/Developer/cwayMCP/mcp-server-config.json
+cd /Users/fredrik.hultin/Developer/cwayMCP/server
+
+# Edit .env file
+cat >> .env << 'EOF'
+
+# Per-User Authentication
+AUTH_METHOD=oauth2
+AZURE_TENANT_ID=your-tenant-id-from-azure
+AZURE_CLIENT_ID=your-client-id-from-azure
+CWAY_API_URL=https://app.cway.se/graphql
+EOF
 ```
 
-## ✅ Verify Connection
+### 2. Authenticate Your User
 
-Once connected, test in Warp:
+Run the interactive login script:
 
-1. **List Available Tools**:
-   - The MCP server provides 9 tools
-   - Look for: `list_projects`, `get_user`, `find_user_by_email`, etc.
+```bash
+cd /Users/fredrik.hultin/Developer/cwayMCP
+python server/scripts/cway_login.py
+```
 
-2. **Test a Simple Query**:
-   ```
-   Use the list_projects tool
-   ```
+This will:
+- Open your browser for Entra ID authentication
+- Exchange the authorization code for Cway tokens
+- Store encrypted tokens in `~/.cway_mcp/tokens/`
 
-3. **Access Resources**:
-   - `cway://projects` - All projects
-   - `cway://users` - All users
-   - `cway://system/status` - System status
+Verify authentication:
 
-## 🔧 Troubleshooting
+```bash
+python server/scripts/cway_whoami.py
+# Should show:
+# ✅ Authenticated as: fredrik.hultin@example.com
+# 📅 Token expires: [timestamp]
+# ⏰ Time remaining: ~40h
+```
 
-### Server Won't Start in Warp
+### 3. Update Warp Configuration
+
+Edit your Warp MCP config file:
+
+```bash
+# Open the config file
+code /Users/fredrik.hultin/Developer/cwayMCP/warp-mcp-config.json
+```
+
+**Replace your email address** in the `CWAY_USERNAME` field:
+
+```json
+{
+  "mcpServers": {
+    "cway": {
+      "name": "Cway MCP Server",
+      "description": "MCP server for Cway GraphQL API integration",
+      "command": "/Users/fredrik.hultin/Developer/cwayMCP/venv/bin/python",
+      "args": [
+        "/Users/fredrik.hultin/Developer/cwayMCP/server/main.py",
+        "--mode",
+        "mcp"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/fredrik.hultin/Developer/cwayMCP/server/src",
+        "CWAY_USERNAME": "your.actual@email.com",  ← CHANGE THIS
+        "CWAY_API_URL": "https://app.cway.se/graphql"
+      }
+    }
+  }
+}
+```
+
+**⚠️ Important:** Use the same email you authenticated with in Step 2.
+
+### 4. Test the Configuration
+
+Test that the server starts correctly:
+
+```bash
+cd /Users/fredrik.hultin/Developer/cwayMCP
+source venv/bin/activate
+CWAY_USERNAME=your@email.com python server/main.py --mode mcp
+```
+
+You should see:
+```
+INFO - Cway MCP Server starting...
+INFO - Authentication method: oauth2
+INFO - Current user: your@email.com
+INFO - Token valid until: [timestamp]
+INFO - MCP Server initialized successfully
+```
+
+Press `Ctrl+C` to stop the test.
+
+### 5. Restart Warp
+
+For Warp to pick up the new configuration:
+
+1. Quit Warp completely (`Cmd+Q`)
+2. Reopen Warp
+3. The MCP server will automatically start with your user context
+
+### 6. Verify in Warp
+
+In Warp's Agent Mode (AI chat), try:
+
+```
+List all Cway projects
+```
+
+The MCP server will automatically use your authenticated tokens!
+
+## How It Works
+
+```
+┌─────────────┐
+│    Warp     │
+│ (MCP Client)│
+└──────┬──────┘
+       │ CWAY_USERNAME=your@email.com
+       ▼
+┌─────────────────────────────────┐
+│    Cway MCP Server              │
+│  • Loads your tokens            │
+│  • Auto-refreshes when needed   │
+│  • Uses tokens for API calls    │
+└──────┬──────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────┐
+│  ~/.cway_mcp/tokens/            │
+│    your_email_hash.json         │
+│    (encrypted with Fernet)      │
+└─────────────────────────────────┘
+```
+
+## Token Lifecycle
+
+- **Access token:** Valid for 1 hour
+- **Refresh token:** Valid for 40 hours
+- **Auto-refresh:** Happens automatically when < 5 minutes remaining
+- **Re-authentication:** Required after 40 hours
+
+## Troubleshooting
+
+### "User not authenticated" error
+
+**Solution:** Run the login script:
+```bash
+python server/scripts/cway_login.py
+```
+
+### "CWAY_USERNAME not set" error
+
+**Solution:** Update `CWAY_USERNAME` in `warp-mcp-config.json` to match your email.
+
+### "Token expired" after 40+ hours
+
+**Solution:** Re-authenticate:
+```bash
+python server/scripts/cway_login.py
+# Then restart Warp
+```
+
+### Server not starting in Warp
 
 **Check logs:**
 ```bash
-tail -f /Users/fredrik.hultin/Developer/cwayMCP/server/logs/cway-mcp.log
+# Test manually:
+cd /Users/fredrik.hultin/Developer/cwayMCP
+source venv/bin/activate
+CWAY_USERNAME=your@email.com python server/main.py --mode mcp
 ```
 
-**Manual test:**
+## Quick Reference Commands
+
 ```bash
-cd /Users/fredrik.hultin/Developer/cwayMCP/server
-source ../venv/bin/activate
-python main.py --mode mcp
+# Login (authenticate)
+python server/scripts/cway_login.py
+
+# Check authentication status
+python server/scripts/cway_whoami.py
+
+# Logout (clear tokens)
+python server/scripts/cway_logout.py
+
+# Test server manually
+CWAY_USERNAME=your@email.com python server/main.py --mode mcp
+
+# View Warp config
+cat /Users/fredrik.hultin/Developer/cwayMCP/warp-mcp-config.json
 ```
 
-### Connection Issues
+## Configuration Summary
 
-**Verify Python path:**
-```bash
-/Users/fredrik.hultin/Developer/cwayMCP/venv/bin/python --version
-```
+**What changed from static token:**
 
-**Check API token:**
-```bash
-grep CWAY_API_TOKEN /Users/fredrik.hultin/Developer/cwayMCP/server/.env
-```
-
-### Warp Can't Find the Server
-
-Make sure:
-- ✅ Virtual environment exists at `/Users/fredrik.hultin/Developer/cwayMCP/venv`
-- ✅ Python is installed: `python --version` (requires 3.9+)
-- ✅ Dependencies installed: `pip list | grep gql`
-- ✅ `.env` file configured with API token
-
-## 📊 Available Features
-
-Once connected, you can:
-
-### 🔨 Use Tools
-- **list_projects** - Get all Cway projects
-- **get_project** - Get specific project details
-- **get_active_projects** - List active projects only
-- **get_completed_projects** - List completed projects
-- **list_users** - Get all users
-- **get_user** - Get specific user by ID
-- **find_user_by_email** - Find user by email
-- **get_users_page** - Paginated user list
-- **get_system_status** - Check system health
-
-### 📚 Access Resources
-- `cway://projects` - All project data
-- `cway://users` - All user data
-- `cway://projects/active` - Active projects only
-- `cway://projects/completed` - Completed projects only
-- `cway://system/status` - Connection status
-
-## 🎯 Example Queries
-
-Once connected in Warp, try:
-
-```
-"Show me all active Cway projects"
-"Find user with email user@example.com"
-"Get the status of project <project-id>"
-"List all users in the system"
-"What's the system status?"
-```
-
-## 📝 Configuration Details
-
-**Server Path**: `/Users/fredrik.hultin/Developer/cwayMCP/server/main.py`
-**Python Interpreter**: `/Users/fredrik.hultin/Developer/cwayMCP/venv/bin/python`
-**Config File**: `/Users/fredrik.hultin/Developer/cwayMCP/mcp-server-config.json`
-**Environment File**: `/Users/fredrik.hultin/Developer/cwayMCP/server/.env`
-
-**API Endpoint**: `https://app.cway.se/graphql`
-**Token**: Configured in `.env` file
-
-## 🆘 Need Help?
-
-1. **Check the logs**: `server/logs/cway-mcp.log`
-2. **Run tests**: `cd server && pytest tests/unit/ -v`
-3. **Test connection**: See `INSTALLATION.md`
-4. **Server status**: `python main.py --mode mcp` should show connection success
+| Old (Static Token) | New (Per-User OAuth2) |
+|-------------------|----------------------|
+| `CWAY_API_TOKEN=abc123...` | `CWAY_USERNAME=your@email.com` |
+| Token in config file (insecure) | Token encrypted in `~/.cway_mcp/tokens/` |
+| Manual token refresh | Automatic token refresh |
+| Single shared token | Per-user personalized access |
 
 ---
 
-**Status**: ✅ Ready to connect!
+**You're all set!** 🎉
 
-Your server is configured and tested. Just add it to Warp's MCP settings!
+Your MCP server now uses your personal Cway account with automatic token refresh for 40-hour sessions.
