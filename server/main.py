@@ -91,26 +91,10 @@ def create_app():
     async def app_lifespan(app):
         """Lifespan context manager for the Starlette app."""
         logger.info("🚀 Starting MCP server...")
-        mcp_server = CwayMCPServer()
         
-        # Store in app state
-        app.state.mcp_server = mcp_server
+        # Store SSE transport in app state (MCP server created per-connection)
         app.state.sse = sse
         
-        # Run MCP server in background task
-        async def run_mcp():
-            logger.info("✅ MCP server background task started")
-            await mcp_server.server.run(
-                sse.read_stream,
-                sse.write_stream,
-                mcp_server.server.create_initialization_options()
-            )
-            logger.info("🏁 MCP server.run() completed")
-        
-        task = asyncio.create_task(run_mcp())
-        
-        # Give task a moment to start
-        await asyncio.sleep(0.1)
         logger.info("="*60)
         logger.info("✅ MCP Server Ready")
         logger.info(f"SSE Endpoint: http://{settings.mcp_server_host}:{settings.mcp_server_port}/sse")
@@ -120,23 +104,59 @@ def create_app():
         yield
         
         logger.info("🛑 Shutting down MCP server...")
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
     
     # Create SSE handler
     async def sse_app(scope, receive, send):
         path = scope.get("path", "")
+        method = scope.get("method", "")
+        
         if path == "/sse":
-            # SSE event stream - keep connection alive
-            logger.info("🔌 SSE connection established")
-            async with sse.connect_sse(scope, receive, send):
-                # Connection stays open until client disconnects
-                await asyncio.Event().wait()
+            # SSE event stream - MUST be GET request
+            if method != "GET":
+                logger.warning(f"❌ Rejected {method} request to /sse (must be GET)")
+                await send({
+                    'type': 'http.response.start',
+                    'status': 405,
+                    'headers': [[b'content-type', b'text/plain']],
+                })
+                await send({
+                    'type': 'http.response.body',
+                    'body': b'Method Not Allowed - /sse requires GET',
+                })
+                return
+            
+            logger.info("🔌 SSE connection established (GET /sse)")
+            
+            # Create MCP server instance for this connection
+            mcp_server = CwayMCPServer()
+            
+            # connect_sse returns (read_stream, write_stream)
+            # Run MCP server with these streams inside the context manager
+            async with sse.connect_sse(scope, receive, send) as streams:
+                read_stream, write_stream = streams
+                logger.info("✅ Running MCP server for this connection")
+                await mcp_server.server.run(
+                    read_stream,
+                    write_stream,
+                    mcp_server.server.create_initialization_options()
+                )
+            
             logger.info("🔌 SSE connection closed")
         elif path == "/messages":
+            # Messages endpoint - MUST be POST request
+            if method != "POST":
+                logger.warning(f"❌ Rejected {method} request to /messages (must be POST)")
+                await send({
+                    'type': 'http.response.start',
+                    'status': 405,
+                    'headers': [[b'content-type', b'text/plain']],
+                })
+                await send({
+                    'type': 'http.response.body',
+                    'body': b'Method Not Allowed - /messages requires POST',
+                })
+                return
+            
             await sse.handle_post_message(scope, receive, send)
         else:
             # 404 for unknown paths
