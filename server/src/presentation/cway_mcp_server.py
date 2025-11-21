@@ -43,6 +43,7 @@ from ..indexing.mcp_indexing_service import get_indexing_service
 from .tool_definitions import get_all_tools
 from ..application.services import ConfirmationService
 from ..application.org_use_cases import OrganizationUseCases
+from ..infrastructure.confirmation_token_manager import ConfirmationTokenManager
 
 
 # Set up logging - redirect to file and stderr to avoid interfering with stdio protocol
@@ -88,6 +89,9 @@ class CwayMCPServer:
             secret_key=settings.secret_key if hasattr(settings, 'secret_key') else None,
             default_expiry_minutes=5
         )
+        
+        # Confirmation token manager for prepare-confirm pattern
+        self.confirmation_token_manager = ConfirmationTokenManager()
         
         # Token manager (for OAuth2 mode) - None for static token mode
         self.token_manager = None
