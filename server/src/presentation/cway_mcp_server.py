@@ -43,6 +43,7 @@ from ..indexing.mcp_indexing_service import get_indexing_service
 from .tool_definitions import get_all_tools
 from ..application.services import ConfirmationService
 from ..infrastructure.auth.token_manager import TokenManager, TokenManagerError
+from ..application.auth_use_cases import AuthUseCases
 
 
 # Set up logging - redirect to file and stderr to avoid interfering with stdio protocol
@@ -91,12 +92,14 @@ class CwayMCPServer:
         
         # Per-user authentication support
         self.token_manager: Optional[TokenManager] = None
+        self.auth_use_cases: Optional[AuthUseCases] = None
         if settings.auth_method == "oauth2":
             self.token_manager = TokenManager(
                 api_url=settings.cway_api_url,
                 tenant_id=settings.azure_tenant_id,
                 client_id=settings.azure_client_id
             )
+            self.auth_use_cases = AuthUseCases(self.token_manager)
             logger.info("🔐 Token Manager initialized for per-user authentication")
         
         # Register handlers
@@ -2123,6 +2126,85 @@ class CwayMCPServer:
                 "success": success,
                 "message": "Folder deleted successfully" if success else "Failed to delete folder"
             }
+        
+        # Authentication tools (only available in oauth2 mode)
+        elif name == "login":
+            if not self.auth_use_cases:
+                return {
+                    "error": "Authentication tools not available",
+                    "message": "Login is only available when AUTH_METHOD=oauth2. Current mode: " + settings.auth_method
+                }
+            
+            username = arguments["username"]
+            result = await self.auth_use_cases.initiate_login(username)
+            
+            return {
+                "success": result.success,
+                "authorization_url": result.authorization_url,
+                "state": result.state,
+                "message": result.message
+            }
+        
+        elif name == "complete_login":
+            if not self.auth_use_cases:
+                return {
+                    "error": "Authentication tools not available",
+                    "message": "Login is only available when AUTH_METHOD=oauth2. Current mode: " + settings.auth_method
+                }
+            
+            username = arguments["username"]
+            authorization_code = arguments["authorization_code"]
+            state = arguments["state"]
+            
+            result = await self.auth_use_cases.complete_login(username, authorization_code, state)
+            
+            return {
+                "success": result.success,
+                "username": result.username,
+                "message": result.message,
+                "expires_in_minutes": result.expires_in_minutes
+            }
+        
+        elif name == "logout":
+            if not self.auth_use_cases:
+                return {
+                    "error": "Authentication tools not available",
+                    "message": "Logout is only available when AUTH_METHOD=oauth2. Current mode: " + settings.auth_method
+                }
+            
+            username = arguments["username"]
+            result = await self.auth_use_cases.logout(username)
+            
+            return result
+        
+        elif name == "whoami":
+            if not self.auth_use_cases:
+                return {
+                    "error": "Authentication tools not available",
+                    "message": "whoami is only available when AUTH_METHOD=oauth2. Current mode: " + settings.auth_method
+                }
+            
+            username = arguments["username"]
+            result = await self.auth_use_cases.whoami(username)
+            
+            return {
+                "authenticated": result.authenticated,
+                "username": result.username,
+                "message": result.message,
+                "expires_in_minutes": result.expires_in_minutes,
+                "expires_at": result.expires_at
+            }
+        
+        elif name == "list_authenticated_users":
+            if not self.auth_use_cases:
+                return {
+                    "error": "Authentication tools not available",
+                    "message": "list_authenticated_users is only available when AUTH_METHOD=oauth2. Current mode: " + settings.auth_method
+                }
+            
+            result = await self.auth_use_cases.list_authenticated_users()
+            
+            return result
             
         else:
             raise ValueError(f"Unknown tool: {name}")

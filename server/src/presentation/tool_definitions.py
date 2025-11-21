@@ -1781,6 +1781,85 @@ def get_search_and_activity_tools() -> List[Tool]:
     ]
 
 
+def get_auth_tools() -> List[Tool]:
+    """Get all authentication-related tool definitions."""
+    return [
+        Tool(
+            name="login",
+            description="Initiate user authentication flow with Entra ID. Returns authorization URL to open in browser. Only available when AUTH_METHOD=oauth2.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "User's email address"
+                    }
+                },
+                "required": ["username"]
+            }
+        ),
+        Tool(
+            name="complete_login",
+            description="Complete login by exchanging authorization code for tokens. Call this after authenticating in browser. Only available when AUTH_METHOD=oauth2.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "User's email address"
+                    },
+                    "authorization_code": {
+                        "type": "string",
+                        "description": "Authorization code from Entra ID redirect"
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "State parameter from authorization response"
+                    }
+                },
+                "required": ["username", "authorization_code", "state"]
+            }
+        ),
+        Tool(
+            name="logout",
+            description="Logout user by removing stored tokens. Only available when AUTH_METHOD=oauth2.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "User's email address"
+                    }
+                },
+                "required": ["username"]
+            }
+        ),
+        Tool(
+            name="whoami",
+            description="Get current user authentication status and token expiry information. Only available when AUTH_METHOD=oauth2.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "User's email address"
+                    }
+                },
+                "required": ["username"]
+            }
+        ),
+        Tool(
+            name="list_authenticated_users",
+            description="List all users who have authenticated and have stored tokens. Only available when AUTH_METHOD=oauth2.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+    ]
+
+
 def get_all_tools() -> List[Tool]:
     """Get all tool definitions."""
     return (
@@ -1796,5 +1875,6 @@ def get_all_tools() -> List[Tool]:
         get_search_and_activity_tools() +
         get_system_tools() +
         get_analytics_tools() +
-        get_indexing_tools()
+        get_indexing_tools() +
+        get_auth_tools()
     )
