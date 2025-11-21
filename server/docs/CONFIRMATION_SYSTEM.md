@@ -14,9 +14,10 @@ The confirmation system uses a two-step process to ensure that destructive opera
 ### Components
 
 - **ConfirmationService** (`src/application/services/confirmation_service.py`): Core service that generates and validates confirmation tokens
-- **MCP Tools**: Four new tools for prepare/confirm operations
+- **MCP Tools**: Six tools for prepare/confirm operations
   - `prepare_close_projects` / `confirm_close_projects`
   - `prepare_delete_projects` / `confirm_delete_projects`
+  - `prepare_delete_user` / `confirm_delete_user`
 
 ### Security Features
 
@@ -100,6 +101,55 @@ result = await call_tool("confirm_delete_projects", {
 })
 ```
 
+### Deleting Users (Irreversible - SSO Detection)
+
+#### Step 1: Prepare
+```python
+# AI calls prepare_delete_user
+result = await call_tool("prepare_delete_user", {
+    "username": "john.doe"
+})
+
+# Response includes user details and warnings:
+# {
+#   "action": "preview",
+#   "operation": "delete",
+#   "items": [{
+#     "username": "john.doe",
+#     "name": "John Doe",
+#     "email": "john.doe@example.com",
+#     "enabled": true,
+#     "is_sso": false
+#   }],
+#   "warnings": [
+#     "⚠️ DESTRUCTIVE ACTION: Will permanently delete user 'john.doe'",
+#     "🚨 THIS ACTION CANNOT BE UNDONE",
+#     "User email: john.doe@example.com",
+#     "All user data and associations will be permanently lost",
+#     "User will lose access to all projects and artworks"
+#   ]
+# }
+```
+
+#### Step 2: Confirm
+```python
+# AI confirms with token
+result = await call_tool("confirm_delete_user", {
+    "confirmation_token": "eyJ...|ghi789..."
+})
+
+# Response:
+# {
+#   "success": True,
+#   "action": "deleted",
+#   "username": "john.doe",
+#   "message": "User 'john.doe' deleted successfully"
+# }
+```
+
+**Note**: If the user is an SSO user, an additional warning is included:
+- "⚠️ This is an SSO user - deletion may affect external authentication"
+
 ## Token Format
 
 Tokens consist of two parts separated by a pipe (`|`):
@@ -175,6 +225,7 @@ Example:
 The AI should **always** use the two-step confirmation process for:
 - Deleting projects (`prepare_delete_projects` → `confirm_delete_projects`)
 - Closing projects (`prepare_close_projects` → `confirm_close_projects`)
+- Deleting users (`prepare_delete_user` → `confirm_delete_user`)
 
 ### AI Behavior Pattern
 

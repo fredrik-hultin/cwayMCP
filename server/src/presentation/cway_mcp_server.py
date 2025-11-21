@@ -1044,11 +1044,86 @@ class CwayMCPServer:
                 }
             return {"user": None, "message": "User not found"}
         
-        elif name == "delete_user":
+        elif name == "prepare_delete_user":
             username = arguments["username"]
-            success = await self.user_repo.delete_user(username)
-            message = f"User '{username}' deleted successfully" if success else f"Failed to delete user '{username}'"
-            return {"success": success, "message": message}
+            
+            # Fetch user details for preview
+            users = await self.user_repo.search_users(username)
+            user = None
+            for u in users:
+                if u.username == username:
+                    user = u
+                    break
+            
+            if not user:
+                return {
+                    "action": "error",
+                    "message": f"User '{username}' not found",
+                    "warnings": [f"User '{username}' does not exist"]
+                }
+            
+            user_info = {
+                "username": user.username,
+                "name": user.name,
+                "email": user.email,
+                "enabled": user.enabled,
+                "is_sso": user.isSSO if hasattr(user, 'isSSO') else False
+            }
+            
+            # Generate warnings
+            warnings = [
+                f"⚠️ DESTRUCTIVE ACTION: Will permanently delete user '{username}'",
+                "🚨 THIS ACTION CANNOT BE UNDONE",
+                f"User email: {user.email}",
+                "All user data and associations will be permanently lost",
+                "User will lose access to all projects and artworks"
+            ]
+            
+            if user.isSSO if hasattr(user, 'isSSO') else False:
+                warnings.append("⚠️ This is an SSO user - deletion may affect external authentication")
+            
+            # Generate confirmation token
+            token_info = self.confirmation_service.generate_token(
+                action="delete_user",
+                data={"username": username}
+            )
+            
+            return self.confirmation_service.create_preview_response(
+                action="delete",
+                items=[user_info],
+                item_type="user",
+                warnings=warnings,
+                token_info=token_info
+            )
+        
+        elif name == "confirm_delete_user":
+            confirmation_token = arguments["confirmation_token"]
+            
+            try:
+                # Validate token and extract data
+                validated = self.confirmation_service.validate_token(confirmation_token)
+                if validated["action"] != "delete_user":
+                    return {
+                        "success": False,
+                        "message": "Invalid token: wrong action type"
+                    }
+                
+                username = validated["data"]["username"]
+                
+                # Execute the delete operation
+                success = await self.user_repo.delete_user(username)
+                
+                return {
+                    "success": success,
+                    "action": "deleted",
+                    "username": username,
+                    "message": f"User '{username}' deleted successfully" if success else f"Failed to delete user '{username}'"
+                }
+            except ValueError as e:
+                return {
+                    "success": False,
+                    "message": f"Confirmation failed: {str(e)}"
+                }
         
         elif name == "find_users_and_teams":
             search = arguments.get("search")

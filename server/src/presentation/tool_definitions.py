@@ -530,8 +530,8 @@ def get_user_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="delete_user",
-            description="Delete a user",
+            name="prepare_delete_user",
+            description="Preview user before deletion. Returns user details, warnings, and a confirmation token. Must be followed by confirm_delete_user to execute. WARNING: This is a destructive operation that cannot be undone.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -541,6 +541,20 @@ def get_user_tools() -> List[Tool]:
                     }
                 },
                 "required": ["username"]
+            }
+        ),
+        Tool(
+            name="confirm_delete_user",
+            description="Execute user deletion after confirmation. Requires valid confirmation token from prepare_delete_user. WARNING: This action cannot be undone.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {
+                        "type": "string",
+                        "description": "Confirmation token from prepare_delete_user"
+                    }
+                },
+                "required": ["confirmation_token"]
             }
         ),
         Tool(
