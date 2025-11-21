@@ -100,13 +100,12 @@ def create_app():
         # Run MCP server in background task
         async def run_mcp():
             logger.info("✅ MCP server background task started")
-            async with mcp_server.server.run(
+            await mcp_server.server.run(
                 sse.read_stream,
                 sse.write_stream,
                 mcp_server.server.create_initialization_options()
-            ):
-                logger.info("✅ MCP server is running and ready")
-                await asyncio.Event().wait()
+            )
+            logger.info("🏁 MCP server.run() completed")
         
         task = asyncio.create_task(run_mcp())
         
