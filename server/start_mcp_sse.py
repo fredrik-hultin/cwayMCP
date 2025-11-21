@@ -149,11 +149,20 @@ def create_app():
     # Create SSE transport
     sse = SseServerTransport("/messages")
     
+    # Wrap SSE endpoints as ASGI apps
+    from starlette.types import ASGIApp, Receive, Scope, Send
+    
+    async def sse_endpoint(scope: Scope, receive: Receive, send: Send) -> None:
+        await sse.connect_sse(scope, receive, send)
+    
+    async def messages_endpoint(scope: Scope, receive: Receive, send: Send) -> None:
+        await sse.handle_post_message(scope, receive, send)
+    
     # Create Starlette app with SSE routes
     app = Starlette(
         routes=[
-            Route("/sse", endpoint=sse.connect_sse),
-            Route("/messages", endpoint=sse.handle_post_message, methods=["POST"]),
+            Route("/sse", endpoint=sse_endpoint),
+            Route("/messages", endpoint=messages_endpoint, methods=["POST"]),
         ],
         middleware=[
             Middleware(AuthenticationMiddleware)
