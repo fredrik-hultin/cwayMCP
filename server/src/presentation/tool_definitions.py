@@ -90,46 +90,6 @@ def get_project_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="create_project",
-            description="Create a new project",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Project name"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Project description (optional)"
-                    }
-                },
-                "required": ["name"]
-            }
-        ),
-        Tool(
-            name="update_project",
-            description="Update an existing project",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "Project ID"
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "New project name (optional)"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "New project description (optional)"
-                    }
-                },
-                "required": ["project_id"]
-            }
-        ),
-        Tool(
             name="prepare_close_projects",
             description="Preview projects before closing. Returns project details, warnings, and a confirmation token. Must be followed by confirm_close_projects to execute.",
             inputSchema={
@@ -274,69 +234,6 @@ def get_project_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="add_project_member",
-            description="Add user to project team",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The UUID of the user to add"
-                    },
-                    "role": {
-                        "type": "string",
-                        "description": "Role (e.g., MEMBER, MANAGER, VIEWER)",
-                        "default": "MEMBER"
-                    }
-                },
-                "required": ["project_id", "user_id"]
-            }
-        ),
-        Tool(
-            name="remove_project_member",
-            description="Remove user from project team",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The UUID of the user to remove"
-                    }
-                },
-                "required": ["project_id", "user_id"]
-            }
-        ),
-        Tool(
-            name="update_project_member_role",
-            description="Change member permissions in project",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The UUID of the user"
-                    },
-                    "role": {
-                        "type": "string",
-                        "description": "New role (e.g., MEMBER, MANAGER, VIEWER)"
-                    }
-                },
-                "required": ["project_id", "user_id", "role"]
-            }
-        ),
-        Tool(
             name="get_project_comments",
             description="Get project discussions and comments",
             inputSchema={
@@ -408,8 +305,7 @@ def get_project_tools() -> List[Tool]:
                 },
                 "required": ["project_id", "file_id", "name"]
             }
-        ),
-    ]
+        )]
 
 
 def get_user_tools() -> List[Tool]:
@@ -488,54 +384,6 @@ def get_user_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="create_user",
-            description="Create a new user",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "description": "User email address"
-                    },
-                    "username": {
-                        "type": "string",
-                        "description": "Username"
-                    },
-                    "first_name": {
-                        "type": "string",
-                        "description": "First name (optional)"
-                    },
-                    "last_name": {
-                        "type": "string",
-                        "description": "Last name (optional)"
-                    }
-                },
-                "required": ["email", "username"]
-            }
-        ),
-        Tool(
-            name="update_user_name",
-            description="Update user's real name",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "description": "Username"
-                    },
-                    "first_name": {
-                        "type": "string",
-                        "description": "First name (optional)"
-                    },
-                    "last_name": {
-                        "type": "string",
-                        "description": "Last name (optional)"
-                    }
-                },
-                "required": ["username"]
-            }
-        ),
-        Tool(
             name="prepare_delete_user",
             description="Preview user before deletion. Returns user details, warnings, and a confirmation token. Must be followed by confirm_delete_user to execute. WARNING: This is a destructive operation that cannot be undone.",
             inputSchema={
@@ -595,27 +443,7 @@ def get_user_tools() -> List[Tool]:
                 "properties": {},
                 "required": []
             }
-        ),
-        Tool(
-            name="set_user_permissions",
-            description="Set permission group for multiple users. Admin only.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "usernames": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of usernames to update"
-                    },
-                    "permission_group_id": {
-                        "type": "string",
-                        "description": "UUID of the permission group to assign"
-                    }
-                },
-                "required": ["usernames", "permission_group_id"]
-            }
-        ),
-    ]
+        )]
 
 
 def get_artwork_tools() -> List[Tool]:
@@ -630,60 +458,6 @@ def get_artwork_tools() -> List[Tool]:
                     "artwork_id": {
                         "type": "string",
                         "description": "The UUID of the artwork"
-                    }
-                },
-                "required": ["artwork_id"]
-            }
-        ),
-        Tool(
-            name="create_artwork",
-            description="Create a new artwork in a project",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Artwork name"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Artwork description (optional)"
-                    }
-                },
-                "required": ["project_id", "name"]
-            }
-        ),
-        Tool(
-            name="approve_artwork",
-            description="Approve an artwork",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork to approve"
-                    }
-                },
-                "required": ["artwork_id"]
-            }
-        ),
-        Tool(
-            name="reject_artwork",
-            description="Reject an artwork with optional reason",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork to reject"
-                    },
-                    "reason": {
-                        "type": "string",
-                        "description": "Reason for rejection (optional)"
                     }
                 },
                 "required": ["artwork_id"]
@@ -798,38 +572,6 @@ def get_artwork_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="submit_artwork_for_review",
-            description="Submit artwork for approval review",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork to submit"
-                    }
-                },
-                "required": ["artwork_id"]
-            }
-        ),
-        Tool(
-            name="request_artwork_changes",
-            description="Request changes/revisions on an artwork",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork"
-                    },
-                    "reason": {
-                        "type": "string",
-                        "description": "Reason for requesting changes"
-                    }
-                },
-                "required": ["artwork_id", "reason"]
-            }
-        ),
-        Tool(
             name="get_artwork_comments",
             description="Get artwork feedback thread",
             inputSchema={
@@ -881,74 +623,6 @@ def get_artwork_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="restore_artwork_version",
-            description="Rollback to previous version",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork"
-                    },
-                    "version_id": {
-                        "type": "string",
-                        "description": "The UUID of the version to restore"
-                    }
-                },
-                "required": ["artwork_id", "version_id"]
-            }
-        ),
-        Tool(
-            name="assign_artwork",
-            description="Assign artwork to a user",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork"
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The UUID of the user to assign"
-                    }
-                },
-                "required": ["artwork_id", "user_id"]
-            }
-        ),
-        Tool(
-            name="duplicate_artwork",
-            description="Duplicate an artwork with optional new name",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork to duplicate"
-                    },
-                    "new_name": {
-                        "type": "string",
-                        "description": "New name for duplicated artwork (optional)"
-                    }
-                },
-                "required": ["artwork_id"]
-            }
-        ),
-        Tool(
-            name="archive_artwork",
-            description="Archive an artwork",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_id": {
-                        "type": "string",
-                        "description": "The UUID of the artwork to archive"
-                    }
-                },
-                "required": ["artwork_id"]
-            }
-        ),
-        Tool(
             name="unarchive_artwork",
             description="Unarchive an artwork",
             inputSchema={
@@ -961,8 +635,7 @@ def get_artwork_tools() -> List[Tool]:
                 },
                 "required": ["artwork_id"]
             }
-        ),
-    ]
+        )]
 
 
 def get_folder_tools() -> List[Tool]:
@@ -1082,8 +755,7 @@ def get_folder_tools() -> List[Tool]:
                 },
                 "required": ["project_id"]
             }
-        ),
-    ]
+        )]
 
 
 def get_file_tools() -> List[Tool]:
@@ -1102,8 +774,7 @@ def get_file_tools() -> List[Tool]:
                 },
                 "required": ["file_id"]
             }
-        ),
-    ]
+        )]
 
 
 def get_share_tools() -> List[Tool]:
@@ -1137,57 +808,7 @@ def get_share_tools() -> List[Tool]:
                 },
                 "required": ["share_id"]
             }
-        ),
-        Tool(
-            name="create_share",
-            description="Create a new file share",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Share name"
-                    },
-                    "file_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of file UUIDs to share"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Share description (optional)"
-                    },
-                    "expires_at": {
-                        "type": "string",
-                        "description": "Expiration date ISO format (optional)"
-                    },
-                    "max_downloads": {
-                        "type": "integer",
-                        "description": "Maximum downloads (optional)"
-                    },
-                    "password": {
-                        "type": "string",
-                        "description": "Password protection (optional)"
-                    }
-                },
-                "required": ["name", "file_ids"]
-            }
-        ),
-        Tool(
-            name="delete_share",
-            description="Delete a share",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "share_id": {
-                        "type": "string",
-                        "description": "The UUID of the share to delete"
-                    }
-                },
-                "required": ["share_id"]
-            }
-        ),
-    ]
+        )]
 
 
 def get_category_tools() -> List[Tool]:
@@ -1219,195 +840,12 @@ def get_category_tools() -> List[Tool]:
                 "properties": {},
                 "required": []
             }
-        ),
-        Tool(
-            name="create_category",
-            description="Create a new category",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Category name"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Category description (optional)"
-                    },
-                    "color": {
-                        "type": "string",
-                        "description": "Category color (hex code, optional)"
-                    }
-                },
-                "required": ["name"]
-            }
-        ),
-        Tool(
-            name="create_brand",
-            description="Create a new brand",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Brand name"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Brand description (optional)"
-                    }
-                },
-                "required": ["name"]
-            }
-        ),
-        Tool(
-            name="create_print_specification",
-            description="Create a new print specification",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Specification name"
-                    },
-                    "width": {
-                        "type": "number",
-                        "description": "Width value"
-                    },
-                    "height": {
-                        "type": "number",
-                        "description": "Height value"
-                    },
-                    "unit": {
-                        "type": "string",
-                        "description": "Unit (mm, cm, in, default: mm)",
-                        "default": "mm"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Description (optional)"
-                    }
-                },
-                "required": ["name", "width", "height"]
-            }
-        ),
-    ]
+        )]
 
 
 def get_media_management_tools() -> List[Tool]:
     """Get all media center management tool definitions."""
-    return [
-        Tool(
-            name="create_folder",
-            description="Create a new folder in media center",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Folder name"
-                    },
-                    "parent_folder_id": {
-                        "type": "string",
-                        "description": "Parent folder UUID (optional, null for root)"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Folder description (optional)"
-                    }
-                },
-                "required": ["name"]
-            }
-        ),
-        Tool(
-            name="rename_file",
-            description="Rename a file in media center",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "file_id": {
-                        "type": "string",
-                        "description": "The UUID of the file to rename"
-                    },
-                    "new_name": {
-                        "type": "string",
-                        "description": "New file name"
-                    }
-                },
-                "required": ["file_id", "new_name"]
-            }
-        ),
-        Tool(
-            name="rename_folder",
-            description="Rename a folder in media center",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "folder_id": {
-                        "type": "string",
-                        "description": "The UUID of the folder to rename"
-                    },
-                    "new_name": {
-                        "type": "string",
-                        "description": "New folder name"
-                    }
-                },
-                "required": ["folder_id", "new_name"]
-            }
-        ),
-        Tool(
-            name="move_files",
-            description="Move files to a different folder",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "file_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of file UUIDs to move"
-                    },
-                    "target_folder_id": {
-                        "type": "string",
-                        "description": "Destination folder UUID"
-                    }
-                },
-                "required": ["file_ids", "target_folder_id"]
-            }
-        ),
-        Tool(
-            name="delete_file",
-            description="Delete a file from media center",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "file_id": {
-                        "type": "string",
-                        "description": "The UUID of the file to delete"
-                    }
-                },
-                "required": ["file_id"]
-            }
-        ),
-        Tool(
-            name="delete_folder",
-            description="Delete a folder from media center",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "folder_id": {
-                        "type": "string",
-                        "description": "The UUID of the folder to delete"
-                    },
-                    "force": {
-                        "type": "boolean",
-                        "description": "Force delete even if not empty (default: false)",
-                        "default": False
-                    }
-                },
-                "required": ["folder_id"]
-            }
-        ),
-    ]
+    return []
 
 
 def get_system_tools() -> List[Tool]:
@@ -1430,8 +868,7 @@ def get_system_tools() -> List[Tool]:
                 "properties": {},
                 "required": []
             }
-        ),
-    ]
+        )]
 
 
 def get_analytics_tools() -> List[Tool]:
@@ -1480,8 +917,7 @@ def get_analytics_tools() -> List[Tool]:
                 },
                 "required": []
             }
-        ),
-    ]
+        )]
 
 
 def get_indexing_tools() -> List[Tool]:
@@ -1574,8 +1010,7 @@ def get_indexing_tools() -> List[Tool]:
                 },
                 "required": ["job_id"]
             }
-        ),
-    ]
+        )]
 
 
 def get_team_tools() -> List[Tool]:
@@ -1596,68 +1031,6 @@ def get_team_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="add_team_member",
-            description="Add a user to project team",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The UUID of the user to add"
-                    },
-                    "role": {
-                        "type": "string",
-                        "description": "Role for the team member (optional)"
-                    }
-                },
-                "required": ["project_id", "user_id"]
-            }
-        ),
-        Tool(
-            name="remove_team_member",
-            description="Remove a user from project team",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The UUID of the user to remove"
-                    }
-                },
-                "required": ["project_id", "user_id"]
-            }
-        ),
-        Tool(
-            name="update_team_member_role",
-            description="Update a team member's role in project",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The UUID of the user"
-                    },
-                    "role": {
-                        "type": "string",
-                        "description": "New role for the team member"
-                    }
-                },
-                "required": ["project_id", "user_id", "role"]
-            }
-        ),
-        Tool(
             name="get_user_roles",
             description="Get all available user roles and their permissions",
             inputSchema={
@@ -1665,26 +1038,7 @@ def get_team_tools() -> List[Tool]:
                 "properties": {},
                 "required": []
             }
-        ),
-        Tool(
-            name="transfer_project_ownership",
-            description="Transfer project ownership to another user",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "project_id": {
-                        "type": "string",
-                        "description": "The UUID of the project"
-                    },
-                    "new_owner_id": {
-                        "type": "string",
-                        "description": "The UUID of the new owner"
-                    }
-                },
-                "required": ["project_id", "new_owner_id"]
-            }
-        ),
-    ]
+        )]
 
 
 def get_search_and_activity_tools() -> List[Tool]:
@@ -1764,27 +1118,7 @@ def get_search_and_activity_tools() -> List[Tool]:
                 },
                 "required": ["user_id"]
             }
-        ),
-        Tool(
-            name="bulk_update_artwork_status",
-            description="Batch update status for multiple artworks",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "artwork_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of artwork UUIDs to update"
-                    },
-                    "status": {
-                        "type": "string",
-                        "description": "New status for all artworks"
-                    }
-                },
-                "required": ["artwork_ids", "status"]
-            }
-        ),
-    ]
+        )]
 
 
 def get_auth_tools() -> List[Tool]:
@@ -1862,8 +1196,7 @@ def get_auth_tools() -> List[Tool]:
                 "properties": {},
                 "required": []
             }
-        ),
-    ]
+        )]
 
 
 def get_organization_tools() -> List[Tool]:
@@ -1909,8 +1242,7 @@ def get_organization_tools() -> List[Tool]:
                 },
                 "required": ["org_name"]
             }
-        ),
-    ]
+        )]
 
 
 def get_confirmation_pattern_tools() -> List[Tool]:
@@ -2697,8 +2029,7 @@ def get_confirmation_pattern_tools() -> List[Tool]:
                 },
                 "required": ["confirmation_token", "artwork_id"]
             }
-        ),
-    ]
+        )]
 
 
 def get_all_tools() -> List[Tool]:
