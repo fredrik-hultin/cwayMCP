@@ -65,27 +65,10 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             token = request.query_params.get("token")
             logger.debug(f"Extracted token from query parameter: {token[:8]}...{token[-8:]}")
         
-        # Validate token if we have one (from either source)
+        # Token passthrough mode - no validation needed
+        # The token will be validated by Cway API when actually used
         if token:
-            try:
-                # Validate token and get user identity
-                identity_extractor = get_identity_extractor()
-                user_identity = await identity_extractor.get_user_identity(token)
-                logger.info(f"Authenticated user: {user_identity.user_id} (org: {user_identity.org_name})")
-                
-                # Load all registered tokens for this user
-                token_store = get_token_store()
-                user_tokens = token_store.get_user_tokens(user_identity.user_id)
-                
-                # Include the primary token in user_tokens if not already present
-                if user_identity.org_name not in user_tokens:
-                    user_tokens[user_identity.org_name] = token
-                
-                logger.debug(f"Loaded {len(user_tokens)} org tokens for user {user_identity.user_id}")
-                
-            except Exception as e:
-                logger.error(f"Token validation failed: {e}")
-                # Continue without user identity - will fall back to .env token
+            logger.debug(f"Using token from request: {token[:8]}...{token[-8:]}")
         
         else:
             # No Authorization header - fall back to static token from .env
