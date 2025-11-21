@@ -135,12 +135,13 @@ def create_app():
     async def sse_app(scope, receive, send):
         path = scope.get("path", "")
         if path == "/sse":
-            # connect_sse returns a context manager that handles the connection
-            # We need to await it to keep the connection open
-            handler = sse.connect_sse(scope, receive, send)
-            async with handler as connection:
-                # Keep the connection alive - it will close when client disconnects
-                await connection
+            # connect_sse is an async generator that manages the SSE connection
+            # The context manager starts background tasks for message handling
+            # We need to keep the context alive until the client disconnects
+            async with sse.connect_sse(scope, receive, send):
+                # Wait indefinitely - connection stays open until client closes
+                # or an error occurs (which will exit the context)
+                await asyncio.Event().wait()
         elif path == "/messages":
             await sse.handle_post_message(scope, receive, send)
         else:
