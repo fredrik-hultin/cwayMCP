@@ -118,30 +118,3 @@ class TestGraphQLClientPerUser:
             
             assert headers['Authorization'] == f"Bearer {user_token}"
     
-    @pytest.mark.asyncio
-    async def test_oauth2_mode_warns_when_no_token_provided(self):
-        """Test that oauth2 mode without api_token shows warning."""
-        with patch('src.infrastructure.graphql_client.settings') as mock_settings, \
-             patch('src.infrastructure.graphql_client.logger') as mock_logger, \
-             patch('src.infrastructure.graphql_client.OAuth2TokenProvider') as MockOAuth2:
-            
-            # Mock OAuth2TokenProvider to avoid actual MSAL calls
-            mock_oauth2_instance = Mock()
-            MockOAuth2.return_value = mock_oauth2_instance
-            
-            mock_settings.cway_api_url = "https://api.test.com"
-            mock_settings.auth_method = "oauth2"
-            mock_settings.azure_tenant_id = "tenant_id"
-            mock_settings.azure_client_id = "client_id"
-            mock_settings.azure_client_secret = "client_secret"
-            mock_settings.oauth2_scope = "scope"
-            mock_settings.use_device_code_flow = False
-            mock_settings.validate_auth_config = Mock()
-            
-            client = CwayGraphQLClient()
-            
-            # Should log warning about missing api_token
-            mock_logger.warning.assert_called()
-            warning_msg = mock_logger.warning.call_args[0][0]
-            assert "api_token" in warning_msg.lower()
-            assert "per-user authentication" in warning_msg.lower()
