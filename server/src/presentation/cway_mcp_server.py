@@ -1214,45 +1214,6 @@ class CwayMCPServer:
                     return {"project": project}
                 return {"project": None, "message": "Project not found"}
             
-            elif name == "create_user":
-                email = arguments["email"]
-                username = arguments["username"]
-                first_name = arguments.get("first_name") or arguments.get("firstName")
-                last_name = arguments.get("last_name") or arguments.get("lastName")
-                user = await user_repo.create_user(email, username, first_name, last_name)
-                return {
-                    "user": {
-                        "id": user.id,
-                        "name": user.name,
-                        "username": user.username,
-                        "email": user.email,
-                        "firstName": user.firstName,
-                        "lastName": user.lastName,
-                        "enabled": user.enabled
-                    },
-                    "message": "User created successfully"
-                }
-            
-            elif name == "update_user_name":
-                username = arguments["username"]
-                first_name = arguments.get("first_name") or arguments.get("firstName")
-                last_name = arguments.get("last_name") or arguments.get("lastName")
-                user = await user_repo.update_user_name(username, first_name, last_name)
-                if user:
-                    return {
-                        "user": {
-                            "id": user.id,
-                            "username": user.username,
-                            "firstName": user.firstName,
-                            "lastName": user.lastName,
-                            "name": user.name,
-                            "email": user.email,
-                            "enabled": user.enabled
-                        },
-                        "message": "User updated successfully"
-                    }
-                return {"user": None, "message": "User not found"}
-            
             elif name == "prepare_delete_user":
                 username = arguments["username"]
                 
@@ -1353,31 +1314,6 @@ class CwayMCPServer:
                     "count": len(groups),
                     "message": f"Retrieved {len(groups)} permission groups"
                 }
-            
-            elif name == "set_user_permissions":
-                usernames = arguments["usernames"]
-                permission_group_id = arguments["permission_group_id"]
-                success = await user_repo.set_user_permissions(usernames, permission_group_id)
-                return {
-                    "success": success,
-                    "users_updated": len(usernames) if success else 0,
-                    "message": f"Updated permissions for {len(usernames)} users" if success else "Failed to update permissions"
-                }
-            
-            elif name == "create_project":
-                name_val = arguments["name"]
-                description = arguments.get("description")
-                project = await project_repo.create_project(name_val, description)
-                return {"project": project, "message": "Project created successfully"}
-            
-            elif name == "update_project":
-                project_id = arguments["project_id"]
-                name_val = arguments.get("name")
-                description = arguments.get("description")
-                project = await project_repo.update_project(project_id, name_val, description)
-                return {"project": project, "message": "Project updated successfully"}
-            
-            # Project workflow tools with confirmation
             elif name == "prepare_close_projects":
                 project_ids = arguments["project_ids"]
                 force = arguments.get("force", False)
@@ -1554,36 +1490,6 @@ class CwayMCPServer:
                     return {"artwork": artwork}
                 return {"artwork": None, "message": "Artwork not found"}
             
-            elif name == "create_artwork":
-                project_id = arguments["project_id"]
-                artwork_name = arguments["name"]
-                description = arguments.get("description")
-                artwork = await project_repo.create_artwork(project_id, artwork_name, description)
-                return {
-                    "artwork": artwork,
-                    "success": True,
-                    "message": "Artwork created successfully"
-                }
-            
-            elif name == "approve_artwork":
-                artwork_id = arguments["artwork_id"]
-                artwork = await project_repo.approve_artwork(artwork_id)
-                return {
-                    "artwork": artwork,
-                    "success": artwork is not None,
-                    "message": "Artwork approved successfully" if artwork else "Failed to approve artwork"
-                }
-            
-            elif name == "reject_artwork":
-                artwork_id = arguments["artwork_id"]
-                reason = arguments.get("reason")
-                artwork = await project_repo.reject_artwork(artwork_id, reason)
-                return {
-                    "artwork": artwork,
-                    "success": artwork is not None,
-                    "message": "Artwork rejected successfully" if artwork else "Failed to reject artwork"
-                }
-            
             elif name == "get_my_artworks":
                 result = await project_repo.get_my_artworks()
                 return {
@@ -1661,24 +1567,6 @@ class CwayMCPServer:
                 }
             
             # Artwork workflow tools
-            elif name == "submit_artwork_for_review":
-                artwork_id = arguments["artwork_id"]
-                artwork = await project_repo.submit_artwork_for_review(artwork_id)
-                return {
-                    "artwork": artwork,
-                    "success": True,
-                    "message": "Artwork submitted for review"
-                }
-            
-            elif name == "request_artwork_changes":
-                artwork_id = arguments["artwork_id"]
-                reason = arguments["reason"]
-                artwork = await project_repo.request_artwork_changes(artwork_id, reason)
-                return {
-                    "artwork": artwork,
-                    "success": True,
-                    "message": "Changes requested on artwork"
-                }
             
             elif name == "get_artwork_comments":
                 artwork_id = arguments["artwork_id"]
@@ -1709,45 +1597,6 @@ class CwayMCPServer:
                     "message": f"Retrieved {len(versions)} versions"
                 }
             
-            elif name == "restore_artwork_version":
-                artwork_id = arguments["artwork_id"]
-                version_id = arguments["version_id"]
-                artwork = await project_repo.restore_artwork_version(artwork_id, version_id)
-                return {
-                    "artwork": artwork,
-                    "success": True,
-                    "message": "Artwork rolled back to previous version"
-                }
-            
-            elif name == "assign_artwork":
-                artwork_id = arguments["artwork_id"]
-                user_id = arguments["user_id"]
-                artwork = await project_repo.assign_artwork(artwork_id, user_id)
-                return {
-                    "artwork": artwork,
-                    "success": True,
-                    "message": f"Artwork assigned to user {user_id}"
-                }
-            
-            elif name == "duplicate_artwork":
-                artwork_id = arguments["artwork_id"]
-                new_name = arguments.get("new_name")
-                artwork = await project_repo.duplicate_artwork(artwork_id, new_name)
-                return {
-                    "artwork": artwork,
-                    "success": True,
-                    "message": f"Artwork duplicated successfully. New ID: {artwork.get('id')}"
-                }
-            
-            elif name == "archive_artwork":
-                artwork_id = arguments["artwork_id"]
-                artwork = await project_repo.archive_artwork(artwork_id)
-                return {
-                    "artwork": artwork,
-                    "success": True,
-                    "message": "Artwork archived successfully"
-                }
-            
             elif name == "unarchive_artwork":
                 artwork_id = arguments["artwork_id"]
                 artwork = await project_repo.unarchive_artwork(artwork_id)
@@ -1767,37 +1616,6 @@ class CwayMCPServer:
                     "message": f"Retrieved {len(team_members)} team members"
                 }
             
-            elif name == "add_team_member":
-                project_id = arguments["project_id"]
-                user_id = arguments["user_id"]
-                role = arguments.get("role")
-                team_member = await project_repo.add_team_member(project_id, user_id, role)
-                return {
-                    "team_member": team_member,
-                    "success": True,
-                    "message": f"User added to team with role: {team_member.get('role', 'Member')}"
-                }
-            
-            elif name == "remove_team_member":
-                project_id = arguments["project_id"]
-                user_id = arguments["user_id"]
-                result = await project_repo.remove_team_member(project_id, user_id)
-                return {
-                    "success": result.get("success", False),
-                    "message": result.get("message", "Team member removed successfully")
-                }
-            
-            elif name == "update_team_member_role":
-                project_id = arguments["project_id"]
-                user_id = arguments["user_id"]
-                role = arguments["role"]
-                team_member = await project_repo.update_team_member_role(project_id, user_id, role)
-                return {
-                    "team_member": team_member,
-                    "success": True,
-                    "message": f"Team member role updated to: {role}"
-                }
-            
             elif name == "get_user_roles":
                 roles = await project_repo.get_user_roles()
                 return {
@@ -1805,18 +1623,6 @@ class CwayMCPServer:
                     "role_count": len(roles),
                     "message": f"Retrieved {len(roles)} user roles"
                 }
-            
-            elif name == "transfer_project_ownership":
-                project_id = arguments["project_id"]
-                new_owner_id = arguments["new_owner_id"]
-                project = await project_repo.transfer_project_ownership(project_id, new_owner_id)
-                return {
-                    "project": project,
-                    "success": True,
-                    "message": f"Project ownership transferred to user {new_owner_id}"
-                }
-            
-            # Search and activity tools
             elif name == "search_artworks":
                 query = arguments.get("query")
                 project_id = arguments.get("project_id")
@@ -1851,20 +1657,6 @@ class CwayMCPServer:
                     "activity_count": len(activities),
                     "message": f"Retrieved {len(activities)} user activities from last {days} days"
                 }
-            
-            elif name == "bulk_update_artwork_status":
-                artwork_ids = arguments["artwork_ids"]
-                status = arguments["status"]
-                result = await project_repo.bulk_update_artwork_status(artwork_ids, status)
-                return {
-                    "updated_artworks": result.get("updatedArtworks", []),
-                    "success_count": result.get("successCount", 0),
-                    "failed_count": result.get("failedCount", 0),
-                    "success": True,
-                    "message": f"Updated {result.get('successCount', 0)} artworks to status: {status}"
-                }
-            
-            # Folder tools
             elif name == "get_folder_tree":
                 folders = await project_repo.get_folder_tree()
                 return {"folders": folders}
@@ -1977,37 +1769,6 @@ class CwayMCPServer:
                     "message": f"Retrieved {len(members)} team members"
                 }
             
-            elif name == "add_project_member":
-                project_id = arguments["project_id"]
-                user_id = arguments["user_id"]
-                role = arguments.get("role", "MEMBER")
-                result = await project_repo.add_project_member(project_id, user_id, role)
-                return {
-                    "member": result,
-                    "success": True,
-                    "message": f"User added to project with role: {role}"
-                }
-            
-            elif name == "remove_project_member":
-                project_id = arguments["project_id"]
-                user_id = arguments["user_id"]
-                success = await project_repo.remove_project_member(project_id, user_id)
-                return {
-                    "success": success,
-                    "message": "User removed from project" if success else "Failed to remove user"
-                }
-            
-            elif name == "update_project_member_role":
-                project_id = arguments["project_id"]
-                user_id = arguments["user_id"]
-                role = arguments["role"]
-                result = await project_repo.update_project_member_role(project_id, user_id, role)
-                return {
-                    "member": result,
-                    "success": True,
-                    "message": f"User role updated to: {role}"
-                }
-            
             elif name == "get_project_comments":
                 project_id = arguments["project_id"]
                 limit = arguments.get("limit", 50)
@@ -2072,42 +1833,6 @@ class CwayMCPServer:
                     "count": len(specs),
                     "message": f"Retrieved {len(specs)} print specifications"
                 }
-            
-            elif name == "create_category":
-                name_arg = arguments["name"]
-                description = arguments.get("description")
-                color = arguments.get("color")
-                category = await category_repo.create_category(name_arg, description, color)
-                return {
-                    "category": category,
-                    "success": True,
-                    "message": f"Category '{name_arg}' created successfully"
-                }
-            
-            elif name == "create_brand":
-                name_arg = arguments["name"]
-                description = arguments.get("description")
-                brand = await category_repo.create_brand(name_arg, description)
-                return {
-                    "brand": brand,
-                    "success": True,
-                    "message": f"Brand '{name_arg}' created successfully"
-                }
-            
-            elif name == "create_print_specification":
-                name_arg = arguments["name"]
-                width = arguments["width"]
-                height = arguments["height"]
-                unit = arguments.get("unit", "mm")
-                description = arguments.get("description")
-                spec = await category_repo.create_print_specification(name_arg, width, height, unit, description)
-                return {
-                    "specification": spec,
-                    "success": True,
-                    "message": f"Print specification '{name_arg}' created successfully"
-                }
-            
-            # Share tools
             elif name == "find_shares":
                 limit = arguments.get("limit", 50)
                 shares = await project_repo.find_shares(limit)
@@ -2126,91 +1851,6 @@ class CwayMCPServer:
                         "message": "Share retrieved successfully"
                     }
                 return {"share": None, "message": "Share not found"}
-            
-            elif name == "create_share":
-                name_arg = arguments["name"]
-                file_ids = arguments["file_ids"]
-                description = arguments.get("description")
-                expires_at = arguments.get("expires_at")
-                max_downloads = arguments.get("max_downloads")
-                password = arguments.get("password")
-                share = await project_repo.create_share(
-                    name_arg, file_ids, description, expires_at, max_downloads, password
-                )
-                return {
-                    "share": share,
-                    "success": True,
-                    "message": f"Share '{name_arg}' created with {len(file_ids)} files"
-                }
-            
-            elif name == "delete_share":
-                share_id = arguments["share_id"]
-                success = await project_repo.delete_share(share_id)
-                return {
-                    "success": success,
-                    "message": "Share deleted successfully" if success else "Failed to delete share"
-                }
-            
-            # Media management tools
-            elif name == "create_folder":
-                name_arg = arguments["name"]
-                parent_folder_id = arguments.get("parent_folder_id")
-                description = arguments.get("description")
-                folder = await project_repo.create_folder(name_arg, parent_folder_id, description)
-                return {
-                    "folder": folder,
-                    "success": True,
-                    "message": f"Folder '{name_arg}' created successfully"
-                }
-            
-            elif name == "rename_file":
-                file_id = arguments["file_id"]
-                new_name = arguments["new_name"]
-                file = await project_repo.rename_file(file_id, new_name)
-                return {
-                    "file": file,
-                    "success": True,
-                    "message": f"File renamed to '{new_name}'"
-                }
-            
-            elif name == "rename_folder":
-                folder_id = arguments["folder_id"]
-                new_name = arguments["new_name"]
-                folder = await project_repo.rename_folder(folder_id, new_name)
-                return {
-                    "folder": folder,
-                    "success": True,
-                    "message": f"Folder renamed to '{new_name}'"
-                }
-            
-            elif name == "move_files":
-                file_ids = arguments["file_ids"]
-                target_folder_id = arguments["target_folder_id"]
-                result = await project_repo.move_files(file_ids, target_folder_id)
-                return {
-                    "success": result.get("success", False),
-                    "moved_count": result.get("movedCount", 0),
-                    "message": f"Moved {result.get('movedCount', 0)} files" if result.get("success") else "Failed to move files"
-                }
-            
-            elif name == "delete_file":
-                file_id = arguments["file_id"]
-                success = await project_repo.delete_file(file_id)
-                return {
-                    "success": success,
-                    "message": "File deleted successfully" if success else "Failed to delete file"
-                }
-            
-            elif name == "delete_folder":
-                folder_id = arguments["folder_id"]
-                force = arguments.get("force", False)
-                success = await project_repo.delete_folder(folder_id, force)
-                return {
-                    "success": success,
-                    "message": "Folder deleted successfully" if success else "Failed to delete folder"
-                }
-            
-            # Authentication tools (only available in oauth2 mode)
             elif name == "login":
                 if not self.auth_use_cases:
                     return {
