@@ -97,20 +97,6 @@ def create_app():
         app.state.mcp_server = mcp_server
         app.state.sse = sse
         
-        # Run MCP server in background
-        async def run_mcp():
-            logger.info("✅ MCP server background task started")
-            async with mcp_server.server.run(
-                sse.read_stream,
-                sse.write_stream,
-                mcp_server.server.create_initialization_options()
-            ):
-                await asyncio.Event().wait()
-        
-        task = asyncio.create_task(run_mcp())
-        
-        # Give the task a moment to start, then show ready banner
-        await asyncio.sleep(0.1)
         logger.info("="*60)
         logger.info("✅ MCP Server Ready")
         logger.info(f"SSE Endpoint: http://{settings.mcp_server_host}:{settings.mcp_server_port}/sse")
@@ -120,18 +106,21 @@ def create_app():
         yield
         
         logger.info("🛑 Shutting down MCP server...")
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
     
     # Create SSE handler
     async def sse_app(scope, receive, send):
         path = scope.get("path", "")
         if path == "/sse":
-            async with sse.connect_sse(scope, receive, send):
-                await asyncio.Event().wait()
+            # Get MCP server from app state
+            mcp_server = scope["app"].state.mcp_server
+            # Connect SSE and run MCP server for this connection
+            async with sse.connect_sse(scope, receive, send) as streams:
+                async with mcp_server.server.run(
+                    streams[0],  # read stream
+                    streams[1],  # write stream
+                    mcp_server.server.create_initialization_options()
+                ):
+                    await asyncio.Event().wait()
         elif path == "/messages":
             await sse.handle_post_message(scope, receive, send)
         else:
