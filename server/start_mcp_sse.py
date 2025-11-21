@@ -19,10 +19,11 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
-from starlette.routing import Route
+from starlette.routing import Route, Mount
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 import uvicorn
 
 from config.settings import settings
@@ -146,23 +147,33 @@ async def app_lifespan(app):
 
 def create_app():
     """Create the Starlette application."""
-    # Create SSE transport
+    # Create SSE transport  
     sse = SseServerTransport("/messages")
     
-    # Wrap SSE endpoints as ASGI apps
-    from starlette.types import ASGIApp, Receive, Scope, Send
+    # Create wrapper app for SSE handlers
+    async def sse_app(scope, receive, send):
+        path = scope.get("path", "")
+        if path == "/sse":
+            await sse.connect_sse(scope, receive, send)
+        elif path == "/messages":
+            await sse.handle_post_message(scope, receive, send)
+        else:
+            # 404 for unknown paths
+            await send({
+                'type': 'http.response.start',
+                'status': 404,
+                'headers': [[b'content-type', b'text/plain']],
+            })
+            await send({
+                'type': 'http.response.body',
+                'body': b'Not Found',
+            })
     
-    async def sse_endpoint(scope: Scope, receive: Receive, send: Send) -> None:
-        await sse.connect_sse(scope, receive, send)
-    
-    async def messages_endpoint(scope: Scope, receive: Receive, send: Send) -> None:
-        await sse.handle_post_message(scope, receive, send)
-    
-    # Create Starlette app with SSE routes
+    # Wrap with middleware
+    from starlette.applications import Starlette
     app = Starlette(
         routes=[
-            Route("/sse", endpoint=sse_endpoint),
-            Route("/messages", endpoint=messages_endpoint, methods=["POST"]),
+            Mount("/", app=sse_app)
         ],
         middleware=[
             Middleware(AuthenticationMiddleware)
