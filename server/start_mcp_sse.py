@@ -20,10 +20,16 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
 from starlette.routing import Route
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 import uvicorn
 
 from config.settings import settings
 from src.presentation.cway_mcp_server import CwayMCPServer
+from src.infrastructure.request_context import set_request_context, clear_request_context
+from src.infrastructure.user_identity import get_identity_extractor
+from src.infrastructure.token_store import get_token_store
 
 
 # Configure logging
@@ -36,6 +42,63 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+
+class AuthenticationMiddleware(BaseHTTPMiddleware):
+    """Middleware to extract and validate Bearer tokens from requests."""
+    
+    async def dispatch(self, request: Request, call_next):
+        """Extract token from Authorization header and set request context."""
+        token = None
+        user_identity = None
+        user_tokens = None
+        
+        # Extract Bearer token from Authorization header
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]  # Remove "Bearer " prefix
+            logger.debug(f"Extracted token from Authorization header: {token[:8]}...{token[-8:]}")
+            
+            try:
+                # Validate token and get user identity
+                identity_extractor = get_identity_extractor()
+                user_identity = await identity_extractor.get_user_identity(token)
+                logger.info(f"Authenticated user: {user_identity.user_id} (org: {user_identity.org_name})")
+                
+                # Load all registered tokens for this user
+                token_store = get_token_store()
+                user_tokens = token_store.get_user_tokens(user_identity.user_id)
+                
+                # Include the primary token in user_tokens if not already present
+                if user_identity.org_name not in user_tokens:
+                    user_tokens[user_identity.org_name] = token
+                
+                logger.debug(f"Loaded {len(user_tokens)} org tokens for user {user_identity.user_id}")
+                
+            except Exception as e:
+                logger.error(f"Token validation failed: {e}")
+                # Continue without user identity - will fall back to .env token
+        
+        else:
+            # No Authorization header - fall back to static token from .env
+            logger.debug("No Authorization header, using fallback token from settings")
+            if settings.cway_api_token:
+                token = settings.cway_api_token
+        
+        # Set request context for this async context
+        set_request_context(
+            token=token,
+            user=user_identity,
+            user_tokens=user_tokens
+        )
+        
+        try:
+            # Process request
+            response = await call_next(request)
+            return response
+        finally:
+            # Clear request context after request completes
+            clear_request_context()
 
 
 def create_server():
@@ -79,11 +142,14 @@ def create_app():
     # Create SSE transport
     sse = SseServerTransport("/messages")
     
-    # Create Starlette app with SSE routes
+    # Create Starlette app with SSE routes and authentication middleware
     app = Starlette(
         routes=[
             Route("/sse", endpoint=sse.connect_sse),
             Route("/messages", endpoint=sse.handle_post_message, methods=["POST"]),
+        ],
+        middleware=[
+            Middleware(AuthenticationMiddleware)
         ],
         lifespan=app_lifespan
     )

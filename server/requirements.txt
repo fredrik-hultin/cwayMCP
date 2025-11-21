@@ -13,6 +13,9 @@ typing-extensions>=4.8.0
 # Environment and configuration
 python-dotenv>=1.0.0
 
+# Encryption
+cryptography>=41.0.0
+
 # OAuth2 and Authentication
 msal>=1.26.0
 httpx>=0.25.0

@@ -11,10 +11,16 @@ def get_project_tools() -> List[Tool]:
     return [
         Tool(
             name="list_projects",
-            description="List all Cway planner projects",
+            description="List all Cway planner projects (optionally across multiple organizations)",
             inputSchema={
                 "type": "object",
-                "properties": {},
+                "properties": {
+                    "orgs": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional list of organization names to query; defaults to current org"
+                    }
+                },
                 "required": []
             }
         ),
@@ -1864,35 +1870,44 @@ def get_organization_tools() -> List[Tool]:
     """Get organization management tool definitions."""
     return [
         Tool(
-            name="list_organizations",
-            description="List all configured organizations with their tokens. Shows which organization is currently active.",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-                "required": []
-            }
-        ),
-        Tool(
-            name="switch_organization",
-            description="Switch to a different organization. Use 'default' for the primary token, or the name of a configured organization (from CWAY_TOKEN_<NAME> env vars).",
+            name="register_org_token",
+            description="Register an additional organization token for the current user (stored encrypted on server).",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "org_name": {
                         "type": "string",
-                        "description": "Organization name to switch to ('default' or a configured org name)"
+                        "description": "Organization name label (e.g., 'Collabra' or 'CustomerCo')"
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "Cway API token for that organization"
                     }
                 },
-                "required": ["org_name"]
+                "required": ["org_name", "token"]
             }
         ),
         Tool(
-            name="get_active_organization",
-            description="Get the name of the currently active organization.",
+            name="list_my_organizations",
+            description="List organizations registered for the current user.",
             inputSchema={
                 "type": "object",
                 "properties": {},
                 "required": []
+            }
+        ),
+        Tool(
+            name="remove_org_token",
+            description="Remove a previously registered organization token for the current user.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "org_name": {
+                        "type": "string",
+                        "description": "Organization name label used at registration"
+                    }
+                },
+                "required": ["org_name"]
             }
         ),
     ]
