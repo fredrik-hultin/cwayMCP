@@ -154,7 +154,10 @@ def create_app():
     async def sse_app(scope, receive, send):
         path = scope.get("path", "")
         if path == "/sse":
-            await sse.connect_sse(scope, receive, send)
+            # connect_sse returns a context manager
+            handler = sse.connect_sse(scope, receive, send)
+            async with handler:
+                pass  # The context manager handles the SSE connection
         elif path == "/messages":
             await sse.handle_post_message(scope, receive, send)
         else:
