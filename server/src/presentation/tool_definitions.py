@@ -124,8 +124,8 @@ def get_project_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="close_projects",
-            description="Close one or more projects",
+            name="prepare_close_projects",
+            description="Preview projects before closing. Returns project details, warnings, and a confirmation token. Must be followed by confirm_close_projects to execute.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -144,6 +144,20 @@ def get_project_tools() -> List[Tool]:
             }
         ),
         Tool(
+            name="confirm_close_projects",
+            description="Execute project closure after confirmation. Requires valid confirmation token from prepare_close_projects.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {
+                        "type": "string",
+                        "description": "Confirmation token from prepare_close_projects"
+                    }
+                },
+                "required": ["confirmation_token"]
+            }
+        ),
+        Tool(
             name="reopen_projects",
             description="Reopen closed projects",
             inputSchema={
@@ -159,8 +173,8 @@ def get_project_tools() -> List[Tool]:
             }
         ),
         Tool(
-            name="delete_projects",
-            description="Delete one or more projects",
+            name="prepare_delete_projects",
+            description="Preview projects before deletion. Returns project details, warnings, and a confirmation token. Must be followed by confirm_delete_projects to execute. WARNING: This is a destructive operation that cannot be undone.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -176,6 +190,20 @@ def get_project_tools() -> List[Tool]:
                     }
                 },
                 "required": ["project_ids"]
+            }
+        ),
+        Tool(
+            name="confirm_delete_projects",
+            description="Execute project deletion after confirmation. Requires valid confirmation token from prepare_delete_projects. WARNING: This action cannot be undone.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirmation_token": {
+                        "type": "string",
+                        "description": "Confirmation token from prepare_delete_projects"
+                    }
+                },
+                "required": ["confirmation_token"]
             }
         ),
         Tool(

@@ -41,6 +41,7 @@ from ..domain.temporal_kpi_entities import (
 )
 from ..indexing.mcp_indexing_service import get_indexing_service
 from .tool_definitions import get_all_tools
+from ..application.services import ConfirmationService
 
 
 # Set up logging - redirect to file and stderr to avoid interfering with stdio protocol
@@ -82,6 +83,10 @@ class CwayMCPServer:
         self.kpi_use_cases: Optional[KPIUseCases] = None
         self.temporal_kpi_calculator: Optional[TemporalKPICalculator] = None
         self.indexing_service = get_indexing_service()
+        self.confirmation_service = ConfirmationService(
+            secret_key=settings.secret_key if hasattr(settings, 'secret_key') else None,
+            default_expiry_minutes=5
+        )
         
         # Register handlers
         self._register_handlers()
@@ -1088,16 +1093,85 @@ class CwayMCPServer:
             project = await self.project_repo.update_project(project_id, name_val, description)
             return {"project": project, "message": "Project updated successfully"}
         
-        # Project workflow tools
-        elif name == "close_projects":
+        # Project workflow tools with confirmation
+        elif name == "prepare_close_projects":
             project_ids = arguments["project_ids"]
             force = arguments.get("force", False)
-            success = await self.project_repo.close_projects(project_ids, force)
-            return {
-                "success": success,
-                "closed_count": len(project_ids) if success else 0,
-                "message": f"Successfully closed {len(project_ids)} projects" if success else "Failed to close projects"
-            }
+            
+            # Fetch project details for preview
+            projects = []
+            warnings = []
+            for pid in project_ids:
+                project = await self.project_repo.get_project_by_id(pid)
+                if project:
+                    projects.append({
+                        "id": project["id"],
+                        "name": project["name"],
+                        "status": project.get("status", "unknown"),
+                        "artwork_count": len(project.get("artworks", [])) if "artworks" in project else 0
+                    })
+                else:
+                    warnings.append(f"Project {pid} not found")
+            
+            if not projects:
+                return {
+                    "action": "error",
+                    "message": "No valid projects found to close",
+                    "warnings": warnings
+                }
+            
+            # Generate warnings
+            warnings.append(f"Will close {len(projects)} project(s)")
+            if not force:
+                warnings.append("Artworks must be complete or approved to close")
+            else:
+                warnings.append("⚠️ Force close enabled - will close even with incomplete artworks")
+            warnings.append("This action can be reversed using reopen_projects")
+            
+            # Generate confirmation token
+            token_info = self.confirmation_service.generate_token(
+                action="close_projects",
+                data={"project_ids": project_ids, "force": force}
+            )
+            
+            return self.confirmation_service.create_preview_response(
+                action="close",
+                items=projects,
+                item_type="projects",
+                warnings=warnings,
+                token_info=token_info
+            )
+        
+        elif name == "confirm_close_projects":
+            confirmation_token = arguments["confirmation_token"]
+            
+            try:
+                # Validate token and extract data
+                validated = self.confirmation_service.validate_token(confirmation_token)
+                if validated["action"] != "close_projects":
+                    return {
+                        "success": False,
+                        "message": "Invalid token: wrong action type"
+                    }
+                
+                project_ids = validated["data"]["project_ids"]
+                force = validated["data"]["force"]
+                
+                # Execute the close operation
+                success = await self.project_repo.close_projects(project_ids, force)
+                
+                return {
+                    "success": success,
+                    "action": "closed",
+                    "closed_count": len(project_ids) if success else 0,
+                    "project_ids": project_ids,
+                    "message": f"Successfully closed {len(project_ids)} project(s)" if success else "Failed to close projects"
+                }
+            except ValueError as e:
+                return {
+                    "success": False,
+                    "message": f"Confirmation failed: {str(e)}"
+                }
         
         elif name == "reopen_projects":
             project_ids = arguments["project_ids"]
@@ -1108,15 +1182,85 @@ class CwayMCPServer:
                 "message": f"Successfully reopened {len(project_ids)} projects" if success else "Failed to reopen projects"
             }
         
-        elif name == "delete_projects":
+        elif name == "prepare_delete_projects":
             project_ids = arguments["project_ids"]
             force = arguments.get("force", False)
-            success = await self.project_repo.delete_projects(project_ids, force)
-            return {
-                "success": success,
-                "deleted_count": len(project_ids) if success else 0,
-                "message": f"Successfully deleted {len(project_ids)} projects" if success else "Failed to delete projects"
-            }
+            
+            # Fetch project details for preview
+            projects = []
+            warnings = []
+            for pid in project_ids:
+                project = await self.project_repo.get_project_by_id(pid)
+                if project:
+                    projects.append({
+                        "id": project["id"],
+                        "name": project["name"],
+                        "status": project.get("status", "unknown"),
+                        "artwork_count": len(project.get("artworks", [])) if "artworks" in project else 0
+                    })
+                else:
+                    warnings.append(f"Project {pid} not found")
+            
+            if not projects:
+                return {
+                    "action": "error",
+                    "message": "No valid projects found to delete",
+                    "warnings": warnings
+                }
+            
+            # Generate warnings
+            warnings.append(f"⚠️ DESTRUCTIVE ACTION: Will permanently delete {len(projects)} project(s)")
+            warnings.append("🚨 THIS ACTION CANNOT BE UNDONE")
+            if not force:
+                warnings.append("Projects must be empty (no artworks) to delete")
+            else:
+                warnings.append("⚠️ Force delete enabled - will delete even if projects are not empty")
+            warnings.append("All associated artworks and data will be permanently lost")
+            
+            # Generate confirmation token
+            token_info = self.confirmation_service.generate_token(
+                action="delete_projects",
+                data={"project_ids": project_ids, "force": force}
+            )
+            
+            return self.confirmation_service.create_preview_response(
+                action="delete",
+                items=projects,
+                item_type="projects",
+                warnings=warnings,
+                token_info=token_info
+            )
+        
+        elif name == "confirm_delete_projects":
+            confirmation_token = arguments["confirmation_token"]
+            
+            try:
+                # Validate token and extract data
+                validated = self.confirmation_service.validate_token(confirmation_token)
+                if validated["action"] != "delete_projects":
+                    return {
+                        "success": False,
+                        "message": "Invalid token: wrong action type"
+                    }
+                
+                project_ids = validated["data"]["project_ids"]
+                force = validated["data"]["force"]
+                
+                # Execute the delete operation
+                success = await self.project_repo.delete_projects(project_ids, force)
+                
+                return {
+                    "success": success,
+                    "action": "deleted",
+                    "deleted_count": len(project_ids) if success else 0,
+                    "project_ids": project_ids,
+                    "message": f"Successfully deleted {len(project_ids)} project(s)" if success else "Failed to delete projects"
+                }
+            except ValueError as e:
+                return {
+                    "success": False,
+                    "message": f"Confirmation failed: {str(e)}"
+                }
         
         # Artwork tools
         elif name == "get_artwork":
