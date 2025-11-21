@@ -44,6 +44,13 @@ from .tool_definitions import get_all_tools
 from ..application.services import ConfirmationService
 from ..application.org_use_cases import OrganizationUseCases
 from ..infrastructure.confirmation_token_manager import ConfirmationTokenManager
+from ..application import (
+    delete_operations,
+    archive_operations,
+    artwork_state_operations,
+    create_operations,
+    permission_update_operations
+)
 
 
 # Set up logging - redirect to file and stderr to avoid interfering with stdio protocol
@@ -2380,6 +2387,491 @@ class CwayMCPServer:
                         "message": f"No token found for organization '{org_name}'"
                     }
                 
+            # ========== CONFIRMATION PATTERN TOOLS ==========
+            # DELETE OPERATIONS
+            elif name == "prepare_delete_file":
+                return await delete_operations.prepare_delete_file(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["file_id"]
+                )
+            elif name == "confirm_delete_file":
+                return await delete_operations.confirm_delete_file(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["confirmation_token"],
+                    arguments["file_id"]
+                )
+            elif name == "prepare_delete_folder":
+                return await delete_operations.prepare_delete_folder(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["folder_id"],
+                    arguments.get("force", False)
+                )
+            elif name == "confirm_delete_folder":
+                return await delete_operations.confirm_delete_folder(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["confirmation_token"],
+                    arguments["folder_id"],
+                    arguments.get("force", False)
+                )
+            elif name == "prepare_delete_share":
+                return await delete_operations.prepare_delete_share(
+                    self.confirmation_token_manager,
+                    share_repo,
+                    arguments["share_id"]
+                )
+            elif name == "confirm_delete_share":
+                return await delete_operations.confirm_delete_share(
+                    self.confirmation_token_manager,
+                    share_repo,
+                    arguments["confirmation_token"],
+                    arguments["share_id"]
+                )
+            
+            # ARCHIVE OPERATIONS
+            elif name == "prepare_archive_artwork":
+                return await archive_operations.prepare_archive_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"]
+                )
+            elif name == "confirm_archive_artwork":
+                return await archive_operations.confirm_archive_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"]
+                )
+            
+            # STATE CHANGE OPERATIONS
+            elif name == "prepare_approve_artwork":
+                return await artwork_state_operations.prepare_approve_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"]
+                )
+            elif name == "confirm_approve_artwork":
+                return await artwork_state_operations.confirm_approve_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"]
+                )
+            elif name == "prepare_reject_artwork":
+                return await artwork_state_operations.prepare_reject_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"],
+                    arguments["reason"]
+                )
+            elif name == "confirm_reject_artwork":
+                return await artwork_state_operations.confirm_reject_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"],
+                    arguments["reason"]
+                )
+            elif name == "prepare_submit_artwork":
+                return await artwork_state_operations.prepare_submit_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"]
+                )
+            elif name == "confirm_submit_artwork":
+                return await artwork_state_operations.confirm_submit_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"]
+                )
+            elif name == "prepare_request_changes":
+                return await artwork_state_operations.prepare_request_changes(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"],
+                    arguments["reason"]
+                )
+            elif name == "confirm_request_changes":
+                return await artwork_state_operations.confirm_request_changes(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"],
+                    arguments["reason"]
+                )
+            elif name == "prepare_restore_version":
+                return await artwork_state_operations.prepare_restore_version(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"],
+                    arguments["version_id"]
+                )
+            elif name == "confirm_restore_version":
+                return await artwork_state_operations.confirm_restore_version(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"],
+                    arguments["version_id"]
+                )
+            elif name == "prepare_bulk_update_status":
+                return await artwork_state_operations.prepare_bulk_update_status(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_ids"],
+                    arguments["status"]
+                )
+            elif name == "confirm_bulk_update_status":
+                return await artwork_state_operations.confirm_bulk_update_status(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_ids"],
+                    arguments["status"]
+                )
+            
+            # CREATE OPERATIONS
+            elif name == "prepare_create_project":
+                return await create_operations.prepare_create_project(
+                    self.confirmation_token_manager,
+                    project_repo,
+                    arguments["name"],
+                    arguments.get("description")
+                )
+            elif name == "confirm_create_project":
+                return await create_operations.confirm_create_project(
+                    self.confirmation_token_manager,
+                    project_repo,
+                    arguments["confirmation_token"],
+                    arguments["name"],
+                    arguments.get("description")
+                )
+            elif name == "prepare_create_user":
+                return await create_operations.prepare_create_user(
+                    self.confirmation_token_manager,
+                    user_repo,
+                    arguments["email"],
+                    arguments["username"],
+                    arguments.get("first_name"),
+                    arguments.get("last_name")
+                )
+            elif name == "confirm_create_user":
+                return await create_operations.confirm_create_user(
+                    self.confirmation_token_manager,
+                    user_repo,
+                    arguments["confirmation_token"],
+                    arguments["email"],
+                    arguments["username"],
+                    arguments.get("first_name"),
+                    arguments.get("last_name")
+                )
+            elif name == "prepare_create_artwork":
+                return await create_operations.prepare_create_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["project_id"],
+                    arguments["name"],
+                    arguments.get("description")
+                )
+            elif name == "confirm_create_artwork":
+                return await create_operations.confirm_create_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["project_id"],
+                    arguments["name"],
+                    arguments.get("description")
+                )
+            elif name == "prepare_create_folder":
+                return await create_operations.prepare_create_folder(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["name"],
+                    arguments.get("parent_folder_id"),
+                    arguments.get("description")
+                )
+            elif name == "confirm_create_folder":
+                return await create_operations.confirm_create_folder(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["confirmation_token"],
+                    arguments["name"],
+                    arguments.get("parent_folder_id"),
+                    arguments.get("description")
+                )
+            elif name == "prepare_create_category":
+                return await create_operations.prepare_create_category(
+                    self.confirmation_token_manager,
+                    category_repo,
+                    arguments["name"],
+                    arguments.get("description"),
+                    arguments.get("color")
+                )
+            elif name == "confirm_create_category":
+                return await create_operations.confirm_create_category(
+                    self.confirmation_token_manager,
+                    category_repo,
+                    arguments["confirmation_token"],
+                    arguments["name"],
+                    arguments.get("description"),
+                    arguments.get("color")
+                )
+            elif name == "prepare_create_brand":
+                return await create_operations.prepare_create_brand(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["name"],
+                    arguments.get("description")
+                )
+            elif name == "confirm_create_brand":
+                return await create_operations.confirm_create_brand(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["confirmation_token"],
+                    arguments["name"],
+                    arguments.get("description")
+                )
+            elif name == "prepare_create_print_spec":
+                return await create_operations.prepare_create_print_spec(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["name"],
+                    arguments["width"],
+                    arguments["height"],
+                    arguments["unit"],
+                    arguments.get("description")
+                )
+            elif name == "confirm_create_print_spec":
+                return await create_operations.confirm_create_print_spec(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["confirmation_token"],
+                    arguments["name"],
+                    arguments["width"],
+                    arguments["height"],
+                    arguments["unit"],
+                    arguments.get("description")
+                )
+            elif name == "prepare_create_share":
+                return await create_operations.prepare_create_share(
+                    self.confirmation_token_manager,
+                    share_repo,
+                    arguments["name"],
+                    arguments["file_ids"],
+                    arguments.get("description"),
+                    arguments.get("password"),
+                    arguments.get("max_downloads"),
+                    arguments.get("expires_at")
+                )
+            elif name == "confirm_create_share":
+                return await create_operations.confirm_create_share(
+                    self.confirmation_token_manager,
+                    share_repo,
+                    arguments["confirmation_token"],
+                    arguments["name"],
+                    arguments["file_ids"],
+                    arguments.get("description"),
+                    arguments.get("password"),
+                    arguments.get("max_downloads"),
+                    arguments.get("expires_at")
+                )
+            
+            # PERMISSION OPERATIONS
+            elif name == "prepare_add_member":
+                return await permission_update_operations.prepare_add_member(
+                    self.confirmation_token_manager,
+                    team_repo,
+                    arguments["project_id"],
+                    arguments["user_id"],
+                    arguments["role"]
+                )
+            elif name == "confirm_add_member":
+                return await permission_update_operations.confirm_add_member(
+                    self.confirmation_token_manager,
+                    team_repo,
+                    arguments["confirmation_token"],
+                    arguments["project_id"],
+                    arguments["user_id"],
+                    arguments["role"]
+                )
+            elif name == "prepare_remove_member":
+                return await permission_update_operations.prepare_remove_member(
+                    self.confirmation_token_manager,
+                    team_repo,
+                    arguments["project_id"],
+                    arguments["user_id"]
+                )
+            elif name == "confirm_remove_member":
+                return await permission_update_operations.confirm_remove_member(
+                    self.confirmation_token_manager,
+                    team_repo,
+                    arguments["confirmation_token"],
+                    arguments["project_id"],
+                    arguments["user_id"]
+                )
+            elif name == "prepare_update_member_role":
+                return await permission_update_operations.prepare_update_member_role(
+                    self.confirmation_token_manager,
+                    team_repo,
+                    arguments["project_id"],
+                    arguments["user_id"],
+                    arguments["role"]
+                )
+            elif name == "confirm_update_member_role":
+                return await permission_update_operations.confirm_update_member_role(
+                    self.confirmation_token_manager,
+                    team_repo,
+                    arguments["confirmation_token"],
+                    arguments["project_id"],
+                    arguments["user_id"],
+                    arguments["role"]
+                )
+            elif name == "prepare_transfer_ownership":
+                return await permission_update_operations.prepare_transfer_ownership(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["project_id"],
+                    arguments["new_owner_id"]
+                )
+            elif name == "confirm_transfer_ownership":
+                return await permission_update_operations.confirm_transfer_ownership(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["confirmation_token"],
+                    arguments["project_id"],
+                    arguments["new_owner_id"]
+                )
+            elif name == "prepare_set_permissions":
+                return await permission_update_operations.prepare_set_permissions(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["usernames"],
+                    arguments["permission_group_id"]
+                )
+            elif name == "confirm_set_permissions":
+                return await permission_update_operations.confirm_set_permissions(
+                    self.confirmation_token_manager,
+                    graphql_client,
+                    arguments["confirmation_token"],
+                    arguments["usernames"],
+                    arguments["permission_group_id"]
+                )
+            
+            # UPDATE/MOVE OPERATIONS
+            elif name == "prepare_update_project":
+                return await permission_update_operations.prepare_update_project(
+                    self.confirmation_token_manager,
+                    project_repo,
+                    arguments["project_id"],
+                    arguments.get("name"),
+                    arguments.get("description")
+                )
+            elif name == "confirm_update_project":
+                return await permission_update_operations.confirm_update_project(
+                    self.confirmation_token_manager,
+                    project_repo,
+                    arguments["confirmation_token"],
+                    arguments["project_id"],
+                    arguments.get("name"),
+                    arguments.get("description")
+                )
+            elif name == "prepare_update_user_name":
+                return await permission_update_operations.prepare_update_user_name(
+                    self.confirmation_token_manager,
+                    user_repo,
+                    arguments["username"],
+                    arguments.get("first_name"),
+                    arguments.get("last_name")
+                )
+            elif name == "confirm_update_user_name":
+                return await permission_update_operations.confirm_update_user_name(
+                    self.confirmation_token_manager,
+                    user_repo,
+                    arguments["confirmation_token"],
+                    arguments["username"],
+                    arguments.get("first_name"),
+                    arguments.get("last_name")
+                )
+            elif name == "prepare_rename_file":
+                return await permission_update_operations.prepare_rename_file(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["file_id"],
+                    arguments["new_name"]
+                )
+            elif name == "confirm_rename_file":
+                return await permission_update_operations.confirm_rename_file(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["confirmation_token"],
+                    arguments["file_id"],
+                    arguments["new_name"]
+                )
+            elif name == "prepare_rename_folder":
+                return await permission_update_operations.prepare_rename_folder(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["folder_id"],
+                    arguments["new_name"]
+                )
+            elif name == "confirm_rename_folder":
+                return await permission_update_operations.confirm_rename_folder(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["confirmation_token"],
+                    arguments["folder_id"],
+                    arguments["new_name"]
+                )
+            elif name == "prepare_move_files":
+                return await permission_update_operations.prepare_move_files(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["file_ids"],
+                    arguments["target_folder_id"]
+                )
+            elif name == "confirm_move_files":
+                return await permission_update_operations.confirm_move_files(
+                    self.confirmation_token_manager,
+                    media_repo,
+                    arguments["confirmation_token"],
+                    arguments["file_ids"],
+                    arguments["target_folder_id"]
+                )
+            elif name == "prepare_assign_artwork":
+                return await permission_update_operations.prepare_assign_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"],
+                    arguments["user_id"]
+                )
+            elif name == "confirm_assign_artwork":
+                return await permission_update_operations.confirm_assign_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"],
+                    arguments["user_id"]
+                )
+            elif name == "prepare_duplicate_artwork":
+                return await permission_update_operations.prepare_duplicate_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["artwork_id"],
+                    arguments.get("new_name")
+                )
+            elif name == "confirm_duplicate_artwork":
+                return await permission_update_operations.confirm_duplicate_artwork(
+                    self.confirmation_token_manager,
+                    artwork_repo,
+                    arguments["confirmation_token"],
+                    arguments["artwork_id"],
+                    arguments.get("new_name")
+                )
+            
             else:
                 raise ValueError(f"Unknown tool: {name}")
         
