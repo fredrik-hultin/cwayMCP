@@ -188,6 +188,7 @@ def main():
         app,
         host=host,
         port=port,
+        reload=settings.debug,  # Auto-reload on code changes in debug mode
         log_level=settings.log_level.lower()
     )
 
