@@ -23,11 +23,10 @@ server/
 │   └── domain/            # Entities, value objects
 ├── config/                # Settings
 ├── tests/                 # Tests
-├── main.py               # Simple entry point (just starts SSE)
-├── start_mcp_sse.py      # SSE server implementation
+├── logs/                  # Application logs
+├── main.py               # SSE server entry point
 └── requirements.txt      # Minimal dependencies
 ```
-
 ## What's Removed
 
 - ❌ **stdio mode** - No `python main.py --mode mcp`
@@ -40,11 +39,8 @@ server/
 ## Starting the Server
 
 ```bash
-# Simple way
+# Start the SSE server
 cd server && python main.py
-
-# Or directly
-cd server && python start_mcp_sse.py
 ```
 
 Server will start on `http://localhost:8000`:

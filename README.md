@@ -75,9 +75,6 @@ echo "CWAY_API_TOKEN=your_bearer_token_here" >> server/.env
 ```bash
 # Start MCP server with SSE transport
 cd server && python main.py
-
-# Or use the dedicated script
-cd server && python start_mcp_sse.py
 ```
 
 ### 5️⃣ Access Points
