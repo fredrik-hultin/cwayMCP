@@ -1,8 +1,9 @@
 """Configuration settings for the Cway MCP server."""
 
-from typing import Optional
+import os
+from typing import Optional, Dict
 from pathlib import Path
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, model_validator
 from pydantic_settings import BaseSettings
 
 # Get the server directory (parent of config directory)
@@ -23,21 +24,13 @@ class Settings(BaseSettings):
     # Authentication Configuration
     auth_method: str = Field(default="static", description="Authentication method: 'static' or 'oauth2'")
     
-    # Static Token Configuration (legacy)
-    cway_api_token: Optional[str] = Field(default=None, description="Bearer token for Cway GraphQL API")
+    # Static Token Configuration
+    cway_api_token: Optional[str] = Field(default=None, description="Primary bearer token for Cway GraphQL API")
     
-    # OAuth2 Configuration
-    azure_tenant_id: Optional[str] = Field(default=None, description="Azure AD tenant ID")
-    azure_client_id: Optional[str] = Field(default=None, description="Azure AD application (client) ID")
-    azure_client_secret: Optional[str] = Field(default=None, description="Azure AD client secret")
-    oauth2_scope: str = Field(
-        default="https://graph.microsoft.com/.default",
-        description="OAuth2 scope"
-    )
-    use_device_code_flow: bool = Field(
-        default=False,
-        description="Use device code flow for OAuth2 (interactive)"
-    )
+    # Multi-org token support
+    active_org: Optional[str] = Field(default=None, description="Currently active organization name")
+    org_tokens: Dict[str, str] = Field(default_factory=dict, description="Organization-specific tokens")
+    
     
     # Cway API Configuration
     cway_api_url: str = Field(
@@ -58,26 +51,34 @@ class Settings(BaseSettings):
     request_timeout: int = Field(default=30, description="HTTP request timeout in seconds")
     max_retries: int = Field(default=3, description="Maximum number of API retries")
     
+    @model_validator(mode='after')
+    def load_org_tokens(self):
+        """Load organization tokens from environment variables with prefix CWAY_TOKEN_"""
+        for key, value in os.environ.items():
+            if key.startswith('CWAY_TOKEN_') and value:
+                org_name = key.replace('CWAY_TOKEN_', '').lower()
+                self.org_tokens[org_name] = value
+        return self
+    
+    def get_active_token(self) -> Optional[str]:
+        """Get the currently active token (org-specific or primary)."""
+        if self.active_org and self.active_org in self.org_tokens:
+            return self.org_tokens[self.active_org]
+        return self.cway_api_token
+    
+    def list_organizations(self) -> list[str]:
+        """List all configured organizations."""
+        orgs = list(self.org_tokens.keys())
+        if self.cway_api_token:
+            orgs.insert(0, "default")
+        return orgs
+    
     def validate_auth_config(self) -> None:
         """Validate that authentication configuration is complete."""
-        if self.auth_method == "static":
-            if not self.cway_api_token:
-                raise ValueError(
-                    "Static authentication requires CWAY_API_TOKEN environment variable. "
-                    "Either set CWAY_API_TOKEN or switch to AUTH_METHOD=oauth2"
-                )
-        elif self.auth_method in ["oauth2", "oauth2_obo"]:
-            if not self.azure_tenant_id or not self.azure_client_id:
-                raise ValueError(
-                    f"{self.auth_method} requires AZURE_TENANT_ID and AZURE_CLIENT_ID. "
-                    "Please configure these environment variables."
-                )
-            if not self.azure_client_secret and not self.use_device_code_flow:
-                raise ValueError(
-                    f"{self.auth_method} requires either AZURE_CLIENT_SECRET or "
-                    "USE_DEVICE_CODE_FLOW=true"
-                )
-        
+        if not self.cway_api_token and not self.org_tokens:
+            raise ValueError(
+                "No API tokens configured. Set CWAY_API_TOKEN or CWAY_TOKEN_<ORG_NAME> environment variables."
+            )
 
 # Global settings instance
 settings = Settings()

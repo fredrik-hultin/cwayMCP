@@ -12,7 +12,7 @@ from graphql import DocumentNode
 
 from config.settings import settings
 from ..utils.logging_config import log_api_call, log_performance, log_request_flow
-from .auth import TokenProvider, OAuth2TokenProvider, StaticTokenProvider
+from .auth import TokenProvider, StaticTokenProvider
 
 
 logger = logging.getLogger(__name__)
@@ -57,11 +57,7 @@ class CwayGraphQLClient:
             self.token_provider = self._create_token_provider_from_settings()
         
     def _create_token_provider_from_settings(self) -> TokenProvider:
-        """Create token provider based on settings configuration.
-        
-        Note: This is only used for legacy static token mode.
-        For per-user oauth2 mode, tokens should be provided via api_token parameter.
-        """
+        """Create token provider based on settings configuration (static token with multi-org support)."""
         # Validate settings first
         try:
             settings.validate_auth_config()
@@ -69,26 +65,13 @@ class CwayGraphQLClient:
             logger.error(f"Authentication configuration error: {e}")
             raise
         
-        if settings.auth_method == "oauth2":
-            # In oauth2 mode without a direct token, this means we're in legacy mode
-            # where the client is expected to handle OAuth2 flow itself.
-            # For per-user auth, tokens should be passed via api_token parameter.
-            logger.warning(
-                "OAuth2 mode detected but no api_token provided. "
-                "For per-user authentication, pass tokens via api_token parameter. "
-                "Falling back to OAuth2TokenProvider (legacy behavior)."
-            )
-            return OAuth2TokenProvider(
-                tenant_id=settings.azure_tenant_id,
-                client_id=settings.azure_client_id,
-                client_secret=settings.azure_client_secret,
-                scope=settings.oauth2_scope,
-                use_device_code_flow=settings.use_device_code_flow,
-            )
+        # Use active token (supports multi-org)
+        active_token = settings.get_active_token()
+        if settings.active_org:
+            logger.info(f"Using API token for organization: {settings.active_org}")
         else:
-            # Static token mode
-            logger.info("Using static token authentication")
-            return StaticTokenProvider(settings.cway_api_token)
+            logger.info("Using default API token")
+        return StaticTokenProvider(active_token)
     
     async def __aenter__(self) -> "CwayGraphQLClient":
         """Async context manager entry."""

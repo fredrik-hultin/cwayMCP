@@ -18,7 +18,7 @@ from mcp.types import (
 
 from config.settings import settings
 from ..infrastructure.graphql_client import CwayGraphQLClient, CwayAPIError
-from ..infrastructure.repositories import GraphQLProjectRepository, GraphQLUserRepository
+from ..infrastructure.graphql_repositories import GraphQLProjectRepository, GraphQLUserRepository
 from ..application.use_cases import ProjectUseCases, UserUseCases
 from .formatters import ResourceFormatter
 

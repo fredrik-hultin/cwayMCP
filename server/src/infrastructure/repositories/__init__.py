@@ -1,5 +1,4 @@
-"""
-Repository module - Clean Architecture data access layer.
+"""Repository module - Clean Architecture data access layer.
 
 All repositories follow Single Responsibility Principle and extend BaseRepository.
 """

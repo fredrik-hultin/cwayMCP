@@ -42,8 +42,7 @@ from ..domain.temporal_kpi_entities import (
 from ..indexing.mcp_indexing_service import get_indexing_service
 from .tool_definitions import get_all_tools
 from ..application.services import ConfirmationService
-from ..infrastructure.auth.token_manager import TokenManager, TokenManagerError
-from ..application.auth_use_cases import AuthUseCases
+from ..application.org_use_cases import OrganizationUseCases
 
 
 # Set up logging - redirect to file and stderr to avoid interfering with stdio protocol
@@ -90,17 +89,9 @@ class CwayMCPServer:
             default_expiry_minutes=5
         )
         
-        # Per-user authentication support
-        self.token_manager: Optional[TokenManager] = None
-        self.auth_use_cases: Optional[AuthUseCases] = None
-        if settings.auth_method == "oauth2":
-            self.token_manager = TokenManager(
-                api_url=settings.cway_api_url,
-                tenant_id=settings.azure_tenant_id,
-                client_id=settings.azure_client_id
-            )
-            self.auth_use_cases = AuthUseCases(self.token_manager)
-            logger.info("🔐 Token Manager initialized for per-user authentication")
+        # Organization management support
+        self.org_use_cases = OrganizationUseCases()
+        logger.info(f"🔐 Using API token for organization: {settings.active_org or 'default'}")
         
         # Register handlers
         self._register_handlers()
@@ -727,17 +718,17 @@ class CwayMCPServer:
         else:
             # Static auth mode - use shared instances
             graphql_client = self.graphql_client
-            user_repo = user_repo
-            project_repo = project_repo
-            artwork_repo = artwork_repo
-            media_repo = media_repo
-            share_repo = share_repo
-            team_repo = team_repo
-            search_repo = search_repo
-            category_repo = category_repo
-            system_repo = system_repo
-            kpi_use_cases = kpi_use_cases
-            temporal_kpi_calculator = temporal_kpi_calculator
+            user_repo = self.user_repo
+            project_repo = self.project_repo
+            artwork_repo = self.artwork_repo
+            media_repo = self.media_repo
+            share_repo = self.share_repo
+            team_repo = self.team_repo
+            search_repo = self.search_repo
+            category_repo = self.category_repo
+            system_repo = self.system_repo
+            kpi_use_cases = self.kpi_use_cases
+            temporal_kpi_calculator = self.temporal_kpi_calculator
         
         # Tool name aliases for consistency
         if name == "list_all_users":

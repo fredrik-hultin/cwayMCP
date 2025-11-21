@@ -1860,6 +1860,44 @@ def get_auth_tools() -> List[Tool]:
     ]
 
 
+def get_organization_tools() -> List[Tool]:
+    """Get organization management tool definitions."""
+    return [
+        Tool(
+            name="list_organizations",
+            description="List all configured organizations with their tokens. Shows which organization is currently active.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+        Tool(
+            name="switch_organization",
+            description="Switch to a different organization. Use 'default' for the primary token, or the name of a configured organization (from CWAY_TOKEN_<NAME> env vars).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "org_name": {
+                        "type": "string",
+                        "description": "Organization name to switch to ('default' or a configured org name)"
+                    }
+                },
+                "required": ["org_name"]
+            }
+        ),
+        Tool(
+            name="get_active_organization",
+            description="Get the name of the currently active organization.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+    ]
+
+
 def get_all_tools() -> List[Tool]:
     """Get all tool definitions."""
     return (
@@ -1876,5 +1914,6 @@ def get_all_tools() -> List[Tool]:
         get_system_tools() +
         get_analytics_tools() +
         get_indexing_tools() +
-        get_auth_tools()
+        get_auth_tools() +
+        get_organization_tools()
     )
