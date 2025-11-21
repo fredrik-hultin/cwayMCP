@@ -105,7 +105,11 @@ def create_app():
                 sse.write_stream,
                 mcp_server.server.create_initialization_options()
             ):
-                logger.info("✅ MCP server is now running and ready")
+                logger.info("="*60)
+                logger.info("✅ MCP Server Ready")
+                logger.info(f"SSE Endpoint: http://{settings.mcp_server_host}:{settings.mcp_server_port}/sse")
+                logger.info(f"Messages: http://{settings.mcp_server_host}:{settings.mcp_server_port}/messages")
+                logger.info("="*60)
                 await asyncio.Event().wait()
         
         task = asyncio.create_task(run_mcp())
