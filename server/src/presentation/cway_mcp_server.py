@@ -42,6 +42,7 @@ from ..domain.temporal_kpi_entities import (
 from ..indexing.mcp_indexing_service import get_indexing_service
 from .tool_definitions import get_all_tools
 from ..application.services import ConfirmationService
+from ..infrastructure.auth.token_manager import TokenManager, TokenManagerError
 
 
 # Set up logging - redirect to file and stderr to avoid interfering with stdio protocol
@@ -87,6 +88,16 @@ class CwayMCPServer:
             secret_key=settings.secret_key if hasattr(settings, 'secret_key') else None,
             default_expiry_minutes=5
         )
+        
+        # Per-user authentication support
+        self.token_manager: Optional[TokenManager] = None
+        if settings.auth_method == "oauth2":
+            self.token_manager = TokenManager(
+                api_url=settings.cway_api_url,
+                tenant_id=settings.azure_tenant_id,
+                client_id=settings.azure_client_id
+            )
+            logger.info("🔐 Token Manager initialized for per-user authentication")
         
         # Register handlers
         self._register_handlers()
@@ -576,43 +587,155 @@ class CwayMCPServer:
                     isError=True
                 )
                 
+    def _get_current_username(self) -> str:
+        """Get current username for per-user authentication.
+        
+        Priority:
+        1. Environment variable CWAY_USERNAME
+        2. Default to 'default' for single-user scenarios
+        """
+        import os
+        return os.environ.get("CWAY_USERNAME", "default")
+    
+    async def _get_authenticated_client(self, username: str) -> CwayGraphQLClient:
+        """Get GraphQL client with valid token for user.
+        
+        Args:
+            username: User identifier
+            
+        Returns:
+            GraphQL client with valid authentication
+            
+        Raises:
+            TokenManagerError: If user is not authenticated
+        """
+        if self.token_manager:
+            # Get valid token (auto-refreshes if needed)
+            access_token = await self.token_manager.get_valid_token(username)
+            return self._create_graphql_client_for_user(access_token)
+        else:
+            # Fall back to static token from settings
+            if not self.graphql_client:
+                self.graphql_client = CwayGraphQLClient()
+                await self.graphql_client.connect()
+            return self.graphql_client
+    
+    def _create_graphql_client_for_user(self, access_token: str) -> CwayGraphQLClient:
+        """Create a new GraphQL client with specific access token.
+        
+        Args:
+            access_token: User-specific access token
+            
+        Returns:
+            New GraphQL client instance
+        """
+        # Create client with specific token (don't use global token provider)
+        client = CwayGraphQLClient(api_token=access_token)
+        return client
+    
     async def _ensure_initialized(self) -> None:
-        """Ensure the server is initialized with all dependencies."""
-        if not self.graphql_client:
-            self.graphql_client = CwayGraphQLClient()
-            await self.graphql_client.connect()
-            
-            # Initialize repositories
-            self.user_repo = UserRepository(self.graphql_client)
-            self.project_repo = ProjectRepository(self.graphql_client)
-            self.artwork_repo = ArtworkRepository(self.graphql_client)
-            self.media_repo = MediaRepository(self.graphql_client)
-            self.share_repo = ShareRepository(self.graphql_client)
-            self.team_repo = TeamRepository(self.graphql_client)
-            self.search_repo = SearchRepository(self.graphql_client)
-            self.category_repo = CategoryRepository(self.graphql_client)
-            self.system_repo = CwaySystemRepository(self.graphql_client)
-            
-            # Initialize KPI use cases
-            self.kpi_use_cases = KPIUseCases(
-                self.user_repo,
-                self.project_repo,
-                self.graphql_client
-            )
-            
-            # Initialize temporal KPI calculator
-            # Convert repositories to domain interfaces
-            from ..infrastructure.repository_adapters import CwayProjectRepositoryAdapter, CwayUserRepositoryAdapter
-            project_repo_adapter = CwayProjectRepositoryAdapter(self.project_repo)
-            user_repo_adapter = CwayUserRepositoryAdapter(self.user_repo)
-            
-            self.temporal_kpi_calculator = TemporalKPICalculator(
-                project_repo_adapter,
-                user_repo_adapter
-            )
+        """Ensure the server is initialized with all dependencies.
+        
+        For per-user auth (oauth2), this only validates configuration.
+        For static auth, this initializes the shared GraphQL client.
+        """
+        if self.token_manager:
+            # Per-user authentication mode - client created per-request
+            # Just validate that auth config is correct
+            username = self._get_current_username()
+            if not self.token_manager.is_user_authenticated(username):
+                raise TokenManagerError(
+                    f"User '{username}' is not authenticated. "
+                    "Please run authentication using the login tool."
+                )
+            logger.info(f"✅ User '{username}' is authenticated")
+        else:
+            # Static token mode - backward compatibility
+            if not self.graphql_client:
+                self.graphql_client = CwayGraphQLClient()
+                await self.graphql_client.connect()
+                
+                # Initialize repositories
+                self.user_repo = UserRepository(self.graphql_client)
+                self.project_repo = ProjectRepository(self.graphql_client)
+                self.artwork_repo = ArtworkRepository(self.graphql_client)
+                self.media_repo = MediaRepository(self.graphql_client)
+                self.share_repo = ShareRepository(self.graphql_client)
+                self.team_repo = TeamRepository(self.graphql_client)
+                self.search_repo = SearchRepository(self.graphql_client)
+                self.category_repo = CategoryRepository(self.graphql_client)
+                self.system_repo = CwaySystemRepository(self.graphql_client)
+                
+                # Initialize KPI use cases
+                self.kpi_use_cases = KPIUseCases(
+                    self.user_repo,
+                    self.project_repo,
+                    self.graphql_client
+                )
+                
+                # Initialize temporal KPI calculator
+                # Convert repositories to domain interfaces
+                from ..infrastructure.repository_adapters import CwayProjectRepositoryAdapter, CwayUserRepositoryAdapter
+                project_repo_adapter = CwayProjectRepositoryAdapter(self.project_repo)
+                user_repo_adapter = CwayUserRepositoryAdapter(self.user_repo)
+                
+                self.temporal_kpi_calculator = TemporalKPICalculator(
+                    project_repo_adapter,
+                    user_repo_adapter
+                )
             
     async def _execute_tool(self, name: str, arguments: Dict[str, Any]) -> Any:
-        """Execute a specific tool."""
+        """Execute a specific tool.
+        
+        For per-user auth mode, this gets a fresh token for each request.
+        For static auth mode, this uses the shared client.
+        """
+        # Get user-specific client if using per-user auth
+        if self.token_manager:
+            username = self._get_current_username()
+            try:
+                graphql_client = await self._get_authenticated_client(username)
+            except TokenManagerError as e:
+                logger.error(f"Authentication error for user '{username}': {e}")
+                return {
+                    "error": "Authentication required",
+                    "message": str(e),
+                    "action": "Please authenticate using the login tool"
+                }
+            
+            # Initialize repositories with user-specific client
+            user_repo = UserRepository(graphql_client)
+            project_repo = ProjectRepository(graphql_client)
+            artwork_repo = ArtworkRepository(graphql_client)
+            media_repo = MediaRepository(graphql_client)
+            share_repo = ShareRepository(graphql_client)
+            team_repo = TeamRepository(graphql_client)
+            search_repo = SearchRepository(graphql_client)
+            category_repo = CategoryRepository(graphql_client)
+            system_repo = CwaySystemRepository(graphql_client)
+            
+            # Initialize use cases
+            kpi_use_cases = KPIUseCases(user_repo, project_repo, graphql_client)
+            
+            from ..infrastructure.repository_adapters import CwayProjectRepositoryAdapter, CwayUserRepositoryAdapter
+            project_repo_adapter = CwayProjectRepositoryAdapter(project_repo)
+            user_repo_adapter = CwayUserRepositoryAdapter(user_repo)
+            temporal_kpi_calculator = TemporalKPICalculator(project_repo_adapter, user_repo_adapter)
+        else:
+            # Static auth mode - use shared instances
+            graphql_client = self.graphql_client
+            user_repo = user_repo
+            project_repo = project_repo
+            artwork_repo = artwork_repo
+            media_repo = media_repo
+            share_repo = share_repo
+            team_repo = team_repo
+            search_repo = search_repo
+            category_repo = category_repo
+            system_repo = system_repo
+            kpi_use_cases = kpi_use_cases
+            temporal_kpi_calculator = temporal_kpi_calculator
+        
         # Tool name aliases for consistency
         if name == "list_all_users":
             name = "list_users"
@@ -628,7 +751,7 @@ class CwayMCPServer:
             name = "update_project"
         
         if name == "list_projects":
-            projects = await self.project_repo.get_planner_projects()
+            projects = await project_repo.get_planner_projects()
             return {
                 "projects": [
                     {
@@ -646,7 +769,7 @@ class CwayMCPServer:
             }
             
         elif name == "get_project":
-            project = await self.project_repo.find_project_by_id(arguments["project_id"])
+            project = await project_repo.find_project_by_id(arguments["project_id"])
             if project:
                 return {
                     "project": {
@@ -663,7 +786,7 @@ class CwayMCPServer:
             return {"project": None, "message": "Project not found"}
             
         elif name == "get_active_projects":
-            projects = await self.project_repo.get_active_projects()
+            projects = await project_repo.get_active_projects()
             return {
                 "projects": [
                     {
@@ -679,7 +802,7 @@ class CwayMCPServer:
             }
             
         elif name == "get_completed_projects":
-            projects = await self.project_repo.get_completed_projects()
+            projects = await project_repo.get_completed_projects()
             return {
                 "projects": [
                     {
@@ -695,7 +818,7 @@ class CwayMCPServer:
             }
             
         elif name == "list_users":
-            users = await self.user_repo.find_all_users()
+            users = await user_repo.find_all_users()
             return {
                 "users": [
                     {
@@ -715,7 +838,7 @@ class CwayMCPServer:
             }
             
         elif name == "get_user":
-            user = await self.user_repo.find_user_by_id(arguments["user_id"])
+            user = await user_repo.find_user_by_id(arguments["user_id"])
             if user:
                 return {
                     "user": {
@@ -736,7 +859,7 @@ class CwayMCPServer:
             return {"user": None, "message": "User not found"}
             
         elif name == "find_user_by_email":
-            user = await self.user_repo.find_user_by_email(arguments["email"])
+            user = await user_repo.find_user_by_email(arguments["email"])
             if user:
                 return {
                     "user": {
@@ -751,7 +874,7 @@ class CwayMCPServer:
             return {"user": None, "message": "User not found"}
             
         elif name == "get_users_page":
-            page_data = await self.user_repo.find_users_page(
+            page_data = await user_repo.find_users_page(
                 page=arguments.get("page", 0),
                 size=arguments.get("size", 10)
             )
@@ -772,8 +895,8 @@ class CwayMCPServer:
             }
             
         elif name == "get_system_status":
-            is_connected = await self.system_repo.validate_connection()
-            login_info = await self.system_repo.get_login_info()
+            is_connected = await system_repo.validate_connection()
+            login_info = await system_repo.get_login_info()
             
             return {
                 "connected": is_connected,
@@ -784,17 +907,17 @@ class CwayMCPServer:
             
         elif name == "analyze_project_velocity":
             project_id = arguments["project_id"]
-            project = await self.project_repo.find_project_by_id(project_id)
+            project = await project_repo.find_project_by_id(project_id)
             if not project:
                 return {"error": "Project not found"}
                 
             # Convert to domain project for analysis
             from ..infrastructure.repository_adapters import CwayProjectRepositoryAdapter
-            adapter = CwayProjectRepositoryAdapter(self.project_repo)
+            adapter = CwayProjectRepositoryAdapter(project_repo)
             domain_project = await adapter.get_project_by_id(project_id)
             
             if domain_project:
-                velocity_analysis = await self.temporal_kpi_calculator.analyze_project_velocity(domain_project)
+                velocity_analysis = await temporal_kpi_calculator.analyze_project_velocity(domain_project)
                 return {
                     "project_velocity_analysis": {
                         "project_id": velocity_analysis.project_id,
@@ -814,7 +937,7 @@ class CwayMCPServer:
             
         elif name == "get_temporal_dashboard":
             analysis_period = arguments.get("analysis_period_days", 90)
-            dashboard = await self.temporal_kpi_calculator.generate_temporal_kpi_dashboard(analysis_period)
+            dashboard = await temporal_kpi_calculator.generate_temporal_kpi_dashboard(analysis_period)
             
             return {
                 "temporal_kpi_dashboard": {
@@ -845,7 +968,7 @@ class CwayMCPServer:
             
         elif name == "get_stagnation_alerts":
             min_urgency = arguments.get("min_urgency_score", 5)
-            dashboard = await self.temporal_kpi_calculator.generate_temporal_kpi_dashboard()
+            dashboard = await temporal_kpi_calculator.generate_temporal_kpi_dashboard()
             
             filtered_alerts = [
                 alert for alert in dashboard.stagnation_alerts 
@@ -966,14 +1089,14 @@ class CwayMCPServer:
                 return {"job_status": None, "message": "Job not found"}
         
         elif name == "get_login_info":
-            login_info = await self.system_repo.get_login_info()
+            login_info = await system_repo.get_login_info()
             if login_info:
                 return {"login_info": login_info}
             return {"login_info": None, "message": "Login info not available"}
         
         elif name == "search_users":
             query = arguments.get("query")
-            users = await self.user_repo.search_users(query)
+            users = await user_repo.search_users(query)
             return {
                 "users": [
                     {
@@ -992,7 +1115,7 @@ class CwayMCPServer:
         elif name == "search_projects":
             query = arguments.get("query")
             limit = arguments.get("limit", 10)
-            result = await self.project_repo.search_projects(query, limit)
+            result = await project_repo.search_projects(query, limit)
             return {
                 "projects": result.get("projects", []),
                 "total_hits": result.get("total_hits", 0)
@@ -1000,7 +1123,7 @@ class CwayMCPServer:
         
         elif name == "get_project_by_id":
             project_id = arguments["project_id"]
-            project = await self.project_repo.get_project_by_id(project_id)
+            project = await project_repo.get_project_by_id(project_id)
             if project:
                 return {"project": project}
             return {"project": None, "message": "Project not found"}
@@ -1010,7 +1133,7 @@ class CwayMCPServer:
             username = arguments["username"]
             first_name = arguments.get("first_name") or arguments.get("firstName")
             last_name = arguments.get("last_name") or arguments.get("lastName")
-            user = await self.user_repo.create_user(email, username, first_name, last_name)
+            user = await user_repo.create_user(email, username, first_name, last_name)
             return {
                 "user": {
                     "id": user.id,
@@ -1028,7 +1151,7 @@ class CwayMCPServer:
             username = arguments["username"]
             first_name = arguments.get("first_name") or arguments.get("firstName")
             last_name = arguments.get("last_name") or arguments.get("lastName")
-            user = await self.user_repo.update_user_name(username, first_name, last_name)
+            user = await user_repo.update_user_name(username, first_name, last_name)
             if user:
                 return {
                     "user": {
@@ -1048,7 +1171,7 @@ class CwayMCPServer:
             username = arguments["username"]
             
             # Fetch user details for preview
-            users = await self.user_repo.search_users(username)
+            users = await user_repo.search_users(username)
             user = None
             for u in users:
                 if u.username == username:
@@ -1111,7 +1234,7 @@ class CwayMCPServer:
                 username = validated["data"]["username"]
                 
                 # Execute the delete operation
-                success = await self.user_repo.delete_user(username)
+                success = await user_repo.delete_user(username)
                 
                 return {
                     "success": success,
@@ -1129,7 +1252,7 @@ class CwayMCPServer:
             search = arguments.get("search")
             page = arguments.get("page", 0)
             size = arguments.get("size", 10)
-            result = await self.user_repo.find_users_and_teams(search, page, size)
+            result = await user_repo.find_users_and_teams(search, page, size)
             return {
                 "items": result["items"],
                 "page": result["page"],
@@ -1138,7 +1261,7 @@ class CwayMCPServer:
             }
         
         elif name == "get_permission_groups":
-            groups = await self.user_repo.get_permission_groups()
+            groups = await user_repo.get_permission_groups()
             return {
                 "permission_groups": groups,
                 "count": len(groups),
@@ -1148,7 +1271,7 @@ class CwayMCPServer:
         elif name == "set_user_permissions":
             usernames = arguments["usernames"]
             permission_group_id = arguments["permission_group_id"]
-            success = await self.user_repo.set_user_permissions(usernames, permission_group_id)
+            success = await user_repo.set_user_permissions(usernames, permission_group_id)
             return {
                 "success": success,
                 "users_updated": len(usernames) if success else 0,
@@ -1158,14 +1281,14 @@ class CwayMCPServer:
         elif name == "create_project":
             name_val = arguments["name"]
             description = arguments.get("description")
-            project = await self.project_repo.create_project(name_val, description)
+            project = await project_repo.create_project(name_val, description)
             return {"project": project, "message": "Project created successfully"}
         
         elif name == "update_project":
             project_id = arguments["project_id"]
             name_val = arguments.get("name")
             description = arguments.get("description")
-            project = await self.project_repo.update_project(project_id, name_val, description)
+            project = await project_repo.update_project(project_id, name_val, description)
             return {"project": project, "message": "Project updated successfully"}
         
         # Project workflow tools with confirmation
@@ -1177,7 +1300,7 @@ class CwayMCPServer:
             projects = []
             warnings = []
             for pid in project_ids:
-                project = await self.project_repo.get_project_by_id(pid)
+                project = await project_repo.get_project_by_id(pid)
                 if project:
                     projects.append({
                         "id": project["id"],
@@ -1233,7 +1356,7 @@ class CwayMCPServer:
                 force = validated["data"]["force"]
                 
                 # Execute the close operation
-                success = await self.project_repo.close_projects(project_ids, force)
+                success = await project_repo.close_projects(project_ids, force)
                 
                 return {
                     "success": success,
@@ -1250,7 +1373,7 @@ class CwayMCPServer:
         
         elif name == "reopen_projects":
             project_ids = arguments["project_ids"]
-            success = await self.project_repo.reopen_projects(project_ids)
+            success = await project_repo.reopen_projects(project_ids)
             return {
                 "success": success,
                 "reopened_count": len(project_ids) if success else 0,
@@ -1265,7 +1388,7 @@ class CwayMCPServer:
             projects = []
             warnings = []
             for pid in project_ids:
-                project = await self.project_repo.get_project_by_id(pid)
+                project = await project_repo.get_project_by_id(pid)
                 if project:
                     projects.append({
                         "id": project["id"],
@@ -1322,7 +1445,7 @@ class CwayMCPServer:
                 force = validated["data"]["force"]
                 
                 # Execute the delete operation
-                success = await self.project_repo.delete_projects(project_ids, force)
+                success = await project_repo.delete_projects(project_ids, force)
                 
                 return {
                     "success": success,
@@ -1340,7 +1463,7 @@ class CwayMCPServer:
         # Artwork tools
         elif name == "get_artwork":
             artwork_id = arguments["artwork_id"]
-            artwork = await self.project_repo.get_artwork(artwork_id)
+            artwork = await project_repo.get_artwork(artwork_id)
             if artwork:
                 return {"artwork": artwork}
             return {"artwork": None, "message": "Artwork not found"}
@@ -1349,7 +1472,7 @@ class CwayMCPServer:
             project_id = arguments["project_id"]
             artwork_name = arguments["name"]
             description = arguments.get("description")
-            artwork = await self.project_repo.create_artwork(project_id, artwork_name, description)
+            artwork = await project_repo.create_artwork(project_id, artwork_name, description)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1358,7 +1481,7 @@ class CwayMCPServer:
         
         elif name == "approve_artwork":
             artwork_id = arguments["artwork_id"]
-            artwork = await self.project_repo.approve_artwork(artwork_id)
+            artwork = await project_repo.approve_artwork(artwork_id)
             return {
                 "artwork": artwork,
                 "success": artwork is not None,
@@ -1368,7 +1491,7 @@ class CwayMCPServer:
         elif name == "reject_artwork":
             artwork_id = arguments["artwork_id"]
             reason = arguments.get("reason")
-            artwork = await self.project_repo.reject_artwork(artwork_id, reason)
+            artwork = await project_repo.reject_artwork(artwork_id, reason)
             return {
                 "artwork": artwork,
                 "success": artwork is not None,
@@ -1376,14 +1499,14 @@ class CwayMCPServer:
             }
         
         elif name == "get_my_artworks":
-            result = await self.project_repo.get_my_artworks()
+            result = await project_repo.get_my_artworks()
             return {
                 "artworks": result,
                 "message": f"Found {result['total_count']} artworks requiring action"
             }
         
         elif name == "get_artworks_to_approve":
-            artworks = await self.project_repo.get_artworks_to_approve()
+            artworks = await project_repo.get_artworks_to_approve()
             return {
                 "artworks": artworks,
                 "count": len(artworks),
@@ -1391,7 +1514,7 @@ class CwayMCPServer:
             }
         
         elif name == "get_artworks_to_upload":
-            artworks = await self.project_repo.get_artworks_to_upload()
+            artworks = await project_repo.get_artworks_to_upload()
             return {
                 "artworks": artworks,
                 "count": len(artworks),
@@ -1401,7 +1524,7 @@ class CwayMCPServer:
         elif name == "download_artworks":
             artwork_ids = arguments["artwork_ids"]
             zip_name = arguments.get("zip_name")
-            job_id = await self.project_repo.create_artwork_download_job(artwork_ids, zip_name)
+            job_id = await project_repo.create_artwork_download_job(artwork_ids, zip_name)
             return {
                 "job_id": job_id,
                 "artwork_count": len(artwork_ids),
@@ -1411,7 +1534,7 @@ class CwayMCPServer:
         
         elif name == "get_artwork_preview":
             artwork_id = arguments["artwork_id"]
-            preview = await self.project_repo.get_artwork_preview(artwork_id)
+            preview = await project_repo.get_artwork_preview(artwork_id)
             if preview:
                 return {
                     "preview": preview,
@@ -1424,7 +1547,7 @@ class CwayMCPServer:
         
         elif name == "get_artwork_history":
             artwork_id = arguments["artwork_id"]
-            history = await self.project_repo.get_artwork_history(artwork_id)
+            history = await project_repo.get_artwork_history(artwork_id)
             return {
                 "history": history,
                 "event_count": len(history),
@@ -1433,7 +1556,7 @@ class CwayMCPServer:
         
         elif name == "analyze_artwork_ai":
             artwork_id = arguments["artwork_id"]
-            thread_id = await self.project_repo.analyze_artwork_ai(artwork_id)
+            thread_id = await project_repo.analyze_artwork_ai(artwork_id)
             return {
                 "thread_id": thread_id,
                 "success": True,
@@ -1443,7 +1566,7 @@ class CwayMCPServer:
         elif name == "generate_project_summary_ai":
             project_id = arguments["project_id"]
             audience = arguments.get("audience", "PROJECT_MANAGER")
-            summary = await self.project_repo.generate_project_summary_ai(project_id, audience)
+            summary = await project_repo.generate_project_summary_ai(project_id, audience)
             return {
                 "summary": summary,
                 "audience": audience,
@@ -1454,7 +1577,7 @@ class CwayMCPServer:
         # Artwork workflow tools
         elif name == "submit_artwork_for_review":
             artwork_id = arguments["artwork_id"]
-            artwork = await self.project_repo.submit_artwork_for_review(artwork_id)
+            artwork = await project_repo.submit_artwork_for_review(artwork_id)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1464,7 +1587,7 @@ class CwayMCPServer:
         elif name == "request_artwork_changes":
             artwork_id = arguments["artwork_id"]
             reason = arguments["reason"]
-            artwork = await self.project_repo.request_artwork_changes(artwork_id, reason)
+            artwork = await project_repo.request_artwork_changes(artwork_id, reason)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1474,7 +1597,7 @@ class CwayMCPServer:
         elif name == "get_artwork_comments":
             artwork_id = arguments["artwork_id"]
             limit = arguments.get("limit", 50)
-            comments = await self.project_repo.get_artwork_comments(artwork_id, limit)
+            comments = await project_repo.get_artwork_comments(artwork_id, limit)
             return {
                 "comments": comments,
                 "comment_count": len(comments),
@@ -1484,7 +1607,7 @@ class CwayMCPServer:
         elif name == "add_artwork_comment":
             artwork_id = arguments["artwork_id"]
             text = arguments["text"]
-            comment = await self.project_repo.add_artwork_comment(artwork_id, text)
+            comment = await project_repo.add_artwork_comment(artwork_id, text)
             return {
                 "comment": comment,
                 "success": True,
@@ -1493,7 +1616,7 @@ class CwayMCPServer:
         
         elif name == "get_artwork_versions":
             artwork_id = arguments["artwork_id"]
-            versions = await self.project_repo.get_artwork_versions(artwork_id)
+            versions = await project_repo.get_artwork_versions(artwork_id)
             return {
                 "versions": versions,
                 "version_count": len(versions),
@@ -1503,7 +1626,7 @@ class CwayMCPServer:
         elif name == "restore_artwork_version":
             artwork_id = arguments["artwork_id"]
             version_id = arguments["version_id"]
-            artwork = await self.project_repo.restore_artwork_version(artwork_id, version_id)
+            artwork = await project_repo.restore_artwork_version(artwork_id, version_id)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1513,7 +1636,7 @@ class CwayMCPServer:
         elif name == "assign_artwork":
             artwork_id = arguments["artwork_id"]
             user_id = arguments["user_id"]
-            artwork = await self.project_repo.assign_artwork(artwork_id, user_id)
+            artwork = await project_repo.assign_artwork(artwork_id, user_id)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1523,7 +1646,7 @@ class CwayMCPServer:
         elif name == "duplicate_artwork":
             artwork_id = arguments["artwork_id"]
             new_name = arguments.get("new_name")
-            artwork = await self.project_repo.duplicate_artwork(artwork_id, new_name)
+            artwork = await project_repo.duplicate_artwork(artwork_id, new_name)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1532,7 +1655,7 @@ class CwayMCPServer:
         
         elif name == "archive_artwork":
             artwork_id = arguments["artwork_id"]
-            artwork = await self.project_repo.archive_artwork(artwork_id)
+            artwork = await project_repo.archive_artwork(artwork_id)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1541,7 +1664,7 @@ class CwayMCPServer:
         
         elif name == "unarchive_artwork":
             artwork_id = arguments["artwork_id"]
-            artwork = await self.project_repo.unarchive_artwork(artwork_id)
+            artwork = await project_repo.unarchive_artwork(artwork_id)
             return {
                 "artwork": artwork,
                 "success": True,
@@ -1551,7 +1674,7 @@ class CwayMCPServer:
         # Team management tools
         elif name == "get_team_members":
             project_id = arguments["project_id"]
-            team_members = await self.project_repo.get_team_members(project_id)
+            team_members = await project_repo.get_team_members(project_id)
             return {
                 "team_members": team_members,
                 "member_count": len(team_members),
@@ -1562,7 +1685,7 @@ class CwayMCPServer:
             project_id = arguments["project_id"]
             user_id = arguments["user_id"]
             role = arguments.get("role")
-            team_member = await self.project_repo.add_team_member(project_id, user_id, role)
+            team_member = await project_repo.add_team_member(project_id, user_id, role)
             return {
                 "team_member": team_member,
                 "success": True,
@@ -1572,7 +1695,7 @@ class CwayMCPServer:
         elif name == "remove_team_member":
             project_id = arguments["project_id"]
             user_id = arguments["user_id"]
-            result = await self.project_repo.remove_team_member(project_id, user_id)
+            result = await project_repo.remove_team_member(project_id, user_id)
             return {
                 "success": result.get("success", False),
                 "message": result.get("message", "Team member removed successfully")
@@ -1582,7 +1705,7 @@ class CwayMCPServer:
             project_id = arguments["project_id"]
             user_id = arguments["user_id"]
             role = arguments["role"]
-            team_member = await self.project_repo.update_team_member_role(project_id, user_id, role)
+            team_member = await project_repo.update_team_member_role(project_id, user_id, role)
             return {
                 "team_member": team_member,
                 "success": True,
@@ -1590,7 +1713,7 @@ class CwayMCPServer:
             }
         
         elif name == "get_user_roles":
-            roles = await self.project_repo.get_user_roles()
+            roles = await project_repo.get_user_roles()
             return {
                 "roles": roles,
                 "role_count": len(roles),
@@ -1600,7 +1723,7 @@ class CwayMCPServer:
         elif name == "transfer_project_ownership":
             project_id = arguments["project_id"]
             new_owner_id = arguments["new_owner_id"]
-            project = await self.project_repo.transfer_project_ownership(project_id, new_owner_id)
+            project = await project_repo.transfer_project_ownership(project_id, new_owner_id)
             return {
                 "project": project,
                 "success": True,
@@ -1614,7 +1737,7 @@ class CwayMCPServer:
             status = arguments.get("status")
             limit = arguments.get("limit", 50)
             page = arguments.get("page", 0)
-            result = await self.project_repo.search_artworks(query, project_id, status, limit, page)
+            result = await project_repo.search_artworks(query, project_id, status, limit, page)
             return {
                 "artworks": result.get("artworks", []),
                 "total_hits": result.get("totalHits", 0),
@@ -1625,7 +1748,7 @@ class CwayMCPServer:
         elif name == "get_project_timeline":
             project_id = arguments["project_id"]
             limit = arguments.get("limit", 100)
-            timeline = await self.project_repo.get_project_timeline(project_id, limit)
+            timeline = await project_repo.get_project_timeline(project_id, limit)
             return {
                 "timeline": timeline,
                 "event_count": len(timeline),
@@ -1636,7 +1759,7 @@ class CwayMCPServer:
             user_id = arguments["user_id"]
             days = arguments.get("days", 30)
             limit = arguments.get("limit", 100)
-            activities = await self.project_repo.get_user_activity(user_id, days, limit)
+            activities = await project_repo.get_user_activity(user_id, days, limit)
             return {
                 "activities": activities,
                 "activity_count": len(activities),
@@ -1646,7 +1769,7 @@ class CwayMCPServer:
         elif name == "bulk_update_artwork_status":
             artwork_ids = arguments["artwork_ids"]
             status = arguments["status"]
-            result = await self.project_repo.bulk_update_artwork_status(artwork_ids, status)
+            result = await project_repo.bulk_update_artwork_status(artwork_ids, status)
             return {
                 "updated_artworks": result.get("updatedArtworks", []),
                 "success_count": result.get("successCount", 0),
@@ -1657,12 +1780,12 @@ class CwayMCPServer:
         
         # Folder tools
         elif name == "get_folder_tree":
-            folders = await self.project_repo.get_folder_tree()
+            folders = await project_repo.get_folder_tree()
             return {"folders": folders}
         
         elif name == "get_folder":
             folder_id = arguments["folder_id"]
-            folder = await self.project_repo.get_folder(folder_id)
+            folder = await project_repo.get_folder(folder_id)
             if folder:
                 return {"folder": folder}
             return {"folder": None, "message": "Folder not found"}
@@ -1671,7 +1794,7 @@ class CwayMCPServer:
             folder_id = arguments["folder_id"]
             page = arguments.get("page", 0)
             size = arguments.get("size", 20)
-            result = await self.project_repo.get_folder_items(folder_id, page, size)
+            result = await project_repo.get_folder_items(folder_id, page, size)
             return {
                 "items": result.get("items", []),
                 "total_hits": result.get("totalHits", 0),
@@ -1680,7 +1803,7 @@ class CwayMCPServer:
         
         # Project status tools
         elif name == "get_project_status_summary":
-            summary = await self.project_repo.get_project_status_summary()
+            summary = await project_repo.get_project_status_summary()
             return {
                 "summary": summary,
                 "message": f"Analyzed {summary['total']} projects"
@@ -1688,7 +1811,7 @@ class CwayMCPServer:
         
         elif name == "compare_projects":
             project_ids = arguments["project_ids"]
-            comparison = await self.project_repo.compare_projects(project_ids)
+            comparison = await project_repo.compare_projects(project_ids)
             return {
                 "comparison": comparison,
                 "project_count": len(comparison['projects']),
@@ -1697,7 +1820,7 @@ class CwayMCPServer:
         
         elif name == "get_project_history":
             project_id = arguments["project_id"]
-            history = await self.project_repo.get_project_history(project_id)
+            history = await project_repo.get_project_history(project_id)
             return {
                 "history": history,
                 "event_count": len(history),
@@ -1705,7 +1828,7 @@ class CwayMCPServer:
             }
         
         elif name == "get_monthly_project_trends":
-            trends = await self.project_repo.get_monthly_project_trends()
+            trends = await project_repo.get_monthly_project_trends()
             return {
                 "trends": trends,
                 "month_count": len(trends),
@@ -1717,14 +1840,14 @@ class CwayMCPServer:
             query = arguments.get("query")
             folder_id = arguments.get("folder_id")
             limit = arguments.get("limit", 50)
-            result = await self.project_repo.search_media_center(query, folder_id, limit=limit)
+            result = await project_repo.search_media_center(query, folder_id, limit=limit)
             return {
                 "results": result,
                 "message": f"Found {result['total_hits']} items matching search"
             }
         
         elif name == "get_media_center_stats":
-            stats = await self.project_repo.get_media_center_stats()
+            stats = await project_repo.get_media_center_stats()
             return {
                 "stats": stats,
                 "message": "Media center statistics retrieved"
@@ -1733,7 +1856,7 @@ class CwayMCPServer:
         elif name == "download_folder_contents":
             folder_id = arguments["folder_id"]
             zip_name = arguments.get("zip_name")
-            job_id = await self.project_repo.download_folder_contents(folder_id, zip_name)
+            job_id = await project_repo.download_folder_contents(folder_id, zip_name)
             return {
                 "job_id": job_id,
                 "success": True,
@@ -1743,7 +1866,7 @@ class CwayMCPServer:
         elif name == "download_project_media":
             project_id = arguments["project_id"]
             zip_name = arguments.get("zip_name")
-            job_id = await self.project_repo.download_project_media(project_id, zip_name)
+            job_id = await project_repo.download_project_media(project_id, zip_name)
             return {
                 "job_id": job_id,
                 "success": True,
@@ -1753,7 +1876,7 @@ class CwayMCPServer:
         # File tools
         elif name == "get_file":
             file_id = arguments["file_id"]
-            file = await self.project_repo.get_file(file_id)
+            file = await project_repo.get_file(file_id)
             if file:
                 return {"file": file}
             return {"file": None, "message": "File not found"}
@@ -1761,7 +1884,7 @@ class CwayMCPServer:
         # Project collaboration tools
         elif name == "get_project_members":
             project_id = arguments["project_id"]
-            members = await self.project_repo.get_project_members(project_id)
+            members = await project_repo.get_project_members(project_id)
             return {
                 "members": members,
                 "member_count": len(members),
@@ -1772,7 +1895,7 @@ class CwayMCPServer:
             project_id = arguments["project_id"]
             user_id = arguments["user_id"]
             role = arguments.get("role", "MEMBER")
-            result = await self.project_repo.add_project_member(project_id, user_id, role)
+            result = await project_repo.add_project_member(project_id, user_id, role)
             return {
                 "member": result,
                 "success": True,
@@ -1782,7 +1905,7 @@ class CwayMCPServer:
         elif name == "remove_project_member":
             project_id = arguments["project_id"]
             user_id = arguments["user_id"]
-            success = await self.project_repo.remove_project_member(project_id, user_id)
+            success = await project_repo.remove_project_member(project_id, user_id)
             return {
                 "success": success,
                 "message": "User removed from project" if success else "Failed to remove user"
@@ -1792,7 +1915,7 @@ class CwayMCPServer:
             project_id = arguments["project_id"]
             user_id = arguments["user_id"]
             role = arguments["role"]
-            result = await self.project_repo.update_project_member_role(project_id, user_id, role)
+            result = await project_repo.update_project_member_role(project_id, user_id, role)
             return {
                 "member": result,
                 "success": True,
@@ -1802,7 +1925,7 @@ class CwayMCPServer:
         elif name == "get_project_comments":
             project_id = arguments["project_id"]
             limit = arguments.get("limit", 50)
-            comments = await self.project_repo.get_project_comments(project_id, limit)
+            comments = await project_repo.get_project_comments(project_id, limit)
             return {
                 "comments": comments,
                 "comment_count": len(comments),
@@ -1812,7 +1935,7 @@ class CwayMCPServer:
         elif name == "add_project_comment":
             project_id = arguments["project_id"]
             text = arguments["text"]
-            comment = await self.project_repo.add_project_comment(project_id, text)
+            comment = await project_repo.add_project_comment(project_id, text)
             return {
                 "comment": comment,
                 "success": True,
@@ -1821,7 +1944,7 @@ class CwayMCPServer:
         
         elif name == "get_project_attachments":
             project_id = arguments["project_id"]
-            attachments = await self.project_repo.get_project_attachments(project_id)
+            attachments = await project_repo.get_project_attachments(project_id)
             return {
                 "attachments": attachments,
                 "attachment_count": len(attachments),
@@ -1832,7 +1955,7 @@ class CwayMCPServer:
             project_id = arguments["project_id"]
             file_id = arguments["file_id"]
             name = arguments["name"]
-            attachment = await self.project_repo.upload_project_attachment(project_id, file_id, name)
+            attachment = await project_repo.upload_project_attachment(project_id, file_id, name)
             return {
                 "attachment": attachment,
                 "success": True,
@@ -1841,7 +1964,7 @@ class CwayMCPServer:
         
         # Category, brand, and specification tools
         elif name == "get_categories":
-            categories = await self.category_repo.get_categories()
+            categories = await category_repo.get_categories()
             return {
                 "categories": categories,
                 "count": len(categories),
@@ -1849,7 +1972,7 @@ class CwayMCPServer:
             }
         
         elif name == "get_brands":
-            brands = await self.category_repo.get_brands()
+            brands = await category_repo.get_brands()
             return {
                 "brands": brands,
                 "count": len(brands),
@@ -1857,7 +1980,7 @@ class CwayMCPServer:
             }
         
         elif name == "get_print_specifications":
-            specs = await self.category_repo.get_print_specifications()
+            specs = await category_repo.get_print_specifications()
             return {
                 "specifications": specs,
                 "count": len(specs),
@@ -1868,7 +1991,7 @@ class CwayMCPServer:
             name_arg = arguments["name"]
             description = arguments.get("description")
             color = arguments.get("color")
-            category = await self.category_repo.create_category(name_arg, description, color)
+            category = await category_repo.create_category(name_arg, description, color)
             return {
                 "category": category,
                 "success": True,
@@ -1878,7 +2001,7 @@ class CwayMCPServer:
         elif name == "create_brand":
             name_arg = arguments["name"]
             description = arguments.get("description")
-            brand = await self.category_repo.create_brand(name_arg, description)
+            brand = await category_repo.create_brand(name_arg, description)
             return {
                 "brand": brand,
                 "success": True,
@@ -1891,7 +2014,7 @@ class CwayMCPServer:
             height = arguments["height"]
             unit = arguments.get("unit", "mm")
             description = arguments.get("description")
-            spec = await self.category_repo.create_print_specification(name_arg, width, height, unit, description)
+            spec = await category_repo.create_print_specification(name_arg, width, height, unit, description)
             return {
                 "specification": spec,
                 "success": True,
@@ -1901,7 +2024,7 @@ class CwayMCPServer:
         # Share tools
         elif name == "find_shares":
             limit = arguments.get("limit", 50)
-            shares = await self.project_repo.find_shares(limit)
+            shares = await project_repo.find_shares(limit)
             return {
                 "shares": shares,
                 "count": len(shares),
@@ -1910,7 +2033,7 @@ class CwayMCPServer:
         
         elif name == "get_share":
             share_id = arguments["share_id"]
-            share = await self.project_repo.get_share(share_id)
+            share = await project_repo.get_share(share_id)
             if share:
                 return {
                     "share": share,
@@ -1925,7 +2048,7 @@ class CwayMCPServer:
             expires_at = arguments.get("expires_at")
             max_downloads = arguments.get("max_downloads")
             password = arguments.get("password")
-            share = await self.project_repo.create_share(
+            share = await project_repo.create_share(
                 name_arg, file_ids, description, expires_at, max_downloads, password
             )
             return {
@@ -1936,7 +2059,7 @@ class CwayMCPServer:
         
         elif name == "delete_share":
             share_id = arguments["share_id"]
-            success = await self.project_repo.delete_share(share_id)
+            success = await project_repo.delete_share(share_id)
             return {
                 "success": success,
                 "message": "Share deleted successfully" if success else "Failed to delete share"
@@ -1947,7 +2070,7 @@ class CwayMCPServer:
             name_arg = arguments["name"]
             parent_folder_id = arguments.get("parent_folder_id")
             description = arguments.get("description")
-            folder = await self.project_repo.create_folder(name_arg, parent_folder_id, description)
+            folder = await project_repo.create_folder(name_arg, parent_folder_id, description)
             return {
                 "folder": folder,
                 "success": True,
@@ -1957,7 +2080,7 @@ class CwayMCPServer:
         elif name == "rename_file":
             file_id = arguments["file_id"]
             new_name = arguments["new_name"]
-            file = await self.project_repo.rename_file(file_id, new_name)
+            file = await project_repo.rename_file(file_id, new_name)
             return {
                 "file": file,
                 "success": True,
@@ -1967,7 +2090,7 @@ class CwayMCPServer:
         elif name == "rename_folder":
             folder_id = arguments["folder_id"]
             new_name = arguments["new_name"]
-            folder = await self.project_repo.rename_folder(folder_id, new_name)
+            folder = await project_repo.rename_folder(folder_id, new_name)
             return {
                 "folder": folder,
                 "success": True,
@@ -1977,7 +2100,7 @@ class CwayMCPServer:
         elif name == "move_files":
             file_ids = arguments["file_ids"]
             target_folder_id = arguments["target_folder_id"]
-            result = await self.project_repo.move_files(file_ids, target_folder_id)
+            result = await project_repo.move_files(file_ids, target_folder_id)
             return {
                 "success": result.get("success", False),
                 "moved_count": result.get("movedCount", 0),
@@ -1986,7 +2109,7 @@ class CwayMCPServer:
         
         elif name == "delete_file":
             file_id = arguments["file_id"]
-            success = await self.project_repo.delete_file(file_id)
+            success = await project_repo.delete_file(file_id)
             return {
                 "success": success,
                 "message": "File deleted successfully" if success else "Failed to delete file"
@@ -1995,7 +2118,7 @@ class CwayMCPServer:
         elif name == "delete_folder":
             folder_id = arguments["folder_id"]
             force = arguments.get("force", False)
-            success = await self.project_repo.delete_folder(folder_id, force)
+            success = await project_repo.delete_folder(folder_id, force)
             return {
                 "success": success,
                 "message": "Folder deleted successfully" if success else "Failed to delete folder"
