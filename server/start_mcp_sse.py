@@ -48,17 +48,24 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
     """Middleware to extract and validate Bearer tokens from requests."""
     
     async def dispatch(self, request: Request, call_next):
-        """Extract token from Authorization header and set request context."""
+        """Extract token from Authorization header, query param, or fallback to .env."""
         token = None
         user_identity = None
         user_tokens = None
         
-        # Extract Bearer token from Authorization header
+        # Try 1: Extract Bearer token from Authorization header (for ChatGPT)
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header[7:]  # Remove "Bearer " prefix
             logger.debug(f"Extracted token from Authorization header: {token[:8]}...{token[-8:]}")
-            
+        
+        # Try 2: Extract token from query parameter (for Warp terminal)
+        elif "token" in request.query_params:
+            token = request.query_params.get("token")
+            logger.debug(f"Extracted token from query parameter: {token[:8]}...{token[-8:]}")
+        
+        # Validate token if we have one (from either source)
+        if token:
             try:
                 # Validate token and get user identity
                 identity_extractor = get_identity_extractor()
