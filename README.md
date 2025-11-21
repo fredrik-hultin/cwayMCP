@@ -94,14 +94,17 @@ Add this MCP server to ChatGPT:
 ## 🛠️ Development
 
 ### 🧪 Testing
+
+**IMPORTANT**: Read [TESTING_POLICY.md](TESTING_POLICY.md) - We NEVER run tests against the live Cway server.
+
 ```bash
-# Run all tests with coverage
+# Run all tests with coverage (all use mocks)
 cd server && python -m pytest tests/ -v --cov=src --cov-report=html
 
 # Unit tests only (fast)
 python -m pytest tests/unit/ -v
 
-# Integration tests (requires API token)
+# Integration tests (mocked, no real API calls)
 python -m pytest tests/integration/ -v
 ```
 
